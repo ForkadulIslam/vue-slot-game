@@ -1,0 +1,2 @@
+Uncaught ReferenceError: computed is not defined
+    at setup (ControlPanel.vue:49:28)
