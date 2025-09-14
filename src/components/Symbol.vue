@@ -19,17 +19,17 @@ defineProps({
 
 <style scoped>
 .symbol {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* Apply equal padding on all sides to create space from the reel borders */
-  padding: 8%; 
-  box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
+  width: 80%; /* Control the size of the symbol within its container */
+  padding-top: 80%; /* This creates a square aspect ratio (height matches width) */
+  height: 0; /* Height is determined by padding-top */
+  position: relative;
+  box-sizing: border-box;
 }
 
 .symbol img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
