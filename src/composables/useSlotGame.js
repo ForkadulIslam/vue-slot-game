@@ -1,7 +1,7 @@
-import { ref, reactive, nextTick } from 'vue';
+import { ref, readonly, nextTick } from 'vue';
 import { Howl } from 'howler';
 
-// --- 1. GAME CONFIGURATION (Matches rtpSimulation5x3.js) ---
+// --- 1. GAME CONFIGURATION ---
 const SYMBOLS = {
   WILD: 'wild',
   SCATTER: 'scatter',
@@ -66,46 +66,50 @@ const FREE_SPINS_CONFIG = {
   BASE_MULTIPLIER_INCREMENT: 2,
 };
 
+// --- 2. SHARED REACTIVE STATE ---
+// By defining the state outside the function, it becomes a singleton.
+const balance = ref(1000);
+const betAmount = ref(25);
+const isSpinning = ref(false);
+const isAutoplaying = ref(false);
+const outcome = ref([]); 
+const reelsForDisplay = ref([]);
+const winAmount = ref(0);
+const winningPaylines = ref(new Set());
+
+// --- 3. SOUNDS ---
+const sounds = {
+  spin: new Howl({ src: [new URL('../assets/sounds/spin.wav', import.meta.url).href] }),
+  win: new Howl({ src: [new URL('../assets/sounds/win-alert.wav', import.meta.url).href] }),
+  payout: new Howl({ src: [new URL('../assets/sounds/payout-award.wav', import.meta.url).href] }),
+  explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
+};
+
+// --- Helper function to generate a grid ---
+const generateGrid = () => {
+  const grid = [];
+  for (let i = 0; i < 5; i++) {
+    const reelSymbols = [];
+    const stopPosition = Math.floor(Math.random() * REEL_STRIPS[i].length);
+    for (let j = 0; j < 3; j++) {
+      reelSymbols.push(REEL_STRIPS[i][(stopPosition + j) % REEL_STRIPS[i].length]);
+    }
+    grid.push(reelSymbols);
+  }
+  return grid;
+};
+
+// --- Initialize the game with a random grid ---
+const initialGrid = generateGrid();
+outcome.value = initialGrid;
+reelsForDisplay.value = initialGrid;
+
 
 export function useSlotGame() {
-  // --- 2. REACTIVE STATE ---
-  const balance = ref(1000);
-  const betAmount = ref(25);
-  const isSpinning = ref(false);
-  const isAutoplaying = ref(false);
-  // `outcome` holds the final, true 5x3 grid result
-  const outcome = ref([]); 
-  // `reelsForDisplay` holds the symbol arrays that are rendered, which can be longer for animation
-  const reelsForDisplay = ref([]);
-  const winAmount = ref(0);
-  const winningPaylines = ref(new Set());
-  let autoplayInterval = null;
-
-  // --- 3. SOUNDS ---
-  const sounds = {
-    spin: new Howl({ src: [new URL('../assets/sounds/spin.wav', import.meta.url).href] }),
-    win: new Howl({ src: [new URL('../assets/sounds/win-alert.wav', import.meta.url).href] }),
-    payout: new Howl({ src: [new URL('../assets/sounds/payout-award.wav', import.meta.url).href] }),
-    explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
-  };
-
   // --- 4. CORE GAME LOGIC ---
   const getRandomSymbol = (reelIndex) => {
     const reel = REEL_STRIPS[reelIndex];
     return reel[Math.floor(Math.random() * reel.length)];
-  };
-
-  const generateSpinResult = () => {
-    const grid = [];
-    for (let i = 0; i < 5; i++) {
-      const reelSymbols = [];
-      const stopPosition = Math.floor(Math.random() * REEL_STRIPS[i].length);
-      for (let j = 0; j < 3; j++) {
-        reelSymbols.push(REEL_STRIPS[i][(stopPosition + j) % REEL_STRIPS[i].length]);
-      }
-      grid.push(reelSymbols);
-    }
-    return grid;
   };
 
   const calculateWins = (grid) => {
@@ -137,47 +141,38 @@ export function useSlotGame() {
     return { totalWinnings, winningPositions, currentWinningPaylines };
   };
 
-  // --- 5. MAIN SPIN FUNCTION (Refactored for Animation) ---
+  // --- 5. MAIN SPIN FUNCTION ---
   const spin = async () => {
     if (isSpinning.value || balance.value < betAmount.value) return;
 
-    //console.log('isSpinning before: ', isSpinning.value);
     isSpinning.value = true;
-    //console.log('isSpinning after: ', isSpinning.value);
     winAmount.value = 0;
     winningPaylines.value.clear();
     balance.value -= betAmount.value;
     sounds.spin.play();
 
-    const finalOutcome = generateSpinResult();
-    console.log("Predetermined Spin Result:", finalOutcome.map(reel => reel.join(', ')).join(' | '));
+    const finalOutcome = generateGrid();
+    console.log("Predetermined Stop Positions:", finalOutcome);
     outcome.value = finalOutcome;
 
-    // Create long reels for animation
     const animationReels = [];
     for (let i = 0; i < 5; i++) {
       const reel = [];
-      // Add 20 random symbols for the blur effect
       for (let j = 0; j < 20; j++) {
         reel.push(getRandomSymbol(i));
       }
-      // Add the final outcome symbols at the end
       reel.push(...finalOutcome[i]);
       animationReels.push(reel);
     }
-    //console.log(animationReels);
     reelsForDisplay.value = animationReels;
 
-    // This timeout orchestrates the animation and result processing
     setTimeout(async () => {
-      // After the spin, set the display to the final outcome
       reelsForDisplay.value = finalOutcome;
       
       let totalSpinWinnings = 0;
       let baseMultiplier = 1;
       let gridForCascading = finalOutcome;
 
-      // --- Cascading Wins Loop ---
       while (true) {
         const { totalWinnings, winningPositions, currentWinningPaylines } = calculateWins(gridForCascading);
 
@@ -219,14 +214,13 @@ export function useSlotGame() {
           }
           
           gridForCascading = nextGrid;
-          reelsForDisplay.value = gridForCascading; // Update display for cascades
+          reelsForDisplay.value = gridForCascading;
           baseMultiplier++;
         } else {
           break; 
         }
       }
 
-      // --- Scatter Check ---
       let scatterCount = gridForCascading.flat().filter(s => s === SYMBOLS.SCATTER).length;
       if (scatterCount >= 3) {
         const scatterWinnings = (SCATTER_PAYOUTS[scatterCount] || 0) * betAmount.value;
@@ -241,7 +235,7 @@ export function useSlotGame() {
       isSpinning.value = false;
       if (isAutoplaying.value) setTimeout(spin, 2000);
 
-    }, 1500); // This timeout should match the CSS animation duration
+    }, 1500);
   };
 
   function setBetAmount(bet) {
@@ -255,13 +249,19 @@ export function useSlotGame() {
     }
   }
   
-  // Initialize the game with a random grid
-  const initialGrid = generateSpinResult();
-  outcome.value = initialGrid;
-  reelsForDisplay.value = initialGrid;
-
   return { 
-    balance, betAmount, isSpinning, isAutoplaying, outcome, reelsForDisplay, winAmount, 
-    spin, symbolPaths, setBetAmount, toggleAutoplay, winningPaylines, PAYLINES 
+    balance: readonly(balance), 
+    betAmount: readonly(betAmount), 
+    isSpinning: readonly(isSpinning), 
+    isAutoplaying: readonly(isAutoplaying), 
+    outcome: readonly(outcome), 
+    reelsForDisplay: readonly(reelsForDisplay), 
+    winAmount: readonly(winAmount), 
+    spin, 
+    symbolPaths, 
+    setBetAmount, 
+    toggleAutoplay, 
+    winningPaylines: readonly(winningPaylines), 
+    PAYLINES 
   };
 }
