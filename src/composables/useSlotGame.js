@@ -154,21 +154,12 @@ export function useSlotGame() {
     const finalOutcome = generateGrid();
     console.log("Predetermined Stop Positions:", finalOutcome);
     outcome.value = finalOutcome;
+    reelsForDisplay.value = finalOutcome;
 
-    const animationReels = [];
-    for (let i = 0; i < 5; i++) {
-      const reel = [];
-      for (let j = 0; j < 20; j++) {
-        reel.push(getRandomSymbol(i));
-      }
-      reel.push(...finalOutcome[i]);
-      animationReels.push(reel);
-    }
-    reelsForDisplay.value = animationReels;
-
+    // This timeout orchestrates the animation and result processing
+    // It must be long enough to allow the last reel to finish its animation
     setTimeout(async () => {
-      reelsForDisplay.value = finalOutcome;
-      
+      // --- WIN LOGIC ---
       let totalSpinWinnings = 0;
       let baseMultiplier = 1;
       let gridForCascading = finalOutcome;
@@ -231,11 +222,12 @@ export function useSlotGame() {
       }
 
       if (totalSpinWinnings > 0) sounds.win.play();
-
+      
       isSpinning.value = false;
+      
       if (isAutoplaying.value) setTimeout(spin, 2000);
 
-    }, 1500);
+    }, 2500);
   };
 
   function setBetAmount(bet) {

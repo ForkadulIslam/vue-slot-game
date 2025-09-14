@@ -1,24 +1,26 @@
 <template>
   <div class="reel-container">
-    <div class="reel">
-      <div 
-        class="reel-strip" 
-        :class="{ 'spinning': isSpinning }"
-        :style="stripStyle"
-      >
-        <Symbol
-          v-for="(symbol, index) in symbols"
-          :key="index"
-          :symbolName="symbol.name"
-          :symbolUrl="symbol.url"
-        />
-      </div>
+    <div 
+      class="reel-strip" 
+      :class="{ 
+        'is-spinning': isSpinning,
+        'is-stopping': isStopping
+      }"
+      :style="stripStyle"
+      @animationend="onAnimationEnd"
+    >
+      <Symbol
+        v-for="(symbol, index) in symbols"
+        :key="index"
+        :symbolName="symbol.name"
+        :symbolUrl="symbol.url"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, watch, computed } from 'vue';
 import Symbol from './Symbol.vue';
 
 const props = defineProps({
@@ -36,26 +38,32 @@ const props = defineProps({
   }
 });
 
-const stripStyle = computed(() => {
-  const style = {
-    transitionDelay: `${props.delay}ms`,
-  };
+const isStopping = ref(false);
 
-  if (props.isSpinning) {
-    // When spinning, the strip is long. We translate it upwards.
-    const travelDistance = props.symbols.length - 3;
-    style.transform = `translateY(-${travelDistance * (100 / 3)}%)`;
-    style.transitionDuration = '1.5s'; // Ensure duration is set for the spin
-  } else {
-    // When not spinning, we are at the final state (or initial state).
-    // The strip has only 3 symbols. We want it at the top.
-    style.transform = 'translateY(0)';
-    // Set duration to 0 to prevent the reverse animation. It will snap instantly.
-    style.transitionDuration = '0s'; 
-  }
+const stripStyle = computed(() => {
+  const travelDistance = props.symbols.length > 3 ? props.symbols.length - 3 : 0;
+  const duration = 1500 + props.delay * 2;
   
-  return style;
+  return {
+    '--travel-distance': `-${travelDistance * (100 / 3)}%`,
+    '--duration': `${duration}ms`,
+    '--delay': `${props.delay}ms`
+  };
 });
+
+watch(() => props.isSpinning, (spinning) => {
+  if (spinning) {
+    isStopping.value = false;
+  } else {
+    isStopping.value = true;
+  }
+});
+
+function onAnimationEnd() {
+  if (isStopping.value) {
+    isStopping.value = false;
+  }
+}
 </script>
 
 <style scoped>
@@ -66,28 +74,71 @@ const stripStyle = computed(() => {
   border-radius: 10px;
   height: 100%;
   border: 2px solid #444;
-  /* Define symbol height based on container height */
   --symbol-height: calc(100% / 3);
-}
-
-.reel {
-  height: 100%; /* The visible area for 3 symbols */
-  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .reel-strip {
   display: flex;
   flex-direction: column;
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
-  transition-property: transform;
-  transition-timing-function: cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Ease with bounce */
+  transform: translateY(0);
 }
 
-.reel-strip.spinning {
-  transition-timing-function: ease-in; /* Accelerate at the start */
+.reel-strip.is-spinning {
+  animation: spin var(--duration) linear infinite;
+}
+
+.reel-strip.is-stopping {
+  animation: stop var(--duration) cubic-bezier(0.6, 0, 0.2, 1) 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes spin {
+  0% {
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+  5% {
+    transform: translateY(5%);
+    filter: blur(1px);
+  }
+  10% {
+    transform: translateY(-10%);
+    filter: blur(2px);
+  }
+  20% {
+    transform: translateY(var(--travel-distance));
+    filter: blur(5px);
+  }
+  80% {
+    transform: translateY(var(--travel-distance));
+    filter: blur(5px);
+  }
+  90% {
+    transform: translateY(-10%);
+    filter: blur(2px);
+  }
+  95% {
+    transform: translateY(5%);
+    filter: blur(1px);
+  }
+  100% {
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes stop {
+  0% {
+    transform: translateY(var(--travel-distance));
+    filter: blur(5px);
+  }
+  100% {
+    transform: translateY(0);
+    filter: blur(0px);
+  }
 }
 
 .reel-strip > * {

@@ -24,12 +24,15 @@ defineProps({
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2% 0; /* Add vertical padding to create space between symbols */
+  /* Apply equal padding on all sides to create space from the reel borders */
+  padding: 8%; 
+  box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
 }
 
 .symbol img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 50%; /* Make the symbol image circular */
 }
 </style>
