@@ -70,13 +70,13 @@ const FREE_SPINS_CONFIG = {
 export function useSlotGame() {
   // --- 2. REACTIVE STATE ---
   const balance = ref(1000);
-  const betAmount = ref(25); // Default bet to cover 25 lines at 1 credit per line
+  const betAmount = ref(25);
   const isSpinning = ref(false);
   const isAutoplaying = ref(false);
-  const outcome = ref([
-    ['seven', 'seven', 'seven'], ['seven', 'seven', 'seven'], ['seven', 'seven', 'seven'],
-    ['seven', 'seven', 'seven'], ['seven', 'seven', 'seven'],
-  ]);
+  // `outcome` holds the final, true 5x3 grid result
+  const outcome = ref([]); 
+  // `reelsForDisplay` holds the symbol arrays that are rendered, which can be longer for animation
+  const reelsForDisplay = ref([]);
   const winAmount = ref(0);
   const winningPaylines = ref(new Set());
   let autoplayInterval = null;
@@ -137,104 +137,111 @@ export function useSlotGame() {
     return { totalWinnings, winningPositions, currentWinningPaylines };
   };
 
-
-  // --- 5. MAIN SPIN FUNCTION ---
+  // --- 5. MAIN SPIN FUNCTION (Refactored for Animation) ---
   const spin = async () => {
     if (isSpinning.value || balance.value < betAmount.value) return;
 
+    //console.log('isSpinning before: ', isSpinning.value);
     isSpinning.value = true;
+    //console.log('isSpinning after: ', isSpinning.value);
     winAmount.value = 0;
     winningPaylines.value.clear();
     balance.value -= betAmount.value;
     sounds.spin.play();
 
-    let currentGrid = generateSpinResult();
-    console.log("Predetermined Spin Result:", currentGrid.map(reel => reel.join(', ')).join(' | '));
-    outcome.value = currentGrid;
-    
-    // We will add a short delay here to simulate reels spinning before showing the result
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const finalOutcome = generateSpinResult();
+    console.log("Predetermined Spin Result:", finalOutcome.map(reel => reel.join(', ')).join(' | '));
+    outcome.value = finalOutcome;
 
-
-    let totalSpinWinnings = 0;
-    let baseMultiplier = 1;
-
-    // --- Cascading Wins Loop ---
-    while (true) {
-      const { totalWinnings, winningPositions, currentWinningPaylines } = calculateWins(currentGrid);
-
-      if (totalWinnings > 0) {
-        sounds.payout.play();
-        const winningsWithMultiplier = totalWinnings * baseMultiplier;
-        totalSpinWinnings += winningsWithMultiplier;
-        winAmount.value = totalSpinWinnings;
-        balance.value += winningsWithMultiplier;
-        
-        currentWinningPaylines.forEach(lineIndex => winningPaylines.value.add(lineIndex));
-        
-        await nextTick(); // Allow UI to update
-
-        // Short pause to see the win before symbols disappear
-        await new Promise(resolve => setTimeout(resolve, 500)); 
-
-
-        // Remove winning symbols and let new ones fall
-        const nextGrid = currentGrid.map(reel => [...reel]);
-        winningPositions.forEach(pos => {
-            const [reel, row] = pos.split(',').map(Number);
-            nextGrid[reel][row] = null;
-        });
-
-        // Drop down existing symbols
-        for (let reel = 0; reel < 5; reel++) {
-          let nullCount = 0;
-          for (let row = 2; row >= 0; row--) {
-            if (nextGrid[reel][row] === null) {
-              nullCount++;
-            } else if (nullCount > 0) {
-              nextGrid[reel][row + nullCount] = nextGrid[reel][row];
-              nextGrid[reel][row] = null;
-            }
-          }
-        }
-
-        // Fill nulls with new symbols from top
-        for (let reel = 0; reel < 5; reel++) {
-          for (let row = 0; row < 3; row++) {
-            if (nextGrid[reel][row] === null) {
-              nextGrid[reel][row] = getRandomSymbol(reel);
-            }
-          }
-        }
-        
-        currentGrid = nextGrid;
-        outcome.value = currentGrid;
-        baseMultiplier++;
-
-      } else {
-        break; // No more wins, exit cascade loop
+    // Create long reels for animation
+    const animationReels = [];
+    for (let i = 0; i < 5; i++) {
+      const reel = [];
+      // Add 20 random symbols for the blur effect
+      for (let j = 0; j < 20; j++) {
+        reel.push(getRandomSymbol(i));
       }
+      // Add the final outcome symbols at the end
+      reel.push(...finalOutcome[i]);
+      animationReels.push(reel);
     }
+    //console.log(animationReels);
+    reelsForDisplay.value = animationReels;
 
-    // --- Scatter Check (after cascades) ---
-    let scatterCount = currentGrid.flat().filter(s => s === SYMBOLS.SCATTER).length;
-    if (scatterCount >= 3) {
-      const scatterWinnings = (SCATTER_PAYOUTS[scatterCount] || 0) * betAmount.value;
-      balance.value += scatterWinnings;
-      totalSpinWinnings += scatterWinnings;
-      winAmount.value = totalSpinWinnings;
-      // TODO: Trigger Free Spins UI/State
-      console.log(`!!! FREE SPINS TRIGGERED: ${FREE_SPINS_CONFIG.TRIGGER_COUNT[scatterCount]} spins !!!`);
-    }
+    // This timeout orchestrates the animation and result processing
+    setTimeout(async () => {
+      // After the spin, set the display to the final outcome
+      reelsForDisplay.value = finalOutcome;
+      
+      let totalSpinWinnings = 0;
+      let baseMultiplier = 1;
+      let gridForCascading = finalOutcome;
 
-    if (totalSpinWinnings > 0) {
-      sounds.win.play();
-    }
+      // --- Cascading Wins Loop ---
+      while (true) {
+        const { totalWinnings, winningPositions, currentWinningPaylines } = calculateWins(gridForCascading);
 
-    isSpinning.value = false;
-    if (isAutoplaying.value) {
-      setTimeout(spin, 2000);
-    }
+        if (totalWinnings > 0) {
+          sounds.payout.play();
+          const winningsWithMultiplier = totalWinnings * baseMultiplier;
+          totalSpinWinnings += winningsWithMultiplier;
+          winAmount.value = totalSpinWinnings;
+          balance.value += winningsWithMultiplier;
+          
+          currentWinningPaylines.forEach(lineIndex => winningPaylines.value.add(lineIndex));
+          
+          await nextTick();
+          await new Promise(resolve => setTimeout(resolve, 500)); 
+
+          const nextGrid = gridForCascading.map(reel => [...reel]);
+          winningPositions.forEach(pos => {
+              const [reel, row] = pos.split(',').map(Number);
+              nextGrid[reel][row] = null;
+          });
+
+          for (let reel = 0; reel < 5; reel++) {
+            let nullCount = 0;
+            for (let row = 2; row >= 0; row--) {
+              if (nextGrid[reel][row] === null) nullCount++;
+              else if (nullCount > 0) {
+                nextGrid[reel][row + nullCount] = nextGrid[reel][row];
+                nextGrid[reel][row] = null;
+              }
+            }
+          }
+
+          for (let reel = 0; reel < 5; reel++) {
+            for (let row = 0; row < 3; row++) {
+              if (nextGrid[reel][row] === null) {
+                nextGrid[reel][row] = getRandomSymbol(reel);
+              }
+            }
+          }
+          
+          gridForCascading = nextGrid;
+          reelsForDisplay.value = gridForCascading; // Update display for cascades
+          baseMultiplier++;
+        } else {
+          break; 
+        }
+      }
+
+      // --- Scatter Check ---
+      let scatterCount = gridForCascading.flat().filter(s => s === SYMBOLS.SCATTER).length;
+      if (scatterCount >= 3) {
+        const scatterWinnings = (SCATTER_PAYOUTS[scatterCount] || 0) * betAmount.value;
+        balance.value += scatterWinnings;
+        totalSpinWinnings += scatterWinnings;
+        winAmount.value = totalSpinWinnings;
+        console.log(`!!! FREE SPINS TRIGGERED: ${FREE_SPINS_CONFIG.TRIGGER_COUNT[scatterCount]} spins !!!`);
+      }
+
+      if (totalSpinWinnings > 0) sounds.win.play();
+
+      isSpinning.value = false;
+      if (isAutoplaying.value) setTimeout(spin, 2000);
+
+    }, 1500); // This timeout should match the CSS animation duration
   };
 
   function setBetAmount(bet) {
@@ -247,9 +254,14 @@ export function useSlotGame() {
       spin();
     }
   }
+  
+  // Initialize the game with a random grid
+  const initialGrid = generateSpinResult();
+  outcome.value = initialGrid;
+  reelsForDisplay.value = initialGrid;
 
   return { 
-    balance, betAmount, isSpinning, isAutoplaying, outcome, winAmount, 
+    balance, betAmount, isSpinning, isAutoplaying, outcome, reelsForDisplay, winAmount, 
     spin, symbolPaths, setBetAmount, toggleAutoplay, winningPaylines, PAYLINES 
   };
 }

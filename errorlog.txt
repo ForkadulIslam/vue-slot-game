@@ -1,7 +1,2 @@
-howler.js?v=0b4e417e:258 The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
-unlock @ howler.js?v=0b4e417e:258Understand this warning
-useSlotGame.js?t=1757865816927:152 Predetermined Spin Result: cherry, lemon, lemon | cherry, cherry, cherry | melon, melon, melon | seven, bar, bell | seven, seven, seven
-favicon.ico:1  GET http://localhost:5173/favicon.ico 404 (Not Found)Understand this error
-useSlotGame.js?t=1757865816927:152 Predetermined Spin Result: plum, plum, plum | plum, plum, plum | bar, bar, bar | seven, seven, seven | bar, bar, bar
-useSlotGame.js?t=1757865816927:152 Predetermined Spin Result: lemon, lemon, lemon | cherry, cherry, cherry | bar, bar, bar | bell, melon, seven | bar, bar, bar
-useSlotGame.js?t=1757865816927:152 Predetermined Spin Result: bell, melon, scatter | melon, melon, melon | bell, bell, bell | seven, seven, seven | melon, scatter, seven
+Reel.vue:40 Uncaught ReferenceError: props is not defined
+    at setup (Reel.vue:40:36)

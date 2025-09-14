@@ -1,7 +1,13 @@
 <template>
   <div class="slot-machine">
     <div class="reels-container">
-      <Reel v-for="(reel, index) in reels" :key="index" :symbols="reel" />
+      <Reel 
+        v-for="(reel, index) in reels" 
+        :key="index" 
+        :symbols="reel"
+        :isSpinning="isSpinning"
+        :delay="index * 200" 
+      />
     </div>
   </div>
 </template>
@@ -11,14 +17,11 @@ import { computed } from 'vue';
 import Reel from './Reel.vue';
 import { useSlotGame } from '../composables/useSlotGame';
 
-// The single source of truth for our game state
-const { outcome, symbolPaths } = useSlotGame();
+const { outcome, symbolPaths, isSpinning, reelsForDisplay } = useSlotGame();
+console.log('SlotMachine - isSpinning: ', isSpinning.value);
 
-// Create a computed property to format the data for the Reel components
 const reels = computed(() => {
-  // The 'outcome' is a 2D array of symbol names, e.g., [['seven', 'bar'], ['melon', 'plum']]
-  // We need to map this to a structure that includes the full URL for each symbol
-  return outcome.value.map(reelSymbols => {
+  return reelsForDisplay.value.map(reelSymbols => {
     return reelSymbols.map(symbolName => {
       return {
         name: symbolName,
@@ -27,6 +30,7 @@ const reels = computed(() => {
     });
   });
 });
+//console.log(reels);
 </script>
 
 <style scoped>
@@ -38,14 +42,15 @@ const reels = computed(() => {
 
 .reels-container {
   display: flex;
-  gap: 1.5vw; /* Responsive gap */
-  
+  gap: 1.5vw;
   border-radius: 10px;
   width: 85vw;
   max-width: 900px;
   height: auto;
-  /* A taller aspect ratio to better fit 3 symbols vertically */
-  aspect-ratio: 5 / 4; 
-  align-items: stretch; /* Make reels fill the height */
+  aspect-ratio: 5 / 3; 
+  align-items: stretch;
+  padding: 1vw;
+  background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
 }
 </style>

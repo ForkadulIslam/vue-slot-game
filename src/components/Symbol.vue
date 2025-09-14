@@ -24,11 +24,12 @@ defineProps({
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 2% 0; /* Add vertical padding to create space between symbols */
 }
 
 .symbol img {
-  width: 90%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 </style>
