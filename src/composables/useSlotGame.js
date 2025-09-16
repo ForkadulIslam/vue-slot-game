@@ -144,7 +144,6 @@ export function useSlotGame() {
     winAmount.value = 0;
     winningPaylines.value.clear();
     balance.value -= betAmount.value;
-    // sounds.spin.play();
 
     const finalOutcome = generateGrid();
     outcome.value = finalOutcome;
@@ -157,7 +156,7 @@ export function useSlotGame() {
       winAmount.value = totalWinnings;
       balance.value += totalWinnings;
       winningPaylines.value = currentWinningPaylines;
-      // sounds.win.play();
+      sounds.win.play();
     }
 
     reelsForDisplay.value = outcome.value;
@@ -189,6 +188,7 @@ export function useSlotGame() {
     winAmount: readonly(winAmount), 
     spin, 
     finishSpin,
+    sounds,
     symbolPaths, 
     setBetAmount, 
     toggleAutoplay, 

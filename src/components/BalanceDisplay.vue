@@ -47,5 +47,7 @@ const formattedBalance = computed(() => {
   font-weight: bold;
   color: #FFD700; /* Gold */
   text-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 223, 0, 0.8);
+  line-height: 1.5rem;
+  min-width: 110px;
 }
 </style>

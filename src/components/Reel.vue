@@ -1,8 +1,7 @@
 <template>
   <div class="reel">
     <Symbol v-for="(symbol, index) in symbols" 
-      :key="index" 
-      class=""
+      :key="index"
       :symbolName="symbol.name"
       :symbolUrl="symbol.url"
     />
@@ -18,13 +17,6 @@ defineProps({
 });
 </script>
 
-<style scoped>
-.reel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  box-sizing: border-box;
-}
+<style>
+
 </style>

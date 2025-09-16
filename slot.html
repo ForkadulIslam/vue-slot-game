@@ -184,9 +184,6 @@
                 //console.log(reel);
                 // Position the reel to show the starting symbols
                 const spinContentHeight = (finalSymbols.length + spinningSymbols.length) * symbolHeight;
-                console.log(spinContentHeight);
-                console.log(finalSymbols);
-                console.log(startingSymbols)
                 gsap.set(reel, { y: -spinContentHeight });
 
                 const reelTimeline = gsap.timeline({
@@ -207,23 +204,19 @@
                 // ANIMATION WITH BLUR EFFECT
                 reelTimeline.to(reel, {
                     y: 0,
-                    duration: 9,
+                    duration: 5,
                     ease: "power2.inOut",
                     // REPLACE the onUpdate section with this:
                     onUpdate: function() {
                         const progress = this.progress();
                         let blurIntensity;
-                        //console.log(progress);
                         if (progress < 0.5) {
-                            // Accelerating phase: 0% to 50% progress
-                            // Blur increases from 0px to 8px
-                            blurIntensity = progress * 16; // 0 -> 8
+                            blurIntensity = progress * 10 * 4; // quick ramp up
+                        } else if (progress > 0.9) {
+                            blurIntensity = (1 - progress) * 10 * 4; // quick ramp down
                         } else {
-                            // Decelerating phase: 50% to 100% progress  
-                            // Blur decreases from 8px to 0px
-                            blurIntensity = (1 - progress) * 16; // 8 -> 0
+                            blurIntensity = 4;
                         }
-                        
                         gsap.set(reel, { filter: `blur(${blurIntensity}px)` });
                     }
                 });

@@ -65,14 +65,12 @@ const selectBet = (bet) => {
 
 <style scoped>
 .control-panel-container {
-  width: 85vw;
-  max-width: 900px;
+  width: 325px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.5rem 0rem;
   background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 15px;
   margin-top: 10px;
 }
 
