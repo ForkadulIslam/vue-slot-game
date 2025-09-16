@@ -107,11 +107,6 @@ reelsForDisplay.value = initialGrid;
 
 export function useSlotGame() {
   // --- 4. CORE GAME LOGIC ---
-  const getRandomSymbol = (reelIndex) => {
-    const reel = REEL_STRIPS[reelIndex];
-    return reel[Math.floor(Math.random() * reel.length)];
-  };
-
   const calculateWins = (grid) => {
     const betPerLine = betAmount.value / PAYLINES.length;
     let totalWinnings = 0;
@@ -142,92 +137,35 @@ export function useSlotGame() {
   };
 
   // --- 5. MAIN SPIN FUNCTION ---
-  const spin = async () => {
+  const spin = () => {
     if (isSpinning.value || balance.value < betAmount.value) return;
 
     isSpinning.value = true;
     winAmount.value = 0;
     winningPaylines.value.clear();
     balance.value -= betAmount.value;
-    sounds.spin.play();
+    // sounds.spin.play();
 
     const finalOutcome = generateGrid();
-    console.log("Predetermined Stop Positions:", finalOutcome);
     outcome.value = finalOutcome;
-    reelsForDisplay.value = finalOutcome;
+  };
 
-    // This timeout orchestrates the animation and result processing
-    // It must be long enough to allow the last reel to finish its animation
-    setTimeout(async () => {
-      // --- WIN LOGIC ---
-      let totalSpinWinnings = 0;
-      let baseMultiplier = 1;
-      let gridForCascading = finalOutcome;
+  const finishSpin = () => {
+    const { totalWinnings, currentWinningPaylines } = calculateWins(outcome.value);
+    
+    if (totalWinnings > 0) {
+      winAmount.value = totalWinnings;
+      balance.value += totalWinnings;
+      winningPaylines.value = currentWinningPaylines;
+      // sounds.win.play();
+    }
 
-      while (true) {
-        const { totalWinnings, winningPositions, currentWinningPaylines } = calculateWins(gridForCascading);
+    reelsForDisplay.value = outcome.value;
+    isSpinning.value = false;
 
-        if (totalWinnings > 0) {
-          sounds.payout.play();
-          const winningsWithMultiplier = totalWinnings * baseMultiplier;
-          totalSpinWinnings += winningsWithMultiplier;
-          winAmount.value = totalSpinWinnings;
-          balance.value += winningsWithMultiplier;
-          
-          currentWinningPaylines.forEach(lineIndex => winningPaylines.value.add(lineIndex));
-          
-          await nextTick();
-          await new Promise(resolve => setTimeout(resolve, 500)); 
-
-          const nextGrid = gridForCascading.map(reel => [...reel]);
-          winningPositions.forEach(pos => {
-              const [reel, row] = pos.split(',').map(Number);
-              nextGrid[reel][row] = null;
-          });
-
-          for (let reel = 0; reel < 5; reel++) {
-            let nullCount = 0;
-            for (let row = 2; row >= 0; row--) {
-              if (nextGrid[reel][row] === null) nullCount++;
-              else if (nullCount > 0) {
-                nextGrid[reel][row + nullCount] = nextGrid[reel][row];
-                nextGrid[reel][row] = null;
-              }
-            }
-          }
-
-          for (let reel = 0; reel < 5; reel++) {
-            for (let row = 0; row < 3; row++) {
-              if (nextGrid[reel][row] === null) {
-                nextGrid[reel][row] = getRandomSymbol(reel);
-              }
-            }
-          }
-          
-          gridForCascading = nextGrid;
-          reelsForDisplay.value = gridForCascading;
-          baseMultiplier++;
-        } else {
-          break; 
-        }
-      }
-
-      let scatterCount = gridForCascading.flat().filter(s => s === SYMBOLS.SCATTER).length;
-      if (scatterCount >= 3) {
-        const scatterWinnings = (SCATTER_PAYOUTS[scatterCount] || 0) * betAmount.value;
-        balance.value += scatterWinnings;
-        totalSpinWinnings += scatterWinnings;
-        winAmount.value = totalSpinWinnings;
-        console.log(`!!! FREE SPINS TRIGGERED: ${FREE_SPINS_CONFIG.TRIGGER_COUNT[scatterCount]} spins !!!`);
-      }
-
-      if (totalSpinWinnings > 0) sounds.win.play();
-      
-      isSpinning.value = false;
-      
-      if (isAutoplaying.value) setTimeout(spin, 2000);
-
-    }, 2500);
+    if (isAutoplaying.value) {
+      setTimeout(() => spin(), 1000);
+    }
   };
 
   function setBetAmount(bet) {
@@ -250,6 +188,7 @@ export function useSlotGame() {
     reelsForDisplay: readonly(reelsForDisplay), 
     winAmount: readonly(winAmount), 
     spin, 
+    finishSpin,
     symbolPaths, 
     setBetAmount, 
     toggleAutoplay, 

@@ -19,20 +19,18 @@ defineProps({
 
 <style scoped>
 .symbol {
-  width: 80%; /* Control the size of the symbol within its container */
-  padding-top: 80%; /* This creates a square aspect ratio (height matches width) */
-  height: 0; /* Height is determined by padding-top */
-  position: relative;
-  box-sizing: border-box;
+  width: 65px;
+  height: 65px;
+  background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .symbol img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  width: 70%;
+  border-radius: 50%;
   object-fit: contain;
-  border-radius: 50%; /* Make the symbol image circular */
 }
 </style>

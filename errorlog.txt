@@ -1,2 +1,0 @@
-Updated inline style after the animation finish  - '.reel-strip' div element
-transition-delay: 0ms; transform: translateY(-666.667%); transition-duration: 0s;

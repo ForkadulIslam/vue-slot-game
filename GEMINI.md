@@ -17,24 +17,4 @@ The project is currently in **Phase 1** of the development plan. The core gamepl
 *   **Balance Display:** The player's balance is displayed and updated in real-time.
 *   **Sound Effects:** The game includes sound effects for spinning and winning.
 
-## Getting Started
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/vue-slot-game.git
-    ```
-2.  **Install the dependencies:**
-    ```bash
-    cd vue-slot-game
-    npm install
-    ```
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-4.  **Open the game in your browser:**
-    [http://localhost:3000](http://localhost:3000)
-
-## Development Plan
-
-The project has a comprehensive development plan that outlines the next steps for improving the game. The plan is divided into five phases, starting with the core gameplay mechanics and progressively adding more complex features. You can find the full development plan in the `developmentPlan.md` file.
