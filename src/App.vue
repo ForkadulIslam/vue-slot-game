@@ -10,6 +10,7 @@
 <script setup>
 import SlotMachine from './components/SlotMachine.vue';
 import ControlPanel from './components/ControlPanel.vue';
+import MachineGraphics from './components/MachineGraphics.vue';
 </script>
 
 <style>

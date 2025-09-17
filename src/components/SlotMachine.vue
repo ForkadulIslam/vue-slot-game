@@ -55,9 +55,9 @@ watch(isSpinning, (newValue) => {
     const symbolHeight = 65; // Assuming fixed symbol height, should match Reel.vue's styling
     
     const soundVolume = { value: 0 };
-    sounds.spin.volume(soundVolume.value);
-    sounds.spin.loop(true);
-    sounds.spin.play();
+    //sounds.spin.volume(soundVolume.value);
+    //sounds.spin.loop(true);
+    //sounds.spin.play();
 
     const volumeTimeline = gsap.timeline({
         onUpdate: () => sounds.spin.volume(soundVolume.value)
