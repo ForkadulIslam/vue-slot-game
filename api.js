@@ -14,15 +14,15 @@ const SYMBOLS = {
 };
 
 const PAYTABLE = {
-  [SYMBOLS.WILD]:   { 5: 5000, 4: 1000, 3: 100 },
-  [SYMBOLS.SEVEN]:  { 5: 2500, 4: 500,  3: 50 },
-  [SYMBOLS.BAR]:    { 5: 1000, 4: 200,  3: 40 },
-  [SYMBOLS.BELL]:   { 5: 500,  4: 100,  3: 20 },
-  [SYMBOLS.MELON]:  { 5: 250,  4: 50,   3: 15 },
-  [SYMBOLS.ORANGE]: { 5: 100,  4: 20,   3: 8 },
-  [SYMBOLS.PLUM]:   { 5: 80,   4: 15,   3: 6 },
-  [SYMBOLS.CHERRY]: { 5: 60,   4: 12,   3: 5 },
-  [SYMBOLS.LEMON]:  { 5: 50,   4: 10,   3: 4 },
+    [SYMBOLS.WILD]:   { 5: 500, 4: 150,  3: 30 },
+    [SYMBOLS.SEVEN]:  { 5: 300, 4: 90,  3: 18 },
+    [SYMBOLS.BAR]:    { 5: 150,  4: 60,  3: 12 },
+    [SYMBOLS.BELL]:   { 5: 80,  4: 30,  3: 9 },
+    [SYMBOLS.MELON]:  { 5: 60,  4: 20,   3: 7 },
+    [SYMBOLS.ORANGE]: { 5: 40,  4: 15,   3: 5 },
+    [SYMBOLS.PLUM]:   { 5: 30,  4: 12,   3: 4 },
+    [SYMBOLS.CHERRY]: { 5: 25,  4: 10,   3: 3 },
+    [SYMBOLS.LEMON]:  { 5: 25,  4: 10,   3: 3 },
 };
 
 const FREE_SPINS_CONFIG = {
@@ -30,14 +30,19 @@ const FREE_SPINS_CONFIG = {
   BASE_MULTIPLIER_INCREMENT: 2,
 };
 
-const SCATTER_PAYOUTS = { 5: 100, 4: 20, 3: 5 };
+const SCATTER_PAYOUTS = { 5: 50, 4: 10, 3: 2 };
 
 const REEL_STRIPS = [
-  ["seven","bar","bell","melon","scatter","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","scatter","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","scatter","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","wild","wild","wild","wild","wild"]
+    // Reel 1
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
+    // Reel 2
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
+    // Reel 3
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
+    // Reel 4
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
+    // Reel 5
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter']
 ];
 
 const PAYLINES = [

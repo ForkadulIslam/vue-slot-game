@@ -9,15 +9,15 @@ const SYMBOLS = {
 
 // Paytable re-balanced for higher RTP and more meaningful wins.
 const PAYTABLE = {
-    [SYMBOLS.WILD]:   { 5: 400, 4: 100,  3: 20 },
-    [SYMBOLS.SEVEN]:  { 5: 200, 4: 80,  3: 15 },
-    [SYMBOLS.BAR]:    { 5: 100,  4: 40,  3: 10 },
-    [SYMBOLS.BELL]:   { 5: 50,  4: 20,  3: 8 },
-    [SYMBOLS.MELON]:  { 5: 40,  4: 15,   3: 6 },
-    [SYMBOLS.ORANGE]: { 5: 30,  4: 12,   3: 4 },
-    [SYMBOLS.PLUM]:   { 5: 25,  4: 10,   3: 4 },
-    [SYMBOLS.CHERRY]: { 5: 20,  4: 8,   3: 3 },
-    [SYMBOLS.LEMON]:  { 5: 20,  4: 8,   3: 3 },
+    [SYMBOLS.WILD]:   { 5: 500, 4: 150,  3: 30 },
+    [SYMBOLS.SEVEN]:  { 5: 300, 4: 90,  3: 18 },
+    [SYMBOLS.BAR]:    { 5: 150,  4: 60,  3: 12 },
+    [SYMBOLS.BELL]:   { 5: 80,  4: 30,  3: 9 },
+    [SYMBOLS.MELON]:  { 5: 60,  4: 20,   3: 7 },
+    [SYMBOLS.ORANGE]: { 5: 40,  4: 15,   3: 5 },
+    [SYMBOLS.PLUM]:   { 5: 30,  4: 12,   3: 4 },
+    [SYMBOLS.CHERRY]: { 5: 25,  4: 10,   3: 3 },
+    [SYMBOLS.LEMON]:  { 5: 25,  4: 10,   3: 3 },
 };
 
 const FREE_SPINS_CONFIG = {
@@ -30,15 +30,15 @@ const SCATTER_PAYOUTS = { 5: 50, 4: 10, 3: 2 };
 // Reel strips re-balanced for a lower hit frequency (~23-25%)
 const REEL_STRIPS = [
     // Reel 1
-    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'bar', 'seven'],
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
     // Reel 2
-    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange'],
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
     // Reel 3
-    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'scatter', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'wild'],
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
     // Reel 4
-    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell'],
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter'],
     // Reel 5
-    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'scatter', 'cherry', 'lemon', 'orange', 'plum']
+    ['cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'wild', 'cherry', 'lemon', 'orange', 'plum', 'bell', 'melon', 'bar', 'seven', 'scatter']
 ];
 
 
@@ -54,7 +54,7 @@ const PAYLINES = [
 
 /**
  * Generates a cryptographically secure random number.
- * @param {number} max - The exclusive maximum value.
+ * @param {number} max - The exclusive maximum value.  
  * @returns {number} A random integer between 0 and max - 1.
  */
 function secureRandom(max) {
@@ -159,6 +159,9 @@ function formatGrid(grid) {
  */
 function simulateFreeSpins(freeSpinsCount, totalBet) {
     let totalFreeSpinsWinnings = 0;
+
+
+
     let progressiveMultiplier = 1;
     const betPerLine = totalBet / PAYLINES.length;
 
