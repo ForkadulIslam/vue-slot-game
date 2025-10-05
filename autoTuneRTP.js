@@ -31,13 +31,18 @@ const FREE_SPINS_CONFIG = {
 
 // --- AUTO-TUNING LOGIC ---
 
-// Base reel strips configuration (a reasonable starting point)
+// Base reel strips configuration (REVISED FOR HIGHER HIT FREQUENCY)
 const BASE_REEL_STRIPS = [
-  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, SYMBOLS.SCATTER, ...Array(25).fill(SYMBOLS.ORANGE), ...Array(25).fill(SYMBOLS.PLUM), ...Array(25).fill(SYMBOLS.CHERRY), ...Array(30).fill(SYMBOLS.LEMON)],
-  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, ...Array(20).fill(SYMBOLS.BELL), ...Array(20).fill(SYMBOLS.MELON), ...Array(20).fill(SYMBOLS.ORANGE), ...Array(20).fill(SYMBOLS.PLUM), ...Array(20).fill(SYMBOLS.CHERRY), ...Array(20).fill(SYMBOLS.LEMON)],
-  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, SYMBOLS.SCATTER, ...Array(15).fill(SYMBOLS.SEVEN), ...Array(15).fill(SYMBOLS.BAR), ...Array(20).fill(SYMBOLS.BELL), ...Array(20).fill(SYMBOLS.MELON)],
-  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, ...Array(12).fill(SYMBOLS.SEVEN), ...Array(10).fill(SYMBOLS.BAR), ...Array(15).fill(SYMBOLS.BELL), ...Array(15).fill(SYMBOLS.MELON)],
-  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, SYMBOLS.SCATTER, ...Array(15).fill(SYMBOLS.SEVEN), ...Array(12).fill(SYMBOLS.BAR)],
+  // Reel 1: Heavily weighted with low-tier symbols
+  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.SCATTER, ...Array(40).fill(SYMBOLS.LEMON), ...Array(40).fill(SYMBOLS.CHERRY), ...Array(30).fill(SYMBOLS.PLUM), ...Array(20).fill(SYMBOLS.ORANGE)],
+  // Reel 2: Also weighted with low-tier symbols to help form 3-of-a-kinds
+  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, ...Array(30).fill(SYMBOLS.LEMON), ...Array(30).fill(SYMBOLS.CHERRY), ...Array(30).fill(SYMBOLS.PLUM), ...Array(25).fill(SYMBOLS.ORANGE)],
+  // Reel 3: Balanced, but still favoring low/mid symbols
+  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, SYMBOLS.SCATTER, ...Array(25).fill(SYMBOLS.ORANGE), ...Array(20).fill(SYMBOLS.MELON), ...Array(20).fill(SYMBOLS.BELL), ...Array(15).fill(SYMBOLS.PLUM)],
+  // Reel 4: More high-tier symbols start to appear
+  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, ...Array(20).fill(SYMBOLS.SEVEN), ...Array(15).fill(SYMBOLS.BAR), ...Array(15).fill(SYMBOLS.BELL), ...Array(10).fill(SYMBOLS.MELON)],
+  // Reel 5: Heavily weighted with high-tier symbols for big win potential
+  [SYMBOLS.SEVEN, SYMBOLS.BAR, SYMBOLS.BELL, SYMBOLS.MELON, SYMBOLS.SCATTER, ...Array(25).fill(SYMBOLS.SEVEN), ...Array(20).fill(SYMBOLS.BAR)],
 ];
 
 // Function to generate reel strips with a specific number of wilds
@@ -115,9 +120,7 @@ Iteration ${i + 1}/${MAX_ITERATIONS}...`);
 }
 
 
-// --- Simulation Logic (Adapted to be callable) ---
-// Note: This is a simplified version of the simulation logic from rtpSimulation5x3.js
-// It is not intended to be a perfect 1:1 copy, but to be fast and effective for tuning.
+// --- Simulation Logic (Full version from rtpSimulation5x3.js) ---
 
 function runSimulation(numSpins, reelStrips) {
     let totalBet = 0;
@@ -131,16 +134,70 @@ function runSimulation(numSpins, reelStrips) {
         let spinWinnings = 0;
         let baseMultiplier = 1;
 
+        // --- Cascading Wins Loop ---
         while (true) {
             const { totalWinnings, winningPositions } = calculateWins(grid, betPerLine);
+
             if (totalWinnings > 0) {
                 spinWinnings += totalWinnings * baseMultiplier;
-                baseMultiplier++;
+                baseMultiplier++; // Increase multiplier for next cascade
+
+                // Remove winning symbols (replace with null)
                 const nextGrid = grid.map(reel => [...reel]);
                 winningPositions.forEach(pos => {
                     const [reel, row] = pos.split(',').map(Number);
                     nextGrid[reel][row] = null;
                 });
+
+                // Fill nulls with new symbols from top
+                for (let reel = 0; reel < 5; reel++) {
+                    const newReel = nextGrid[reel].filter(s => s !== null);
+                    const nullCount = 3 - newReel.length;
+                    for (let k = 0; k < nullCount; k++) {
+                        newReel.unshift(getRandomSymbol(reel, reelStrips));
+                    }
+                    grid[reel] = newReel;
+                }
+            } else {
+                break; // No more wins, exit cascade loop
+            }
+        }
+
+        // --- Scatter Check & Free Spins Trigger ---
+        let scatterCount = grid.flat().filter(s => s === SYMBOLS.SCATTER).length;
+        if (scatterCount >= 3) {
+            spinWinnings += (SCATTER_PAYOUTS[scatterCount] || 0) * totalBetAmount;
+            const freeSpinsCount = FREE_SPINS_CONFIG.TRIGGER_COUNT[scatterCount];
+            if (freeSpinsCount) {
+                spinWinnings += runFreeSpins(freeSpinsCount, betPerLine, reelStrips);
+            }
+        }
+
+        totalWon += spinWinnings;
+    }
+    const rtp = (totalWon / totalBet) * 100;
+    return { rtp };
+}
+
+function runFreeSpins(spinCount, betPerLine, reelStrips) {
+    let totalWinnings = 0;
+    let multiplier = 1;
+
+    for (let i = 0; i < spinCount; i++) {
+        let grid = generateSpinResult(reelStrips);
+        // Free spins cascade loop
+        while (true) {
+            const { totalWinnings: cascadeWinnings, winningPositions } = calculateWins(grid, betPerLine);
+            if (cascadeWinnings > 0) {
+                totalWinnings += cascadeWinnings * multiplier;
+                multiplier += FREE_SPINS_CONFIG.BASE_MULTIPLIER_INCREMENT;
+
+                const nextGrid = grid.map(reel => [...reel]);
+                winningPositions.forEach(pos => {
+                    const [reel, row] = pos.split(',').map(Number);
+                    nextGrid[reel][row] = null;
+                });
+
                 for (let reel = 0; reel < 5; reel++) {
                     const newReel = nextGrid[reel].filter(s => s !== null);
                     const nullCount = 3 - newReel.length;
@@ -153,10 +210,8 @@ function runSimulation(numSpins, reelStrips) {
                 break;
             }
         }
-        totalWon += spinWinnings;
     }
-    const rtp = (totalWon / totalBet) * 100;
-    return { rtp };
+    return totalWinnings;
 }
 
 function generateSpinResult(reelStrips) {

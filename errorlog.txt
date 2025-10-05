@@ -1,0 +1,30 @@
+PS D:\nodejs_projects\vue-slot-game> node .\simulator.js
+Starting simulation for 1,000,000 spins with a total bet of 2...
+...completed 10% (100,000 spins)
+...completed 20% (200,000 spins)
+...completed 30% (300,000 spins)
+...completed 40% (400,000 spins)
+...completed 50% (500,000 spins)
+...completed 60% (600,000 spins)
+...completed 70% (700,000 spins)
+...completed 80% (800,000 spins)
+...completed 90% (900,000 spins)
+...completed 100% (1,000,000 spins)
+
+--- Simulation Results ---
+Total Spins: 1,000,000
+Total Wagered: 2,000,000.00
+Total Won: 2,019,186.08
+
+Overall RTP: 100.9593%
+--------------------------
+Base Game RTP: 100.9168%
+Free Spins RTP: 0.0426%
+
+--- Free Spins Feature ---
+Features Triggered: 68
+Hit Frequency: 1 in every 14705.88 spins
+Average Win: 12.52x total bet
+--------------------------
+
+PS D:\nodejs_projects\vue-slot-game> 
