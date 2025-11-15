@@ -65,6 +65,7 @@ const reels = computed(() => {
 const reelElements = ref([]);
 const winLineElements = ref([]);
 const winAmountContainer = ref(null);
+const reelsContainer = ref(null);
 
 // Ensure refs are cleared before each update to prevent memory leaks
 onBeforeUpdate(() => {
@@ -77,12 +78,14 @@ watch(winningPaylines, (newLines) => {
   if (newLines.length > 0 && !isSpinning.value) {
     nextTick(() => {
       setWinAnimationPlaying(true);
+      reelsContainer.value?.classList.add('shockwave');
       // Reset the display amount at the beginning of the animation sequence
       displayedWinAmount.value = 0;
 
       const masterTimeline = gsap.timeline({
         onComplete: () => {
           setWinAnimationPlaying(false);
+          reelsContainer.value?.classList.remove('shockwave');
         }
       });
       let cumulativeWin = 0;
@@ -255,7 +258,26 @@ watch(isSpinning, (newValue) => {
     background-color: #111;
     justify-content: flex-start;
     height: 260px;
+    transition: box-shadow 0.3s ease-in-out;
 }
+
+@keyframes shockwave-animation {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7), 0 0 0 0 rgba(255, 215, 0, 0.7);
+    }
+    40% {
+        box-shadow: 0 0 10px 5px rgba(255, 215, 0, 0.7), 0 0 20px 10px rgba(255, 215, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0), 0 0 40px 20px rgba(255, 215, 0, 0);
+    }
+}
+
+.reels-container.shockwave {
+    animation: shockwave-animation 1.5s infinite ease-out;
+    border-radius: 10px; /* Good to have for box-shadow */
+}
+
 
 .reel{
   flex: 1;
