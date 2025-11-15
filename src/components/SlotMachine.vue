@@ -13,8 +13,9 @@
          :viewBox="`0 0 ${reelsContainerWidth} ${reelsContainerHeight}`"
          v-if="winningPaylines.length > 0 && !isSpinning">
       <WinLine
-        v-for="line in winningPaylines"
+        v-for="(line, index) in winningPaylines"
         :key="line.lineId"
+        :ref="el => { if (el) winLineElements[index] = el }"
         :line-definition="line.definition"
         :container-width="reelsContainerWidth"
         :container-height="reelsContainerHeight"
@@ -26,7 +27,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUpdate } from 'vue';
+import { computed, ref, watch, onBeforeUpdate, nextTick } from 'vue';
 import Reel from './Reel.vue';
 import WinLine from './WinLine.vue';
 import { useSlotGame } from '../composables/useSlotGame';
@@ -41,7 +42,8 @@ const {
   winningPaylines,
   winningSymbolPositions,
   reelsNumber,
-  reelsSymbolsNumber
+  reelsSymbolsNumber,
+  displayedWinAmount,
 } = useSlotGame();
 
 const reelsContainerWidth = 325; // from CSS
@@ -59,11 +61,46 @@ const reels = computed(() => {
 });
 
 const reelElements = ref([]);
+const winLineElements = ref([]);
 
 // Ensure refs are cleared before each update to prevent memory leaks
 onBeforeUpdate(() => {
   reelElements.value = [];
+  winLineElements.value = [];
 });
+
+// --- SEQUENTIAL WIN LINE ANIMATION ---
+watch(winningPaylines, (newLines) => {
+  if (newLines.length > 0 && !isSpinning.value) {
+    nextTick(() => {
+      // Reset the display amount at the beginning of the animation sequence
+      displayedWinAmount.value = 0;
+
+      const masterTimeline = gsap.timeline();
+      let cumulativeWin = 0;
+
+      newLines.forEach((line, index) => {
+        const lineComponent = winLineElements.value[index];
+        if (lineComponent) {
+          cumulativeWin += line.winAmount;
+          console.log(line.winAmount);
+          masterTimeline.add(() => {
+            lineComponent.playAnimation();
+          })
+          .to(displayedWinAmount, { 
+            value: cumulativeWin, 
+            duration: 0.8, 
+            ease: 'power1.inOut'
+          }, '+=0.1'); // Animate win amount shortly after line starts drawing
+        }
+      });
+    });
+  } else {
+    // If there are no wins, ensure displayed amount is 0
+    displayedWinAmount.value = 0;
+  }
+});
+
 
 const createSymbolElement = (symbol) => {
   const imgElement = document.createElement('img');
@@ -78,6 +115,9 @@ const createSymbolElement = (symbol) => {
 
 watch(isSpinning, (newValue) => {
   if (newValue) {
+    // When a new spin starts, reset the win display
+    displayedWinAmount.value = 0;
+
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
     const symbolHeight = 65; // Assuming fixed symbol height, should match Reel.vue's styling
@@ -131,8 +171,6 @@ watch(isSpinning, (newValue) => {
       });
     });
   }
-
-  console.log(winningSymbolPositions.value);
 });
 </script>
 
@@ -174,7 +212,7 @@ watch(isSpinning, (newValue) => {
 .symbol {
   width: 65px;
   height: 65px;
-  /* background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%); */
+  background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
   box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
   display: flex;
   justify-content: center;

@@ -4,7 +4,7 @@
       <BalanceDisplay :balance="balance" />
       <div class="win-display">
         <span class="win-label">Win</span>
-        <span class="win-amount">{{ winAmount }}</span>
+        <span class="win-amount">{{ displayedWinAmount.toFixed(2) }}</span>
       </div>
     </div>
     <div class="control-panel">
@@ -41,7 +41,7 @@ import { useSlotGame } from '../composables/useSlotGame';
 
 
 
-const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, winAmount } = useSlotGame();
+const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, displayedWinAmount } = useSlotGame();
 
 const showBetTable = ref(false);
 

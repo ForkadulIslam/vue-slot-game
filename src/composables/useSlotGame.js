@@ -28,6 +28,7 @@ const isAutoplaying = ref(false);
 const outcome = ref([]); 
 const reelsForDisplay = ref([]);
 const winAmount = ref(0.00);
+const displayedWinAmount = ref(0.00);
 const winningPaylines = ref([]);
 const winningSymbolPositions = ref([]);
 
@@ -161,7 +162,8 @@ export function useSlotGame() {
     isAutoplaying: readonly(isAutoplaying), 
     outcome: readonly(outcome), 
     reelsForDisplay: readonly(reelsForDisplay), 
-    winAmount: readonly(winAmount), 
+    winAmount: readonly(winAmount),
+    displayedWinAmount: displayedWinAmount,
     spin, 
     finishSpin,
     sounds,

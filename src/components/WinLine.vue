@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
   lineDefinition: {
@@ -54,7 +54,7 @@ const pathData = computed(() => {
   return points.map((p, i) => (i === 0 ? 'M' : 'L') + `${p.x} ${p.y}`).join(' ');
 });
 
-const animateLine = () => {
+const playAnimation = () => {
   const el = pathElement.value;
   if (!el) return;
 
@@ -63,31 +63,29 @@ const animateLine = () => {
 
   const length = el.getTotalLength();
   gsap.set(el, { strokeDasharray: length, strokeDashoffset: length });
-  gsap.to(el, {
+  
+  const tl = gsap.timeline();
+  
+  tl.to(el, {
     strokeDashoffset: 0,
     duration: 0.5,
     ease: 'power1.inOut',
-    onComplete: () => {
-      // Add a repeating pulse animation
-      gsap.to(el, {
-        opacity: 0.5,
-        duration: 0.7,
-        yoyo: true,
-        repeat: -1,
-        ease: 'power1.inOut'
-      });
-    }
-  });
+  }).to(el, {
+    opacity: 0.5,
+    duration: 0.7,
+    yoyo: true,
+    repeat: -1,
+    ease: 'power1.inOut'
+  }, "-=0.2"); // Start pulsing slightly before the line finishes drawing
 };
 
 onMounted(() => {
-  animateLine();
+  // Hide the line initially, parent will trigger animation
+  gsap.set(pathElement.value, { opacity: 0 });
 });
 
-// If the line definition changes for some reason, re-animate
-watch(() => props.lineDefinition, () => {
-    gsap.killTweensOf(pathElement.value);
-    animateLine();
-}, { deep: true });
+defineExpose({
+  playAnimation
+});
 
 </script>
