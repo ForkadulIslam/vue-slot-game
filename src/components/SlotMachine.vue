@@ -1,6 +1,6 @@
 <template>
   <div class="slot-machine">
-    <div class="reels-container">
+    <div ref="reelsContainer" class="reels-container">
       <Reel
         v-for="(reel, index) in reels"
         :key="index"
@@ -9,6 +9,7 @@
         :ref="el => reelElements[index] = el"
       />
     </div>
+    <div ref="winAmountContainer" class="win-amount-container"></div>
     <svg class="win-lines-overlay"
          :viewBox="`0 0 ${reelsContainerWidth} ${reelsContainerHeight}`"
          v-if="winningPaylines.length > 0 && !isSpinning">
@@ -62,6 +63,7 @@ const reels = computed(() => {
 
 const reelElements = ref([]);
 const winLineElements = ref([]);
+const winAmountContainer = ref(null);
 
 // Ensure refs are cleared before each update to prevent memory leaks
 onBeforeUpdate(() => {
@@ -83,15 +85,45 @@ watch(winningPaylines, (newLines) => {
         const lineComponent = winLineElements.value[index];
         if (lineComponent) {
           cumulativeWin += line.winAmount;
-          console.log(line.winAmount);
           masterTimeline.add(() => {
             lineComponent.playAnimation();
-          })
-          .to(displayedWinAmount, { 
+          });
+
+          // --- Win Amount Fly-off Animation ---
+          const winAmountEl = document.createElement('div');
+          winAmountEl.textContent = `+${line.winAmount}`;
+          winAmountEl.classList.add('win-amount-flyoff');
+          winAmountContainer.value.appendChild(winAmountEl);
+
+          const symbolHeight = reelsContainerHeight / reelsSymbolsNumber;
+          const middleReelIndex = Math.floor(line.definition.length / 2);
+          const winRow = line.definition[middleReelIndex];
+          const y = winRow * symbolHeight + (symbolHeight / 2);
+          const x = reelsContainerWidth / 2;
+
+          gsap.set(winAmountEl, { left: `${x}px`, top: `${y}px`, opacity: 0, scale: 0.5 });
+          
+          masterTimeline.to(winAmountEl, {
+            opacity: 1,
+            scale: 1.5,
+            duration: 0.3,
+            ease: 'power1.out',
+          }, '+=0.5') // Start after line draw animation
+          .to(winAmountEl, {
+            y: '-=50',
+            opacity: 0,
+            duration: 0.7,
+            ease: 'power1.in',
+            onComplete: () => {
+              winAmountEl.remove();
+            }
+          }, '+=0.2');
+
+          masterTimeline.to(displayedWinAmount, { 
             value: cumulativeWin, 
             duration: 0.8, 
             ease: 'power1.inOut'
-          }, '+=0.1'); // Animate win amount shortly after line starts drawing
+          }, '-=1.0'); // Adjust timing to sync with line animations
         }
       });
     });
@@ -189,6 +221,25 @@ watch(isSpinning, (newValue) => {
   width: 100%;
   height: 100%;
   pointer-events: none; /* Allows clicks to pass through */
+}
+
+.win-amount-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.win-amount-flyoff {
+  position: absolute;
+  transform: translate(-50%, -50%); /* Center on the calculated x,y */
+  color: gold;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 0 0 5px black, 0 0 10px black;
 }
 
 .reels-container {
