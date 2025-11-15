@@ -105,12 +105,21 @@ function calculateWins(grid, betPerLine) {
     for (const [index, payline] of PAYLINES.entries()) {
         const lineSymbols = payline.map((row, reel) => grid[reel][row]);
         let firstSymbol = lineSymbols[0];
+
+        // Debugging log
+        // console.log(`--- Payline ${index} ---`);
+        // console.log(`Grid for payline ${index}:`, lineSymbols);
+
         // If first symbol is WILD, find the first non-WILD to determine the pay symbol
         if (firstSymbol === SYMBOLS.WILD) {
             firstSymbol = lineSymbols.find(s => s !== SYMBOLS.WILD) || SYMBOLS.WILD;
+            // console.log(`First symbol was WILD, adjusted to: ${firstSymbol}`);
         }
 
-        if (!PAYTABLE[firstSymbol]) continue;
+        if (!PAYTABLE[firstSymbol]) {
+            // console.log(`No paytable entry for ${firstSymbol}. Skipping.`);
+            continue;
+        }
 
         let matchCount = 0;
         for (const symbol of lineSymbols) {
@@ -120,6 +129,8 @@ function calculateWins(grid, betPerLine) {
                 break;
             }
         }
+
+        // console.log(`Determined firstSymbol: ${firstSymbol}, matchCount: ${matchCount}`);
 
         if (matchCount >= 3) {
             const payout = (PAYTABLE[firstSymbol]?.[matchCount] || 0) * betPerLine;
@@ -134,11 +145,147 @@ function calculateWins(grid, betPerLine) {
                 for (let i = 0; i < matchCount; i++) {
                     winningPositions.add(`${i},${payline[i]}`);
                 }
+                // console.log(`Win found! Payout: ${payout}, Winning Paylines:`, winningPaylines[winningPaylines.length - 1]);
             }
         }
     }
     return { totalWinnings, winningPaylines, winningPositions };
 }
+
+
+
+function simulateFreeSpins(freeSpinsCount, totalBet) {
+    let totalFreeSpinsWinnings = 0;
+
+
+
+    let progressiveMultiplier = 1;
+    const betPerLine = totalBet / PAYLINES.length;
+
+    // Reduced logging for free spins during large simulations
+    // console.log(`\n--- Starting Free Spins ---`);
+    // console.log(`Total spins: ${freeSpinsCount}`);
+
+    for (let i = 0; i < freeSpinsCount; i++) {
+        let grid = generateSpinResult();
+        // --- Cascading Wins Loop for a single Free Spin ---
+        while (true) {
+            const { totalWinnings: stepWinnings, winningPositions } = calculateWins(grid, betPerLine);
+
+            if (stepWinnings > 0) {
+                const winningsThisStep = stepWinnings * progressiveMultiplier;
+                totalFreeSpinsWinnings += winningsThisStep;
+                progressiveMultiplier += FREE_SPINS_CONFIG.BASE_MULTIPLIER_INCREMENT;
+
+                const nextGrid = grid.map(reel => [...reel]);
+                winningPositions.forEach(pos => {
+                    const [reel, row] = pos.split(',').map(Number);
+                    nextGrid[reel][row] = null;
+                });
+
+                for (let reel = 0; reel < 5; reel++) {
+                    const newReel = nextGrid[reel].filter(s => s !== null);
+                    const nullCount = 3 - newReel.length;
+                    for (let k = 0; k < nullCount; k++) {
+                        newReel.unshift(getRandomSymbol(reel));
+                    }
+                    grid[reel] = newReel;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+    return totalFreeSpinsWinnings;
+}
+
+
+/**
+ * Simulates a single paid spin and returns the results.
+ * @param {number} totalBet - The total bet for the spin.
+ * @returns {object} An object containing totalWinnings, freeSpinsWinnings, triggeredFreeSpins, and isWinningSpin.
+ */
+function simulateSpin(totalBet) {
+    const betPerLine = totalBet / PAYLINES.length;
+
+    let grid = generateSpinResult();
+    const initialGrid = JSON.parse(JSON.stringify(grid));
+    let totalWinnings = 0;
+    let baseGameMultiplier = 1;
+    const cascadeSteps = [];
+
+    // --- Base Game Cascading Wins Loop ---
+    while (true) {
+        const currentGridForCalculation = JSON.parse(JSON.stringify(grid));
+        const { totalWinnings: stepWinnings, winningPositions, winningPaylines } = calculateWins(currentGridForCalculation, betPerLine);
+
+        if (stepWinnings > 0) {
+            const winningsThisStep = stepWinnings * baseGameMultiplier;
+            totalWinnings += winningsThisStep;
+
+            cascadeSteps.push({
+                step: baseGameMultiplier - 1,
+                grid: currentGridForCalculation,
+                wins: winningPaylines,
+                winningsThisStep,
+                multiplier: baseGameMultiplier
+            });
+
+            baseGameMultiplier++;
+
+            const nextGrid = grid.map(reel => [...reel]);
+            winningPositions.forEach(pos => {
+                const [reel, row] = pos.split(',').map(Number);
+                nextGrid[reel][row] = null;
+            });
+
+            for (let reel = 0; reel < 5; reel++) {
+                const newReel = nextGrid[reel].filter(s => s !== null);
+                const nullCount = 3 - newReel.length;
+                for (let k = 0; k < nullCount; k++) {
+                    newReel.unshift(getRandomSymbol(reel));
+                }
+                grid[reel] = newReel;
+            }
+        } else {
+            break;
+        }
+    }
+
+    // --- Scatter Check & Free Spins Trigger ---
+    const scatterCount = initialGrid.flat().filter(s => s === SYMBOLS.SCATTER).length;
+    let freeSpinsWinnings = 0;
+    let triggeredFreeSpins = false;
+    let freeSpinsCount = 0;
+    let scatterWin = 0;
+
+    if (scatterCount >= 3) {
+        scatterWin = (SCATTER_PAYOUTS[scatterCount] || 0) * totalBet;
+        totalWinnings += scatterWin;
+
+        freeSpinsCount = FREE_SPINS_CONFIG.TRIGGER_COUNT[scatterCount] || 0;
+        if (freeSpinsCount > 0) {
+            triggeredFreeSpins = true;
+            freeSpinsWinnings = simulateFreeSpins(freeSpinsCount, totalBet);
+            totalWinnings += freeSpinsWinnings;
+        }
+    }
+
+    const isWinningSpin = totalWinnings > 0;
+
+    return {
+        initialGrid,
+        totalWinnings,
+        freeSpinsWinnings,
+        triggeredFreeSpins,
+        isWinningSpin,
+        scatterWin,
+        freeSpinsCount,
+        cascadeSteps
+    };
+}
+
+
 
 
 // --- API ENDPOINT ---
@@ -162,78 +309,20 @@ app.post('/api/spin', (req, res) => {
 
 
     userBalance -= totalBet;
-    const betPerLine = totalBet / PAYLINES.length;
 
-    let grid = generateSpinResult();
-    const initialGrid = JSON.parse(JSON.stringify(grid)); // Deep copy for the response
-    let totalWinnings = 0;
-    let baseMultiplier = 1;
-    const cascadeSteps = [];
+    const spinResult = simulateSpin(totalBet);
 
-    // --- Cascading Wins Loop ---
-    while (true) {
-        const { totalWinnings: stepWinnings, winningPaylines, winningPositions } = calculateWins(grid, betPerLine);
-
-        if (stepWinnings > 0) {
-            const winningsThisStep = stepWinnings * baseMultiplier;
-            totalWinnings += winningsThisStep;
-
-            cascadeSteps.push({
-                step: baseMultiplier - 1,
-                grid: JSON.parse(JSON.stringify(grid)),
-                wins: winningPaylines,
-                winningsThisStep,
-                multiplier: baseMultiplier
-            });
-
-            baseMultiplier++;
-
-            // Remove winning symbols (replace with null)
-            const nextGrid = grid.map(reel => [...reel]);
-            winningPositions.forEach(pos => {
-                const [reel, row] = pos.split(',').map(Number);
-                nextGrid[reel][row] = null;
-            });
-
-            // Fill nulls with new symbols from top
-            for (let reel = 0; reel < 5; reel++) {
-                const newReel = nextGrid[reel].filter(s => s !== null);
-                const nullCount = 3 - newReel.length;
-                for (let k = 0; k < nullCount; k++) {
-                    newReel.unshift(getRandomSymbol(reel));
-                }
-                grid[reel] = newReel;
-            }
-        } else {
-            break; // No more wins, exit cascade loop
-        }
-    }
-
-    // --- Scatter Check & Free Spins Trigger ---
-    const scatterCount = initialGrid.flat().filter(s => s === SYMBOLS.SCATTER).length;
-    let scatterWin = 0;
-    let freeSpinsTriggered = false;
-    let freeSpinsCount = 0;
-
-    if (scatterCount >= 3) {
-        scatterWin = (SCATTER_PAYOUTS[scatterCount] || 0) * totalBet;
-        totalWinnings += scatterWin;
-        freeSpinsTriggered = true;
-        freeSpinsCount = FREE_SPINS_CONFIG.TRIGGER_COUNT[scatterCount] || 0;
-        // Note: The actual free spins are not simulated here, only the trigger is reported.
-    }
-
-    userBalance += totalWinnings;
+    userBalance += spinResult.totalWinnings;
 
     res.json({
-        initialGrid,
-        totalWinnings,
+        initialGrid: spinResult.initialGrid,
+        totalWinnings: spinResult.totalWinnings,
         finalBalance: userBalance,
-        cascadeSteps,
-        scatterWin,
+        cascadeSteps: spinResult.cascadeSteps,
+        scatterWin: spinResult.scatterWin,
         freeSpins: {
-            triggered: freeSpinsTriggered,
-            spinCount: freeSpinsCount
+            triggered: spinResult.triggeredFreeSpins,
+            spinCount: spinResult.freeSpinsCount
         }
     });
 });

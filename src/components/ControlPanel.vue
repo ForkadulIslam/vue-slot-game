@@ -4,7 +4,7 @@
       <BalanceDisplay :balance="balance" />
       <div class="win-display">
         <span class="win-label">Win</span>
-        <span class="win-amount">{{ formattedWinAmount }}</span>
+        <span class="win-amount">{{ winAmount }}</span>
       </div>
     </div>
     <div class="control-panel">
@@ -41,17 +41,9 @@ import { useSlotGame } from '../composables/useSlotGame';
 
 
 
-const { balance, betAmount, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, winAmount } = useSlotGame();
+const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, winAmount } = useSlotGame();
 
 const showBetTable = ref(false);
-const availableBets = Array.from({ length: 15 }, (_, i) => i + 1);
-
-const formattedWinAmount = computed(() => {
-  return winAmount.value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
-});
 
 const toggleBetTable = () => {
   showBetTable.value = !showBetTable.value;
@@ -100,10 +92,13 @@ const selectBet = (bet) => {
 }
 
 .win-amount {
-  font-size: 1.5rem; /* Smaller to fit */
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #32CD32; /* Lime Green for win amount */
+  color: #32CD32;
   text-shadow: 0 0 20px rgba(50, 205, 50, 1), 0 0 30px rgba(50, 205, 50, 0.8);
+  display: inline-block;
+  width: 60px;
+  text-align: center;
 }
 
 .control-panel {

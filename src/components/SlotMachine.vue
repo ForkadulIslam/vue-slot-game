@@ -51,51 +51,9 @@ const createSymbolElement = (symbol) => {
 watch(isSpinning, (newValue) => {
   if (newValue) {
     const reelsEl = document.querySelectorAll('.reel');
-    const finalOutcome = outcome.value;
+    const finalOutcome = outcome.value.reelsSymbols;
     const symbolHeight = 65; // Assuming fixed symbol height, should match Reel.vue's styling
-    
-    const soundVolume = { value: 0 };
-    //sounds.spin.volume(soundVolume.value);
-    //sounds.spin.loop(true);
-    //sounds.spin.play();
-
-    const volumeTimeline = gsap.timeline({
-        onUpdate: () => sounds.spin.volume(soundVolume.value)
-    });
-
-    // Phase 1: Accelerate to 50% volume over 3.5 seconds
-    volumeTimeline.to(soundVolume, {
-        value: 0.5,
-        duration: 3.5,
-        ease: "power1.in"
-    });
-
-    // Phase 2: Decelerate to 100% volume over the next 3.5 seconds
-    volumeTimeline.to(soundVolume, {
-        value: 1.0,
-        duration: 3.5,
-        ease: "power1.out"
-    });
-
-    const reelAnimationDuration = 7;
-    const lastReelDelay = (reelsEl.length - 1) * 0.4;
-    const totalDuration = lastReelDelay + reelAnimationDuration;
-    const fadeOutDuration = 2;
-
-    // Start the fade-out before the animation ends
-    gsap.delayedCall(totalDuration - fadeOutDuration, () => {
-        volumeTimeline.kill();
-        gsap.to(soundVolume, {
-            value: 50,
-            duration: fadeOutDuration,
-            ease: "linear",
-            onUpdate: () => sounds.spin.volume(soundVolume.value),
-            onComplete: () => {
-                sounds.spin.stop();
-                sounds.spin.loop(false);
-            }
-        });
-    });
+    const reelAnimationDuration = 5;
 
     reelsEl.forEach((reel, reelIndex) => {
       const finalSymbols = finalOutcome[reelIndex];
@@ -104,7 +62,7 @@ watch(isSpinning, (newValue) => {
       
       const randomSymbolElements = [];
       const symbolKeys = Object.keys(symbolPaths).filter(k => k !== 'gold_coin');
-      for (let k = 0; k < 100; k++) { // Reduced random symbols for performance
+      for (let k = 0; k < 50; k++) { // Reduced random symbols for performance
         randomSymbolElements.push(createSymbolElement(symbolKeys[Math.floor(Math.random() * symbolKeys.length)]));
       }
 
@@ -115,39 +73,34 @@ watch(isSpinning, (newValue) => {
       gsap.set(reel, { y: -spinContentHeight });
 
       const reelTimeline = gsap.timeline({
-        delay: reelIndex * .4, // Shorter delay
+        delay: reelIndex * .2, // Shorter delay
         onComplete: () => {
-          // Clean up - keep only final symbols
           const finalClones = finalSymbolElements.map(s => s.cloneNode(true));
           reel.innerHTML = '';
           reel.append(...finalClones);
           gsap.set(reel, { y: 0, filter: 'blur(0px)' });
-          
           if (reelIndex === reelsEl.length - 1) {
             finishSpin();
           }
         }
       });
 
-       reelTimeline.to(reel, {
-            y: 0,
-            duration: reelAnimationDuration,
-            ease: "power2.inOut",
-            onUpdate: function() {
-                const progress = this.progress();
-                let blurIntensity;
-                if ( progress < 0.5) {
-                    blurIntensity = progress * 10 * 4; // quick ramp up
-                } 
-                else if (progress > 0.9) {
-                    blurIntensity = (1 - progress) * 10 * 4; // quick ramp down
-                } 
-                else {
-                    blurIntensity = 4;
-                }
-                gsap.set(reel, { filter: `blur(${blurIntensity}px)` });
-            }
-        });
+      reelTimeline.to(reel, {
+          y: 0,
+          duration: reelAnimationDuration,
+          ease: "power2.inOut",
+          onUpdate: function() {
+              const progress = this.progress();
+              let blurIntensity;
+              if ( progress < 0.5) {
+                  blurIntensity = progress * 10 * 2; // quick ramp up
+              } 
+              else if (progress > 0.5) {
+                  blurIntensity = (1 - progress) * 10 * 2;
+              } 
+              gsap.set(reel, { filter: `blur(${blurIntensity}px)` });
+          }
+      });
     });
   }
 });
@@ -166,7 +119,7 @@ watch(isSpinning, (newValue) => {
     overflow: hidden;
     background-color: #111;
     justify-content: flex-start;
-    height: 195px;
+    height: 260px;
 }
 
 .reel{

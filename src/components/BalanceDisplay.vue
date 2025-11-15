@@ -1,7 +1,7 @@
 <template>
   <div class="balance-display">
     <span class="balance-label">Balance</span>
-    <span class="balance-amount">{{ formattedBalance }}</span>
+    <span class="balance-amount">৳ {{ balance }}</span>
   </div>
 </template>
 
@@ -10,25 +10,16 @@ import { computed } from 'vue';
 
 const props = defineProps({
   balance: {
-    type: Number,
     required: true,
   },
 });
 
-const formattedBalance = computed(() => {
-  return props.balance.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
-});
 </script>
 
 <style scoped>
 .balance-display {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  
+  flex-direction: column;  
   background-color: rgba(0, 0, 0, 0.3);
   padding: 0.5rem 1.5rem;
   border-radius: 10px;
@@ -43,7 +34,7 @@ const formattedBalance = computed(() => {
 }
 
 .balance-amount {
-  font-size: 1.5rem; /* Smaller to fit with win amount */
+  font-size: 1.2rem; /* Smaller to fit with win amount */
   font-weight: bold;
   color: #FFD700; /* Gold */
   text-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 223, 0, 0.8);

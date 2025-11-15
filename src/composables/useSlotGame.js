@@ -1,34 +1,36 @@
 import { ref, readonly, nextTick } from 'vue';
 import { Howl } from 'howler';
+import axios from 'axios';
 
 // --- 1. GAME CONFIGURATION ---
 const SYMBOLS = {
-  WILD: 'wild',
-  SCATTER: 'scatter',
-  SEVEN: 'seven',
-  BAR: 'bar',
-  BELL: 'bell',
-  MELON: 'melon',
-  ORANGE: 'orange',
-  PLUM: 'plum',
-  CHERRY: 'cherry',
-  LEMON: 'lemon',
-  BANANA: 'banana',
+  SEVEN: 'Scatter2',
+  SCATTER: 'Scatter1',
+  WILD: 'Wild',
+  BAR: 'Nine',
+  BELL: 'Ten',
+  MELON: 'Jack',
+  ORANGE: 'Queen',
+  PLUM: 'King',
+  CHERRY: 'Ace',
+  LEMON: 'lemon'
 };
 
+
+
 const symbolPaths = {
-  wild: new URL('../assets/images/symblos/celebration/wild.png', import.meta.url).href,
-  scatter: new URL('../assets/images/symblos/celebration/scatter.png', import.meta.url).href,
+  Wild: new URL('../assets/images/symblos/celebration/wild.png', import.meta.url).href,
+  Scatter1: new URL('../assets/images/symblos/celebration/scatter.png', import.meta.url).href,
   seven: new URL('../assets/images/symblos/seven.svg', import.meta.url).href,
-  bar: new URL('../assets/images/symblos/bar.svg', import.meta.url).href,
-  melon: new URL('../assets/images/symblos/melon.svg', import.meta.url).href,
-  bell: new URL('../assets/images/symblos/bell.svg', import.meta.url).href,
-  plum: new URL('../assets/images/symblos/plum.svg', import.meta.url).href,
-  orange: new URL('../assets/images/symblos/orange.svg', import.meta.url).href,
+  Nine: new URL('../assets/images/symblos/bar.svg', import.meta.url).href,
+  Jack: new URL('../assets/images/symblos/melon.svg', import.meta.url).href,
+  Ten: new URL('../assets/images/symblos/bell.svg', import.meta.url).href,
+  King: new URL('../assets/images/symblos/plum.svg', import.meta.url).href,
+  Queen: new URL('../assets/images/symblos/orange.svg', import.meta.url).href,
   lemon: new URL('../assets/images/symblos/lemon.svg', import.meta.url).href,
-  cherry: new URL('../assets/images/symblos/cherry.svg', import.meta.url).href,
+  Ace: new URL('../assets/images/symblos/cherry.svg', import.meta.url).href,
   banana: new URL('../assets/images/symblos/banana.svg', import.meta.url).href,
-  gold_coin: new URL('../assets/images/symblos/celebration/gold_coin.png', import.meta.url).href,
+  Scatter2: new URL('../assets/images/symblos/celebration/gold_coin.png', import.meta.url).href,
 };
 
 const PAYTABLE = {
@@ -46,11 +48,11 @@ const PAYTABLE = {
 const SCATTER_PAYOUTS = { 5: 100, 4: 20, 3: 5 };
 
 const REEL_STRIPS = [
-  ["seven","bar","bell","melon","scatter","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","orange","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","plum","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","cherry","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","lemon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","scatter","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","bell","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","melon","wild","wild","wild","wild","wild"],
-  ["seven","bar","bell","melon","scatter","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","seven","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","bar","wild","wild","wild","wild","wild"]
+  ["Ace", "King", "Queen", "Jack", "Ten", "Nine", "Wild", "Scatter1", "Scatter2"],
+  ["Ace", "King", "Queen", "Jack", "Ten", "Nine", "Wild", "Scatter1", "Scatter2"],
+  ["Ace", "King", "Queen", "Jack", "Ten", "Nine", "Wild", "Scatter1", "Scatter2"],
+  ["Ace", "King", "Queen", "Jack", "Ten", "Nine", "Wild", "Scatter1", "Scatter2"],
+  ["Ace", "King", "Queen", "Jack", "Ten", "Nine", "Wild", "Scatter1", "Scatter2"]
 ];
 
 const PAYLINES = [
@@ -68,14 +70,16 @@ const FREE_SPINS_CONFIG = {
 
 // --- 2. SHARED REACTIVE STATE ---
 // By defining the state outside the function, it becomes a singleton.
-const balance = ref(1000);
-const betAmount = ref(25);
+const balance = ref(0);
+const betAmount = ref(0);
+const availableBets = ref(new Set());
 const isSpinning = ref(false);
 const isAutoplaying = ref(false);
 const outcome = ref([]); 
 const reelsForDisplay = ref([]);
-const winAmount = ref(0);
+const winAmount = ref(0.00);
 const winningPaylines = ref(new Set());
+const sessionId = ref(0);
 
 // --- 3. SOUNDS ---
 const sounds = {
@@ -85,85 +89,74 @@ const sounds = {
   explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
 };
 
-// --- Helper function to generate a grid ---
-const generateGrid = () => {
-  const grid = [];
-  for (let i = 0; i < 5; i++) {
-    const reelSymbols = [];
-    const stopPosition = Math.floor(Math.random() * REEL_STRIPS[i].length);
-    for (let j = 0; j < 3; j++) {
-      reelSymbols.push(REEL_STRIPS[i][(stopPosition + j) % REEL_STRIPS[i].length]);
-    }
-    grid.push(reelSymbols);
+// --- Helper function to generate outcome from API response ---
+const endpoint = import.meta.env.VITE_API_BASE_URL;
+const startGameSession = async ()=> {
+  try {
+    const response = await axios.post(`${endpoint}/start-session`, {
+        "user_name":"Demo",
+        "pin": "1234"
+    });
+    return response.data;
+  } catch (error) {
+     console.error('Axios error:', error.message);
   }
-  return grid;
-};
+}
+
+const getSpinAndOutcome = async ()=>{
+  try {
+    const response = await axios.post(`${endpoint}/spin`, {
+        "bet":betAmount.value,
+        "sessionId": sessionId.value
+    });
+    return response.data
+    // Process the data here
+  } catch (error) {
+     console.error('Axios error:', error.message);
+  }
+
+}
+const processOutcome = ()=>{
+  const _outcome = outcome.value;
+  winAmount.value = _outcome.totalWin.toFixed(2);
+  balance.value = _outcome.credits.toFixed(2);
+}
 
 // --- Initialize the game with a random grid ---
-const initialGrid = generateGrid();
-outcome.value = initialGrid;
+const gameSession = await startGameSession();
+const initialGrid = gameSession.reelsSymbols;
+sessionId.value = gameSession.sessionId
+balance.value = parseFloat(gameSession.credits).toFixed(2);
+betAmount.value = gameSession.bet;
+availableBets.value = gameSession.availableBets
+outcome.value = gameSession;
 reelsForDisplay.value = initialGrid;
+
 
 
 export function useSlotGame() {
   // --- 4. CORE GAME LOGIC ---
-  const calculateWins = (grid) => {
-    const betPerLine = betAmount.value / PAYLINES.length;
+  const calculateWins = () => {
     let totalWinnings = 0;
     const currentWinningPaylines = new Set();
     const winningPositions = new Set();
-
-    for (const [index, payline] of PAYLINES.entries()) {
-        const lineSymbols = payline.map((row, reel) => grid[reel][row]);
-        let firstSymbol = lineSymbols.find(s => s !== SYMBOLS.WILD) || SYMBOLS.WILD;
-        if (!PAYTABLE[firstSymbol]) continue;
-
-        let matchCount = 0;
-        for (const symbol of lineSymbols) {
-            if (symbol === firstSymbol || symbol === SYMBOLS.WILD) matchCount++;
-            else break;
-        }
-
-        if (matchCount >= 3) {
-            const payout = (PAYTABLE[firstSymbol]?.[matchCount] || 0) * betPerLine;
-            if (payout > 0) {
-                totalWinnings += payout;
-                currentWinningPaylines.add(index);
-                for (let i = 0; i < matchCount; i++) winningPositions.add(`${i},${payline[i]}`);
-            }
-        }
-    }
     return { totalWinnings, winningPositions, currentWinningPaylines };
   };
 
   // --- 5. MAIN SPIN FUNCTION ---
-  const spin = () => {
+  const spin = async() => {
     if (isSpinning.value || balance.value < betAmount.value) return;
-
-    isSpinning.value = true;
-    winAmount.value = 0;
-    winningPaylines.value.clear();
-    balance.value -= betAmount.value;
-
-    const finalOutcome = generateGrid();
+    const finalOutcome = await getSpinAndOutcome();
     outcome.value = finalOutcome;
+    isSpinning.value = true;
+    winAmount.value = parseFloat(0).toFixed(2);
   };
 
   const finishSpin = () => {
-    const { totalWinnings, currentWinningPaylines } = calculateWins(outcome.value);
-    
-    if (totalWinnings > 0) {
-      winAmount.value = totalWinnings;
-      balance.value += totalWinnings;
-      winningPaylines.value = currentWinningPaylines;
-      sounds.win.play();
-    }
-
-    reelsForDisplay.value = outcome.value;
     isSpinning.value = false;
-
+    processOutcome();
     if (isAutoplaying.value) {
-      setTimeout(() => spin(), 1000);
+      spin();
     }
   };
 
@@ -180,7 +173,8 @@ export function useSlotGame() {
   
   return { 
     balance: readonly(balance), 
-    betAmount: readonly(betAmount), 
+    betAmount: readonly(betAmount),
+    availableBets:readonly(availableBets),
     isSpinning: readonly(isSpinning), 
     isAutoplaying: readonly(isAutoplaying), 
     outcome: readonly(outcome), 

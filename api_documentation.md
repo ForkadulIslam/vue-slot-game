@@ -1,126 +1,729 @@
-# Slot Game API Documentation
+API = localhost:300.
 
-This document outlines the API endpoints for the Vue Slot Game backend.
-
----
-
-## Endpoint: `POST /api/spin`
-
-This is the primary endpoint for gameplay. It simulates a single paid spin, including all resulting cascades and feature triggers.
-
-### Request
-
-The request body must be a JSON object containing the total bet for the spin.
-
--   **Method:** `POST`
--   **URL:** `/api/spin`
--   **Headers:**
-    -   `Content-Type: application/json`
--   **Body:**
-
-    ```json
-    {
-      "totalBet": 25
-    }
-    ```
-
-    | Field      | Type    | Required | Description                               |
-    | :--------- | :------ | :------- | :---------------------------------------- |
-    | `totalBet` | Number  | Yes      | The total amount wagered for the spin. This should be divisible by the number of paylines (25). |
-
----
-
-### Success Response (200 OK)
-
-The response will be a JSON object detailing the complete outcome of the spin and all subsequent events (cascades, feature triggers).
-
--   **Content-Type:** `application/json`
--   **Body Example:**
-
-    ```json
-    {
-      "initialGrid": [
-        ["cherry", "lemon", "plum"],
-        ["cherry", "wild", "orange"],
-        ["cherry", "melon", "bar"],
-        ["plum", "seven", "bell"],
-        ["orange", "bar", "seven"]
-      ],
-      "totalWinnings": 18,
-      "finalBalance": 1003,
-      "cascadeSteps": [
-        {
-          "step": 0,
-          "grid": [
-            ["cherry", "lemon", "plum"],
-            ["cherry", "wild", "orange"],
-            ["cherry", "melon", "bar"],
-            ["plum", "seven", "bell"],
-            ["orange", "bar", "seven"]
-          ],
-          "wins": [
-            {
-              "paylineIndex": 0,
-              "symbol": "cherry",
-              "matchCount": 3,
-              "payout": 5
+POST Endpoint '/geme-session'
+Payload: user_name:'demo', 'password':'123456'
+Sample response: {
+    "sessionId": "c9d3faca-aade-48a0-8904-60ba78378261",
+    "credits": 1000,
+    "bet": 1,
+    "availableBets": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40,
+        50
+    ],
+    "reelsSymbols": [
+        [
+            "King",
+            "Queen",
+            "Nine",
+            "Jack"
+        ],
+        [
+            "King",
+            "Nine",
+            "Queen",
+            "Ten"
+        ],
+        [
+            "Jack",
+            "Queen",
+            "Scatter2",
+            "Scatter2"
+        ],
+        [
+            "Jack",
+            "Wild",
+            "Queen",
+            "Ten"
+        ],
+        [
+            "Ten",
+            "Wild",
+            "Queen",
+            "Nine"
+        ]
+    ],
+    "availableSymbols": [
+        "Ace",
+        "King",
+        "Queen",
+        "Jack",
+        "Ten",
+        "Nine",
+        "Wild",
+        "Scatter1",
+        "Scatter2"
+    ],
+    "reelsNumber": 5,
+    "reelsSymbolsNumber": 4,
+    "paytable": {
+        "1": {
+            "Nine": {
+                "3": 0.2,
+                "4": 0.4,
+                "5": 0.8
+            },
+            "Ten": {
+                "3": 0.2,
+                "4": 0.4,
+                "5": 0.8
+            },
+            "Jack": {
+                "3": 0.4,
+                "4": 0.8,
+                "5": 1.5
+            },
+            "Queen": {
+                "3": 0.4,
+                "4": 0.8,
+                "5": 1.5
+            },
+            "King": {
+                "3": 0.8,
+                "4": 1.5,
+                "5": 3
+            },
+            "Ace": {
+                "3": 1,
+                "4": 2,
+                "5": 4
+            },
+            "Scatter1": {
+                "3": 2,
+                "4": 5,
+                "5": 10
             }
-          ],
-          "winningsThisStep": 5,
-          "multiplier": 1
         },
-        {
-          "step": 1,
-          "grid": [
-            ["bar", "lemon", "plum"],
-            ["bell", "wild", "orange"],
-            ["seven", "melon", "bar"],
-            ["plum", "seven", "bell"],
-            ["orange", "bar", "seven"]
-          ],
-          "wins": [
-             {
-              "paylineIndex": 15,
-              "symbol": "bar",
-              "matchCount": 3,
-              "payout": 40
+        "2": {
+            "Nine": {
+                "3": 0.4,
+                "4": 0.8,
+                "5": 1.6
+            },
+            "Ten": {
+                "3": 0.4,
+                "4": 0.8,
+                "5": 1.6
+            },
+            "Jack": {
+                "3": 0.8,
+                "4": 1.6,
+                "5": 3
+            },
+            "Queen": {
+                "3": 0.8,
+                "4": 1.6,
+                "5": 3
+            },
+            "King": {
+                "3": 1.6,
+                "4": 3,
+                "5": 6
+            },
+            "Ace": {
+                "3": 2,
+                "4": 4,
+                "5": 8
+            },
+            "Scatter1": {
+                "3": 4,
+                "4": 10,
+                "5": 20
             }
-          ],
-          "winningsThisStep": 8,
-          "multiplier": 2
+        },
+        "3": {
+            "Nine": {
+                "3": 0.6000000000000001,
+                "4": 1.2000000000000002,
+                "5": 2.4000000000000004
+            },
+            "Ten": {
+                "3": 0.6000000000000001,
+                "4": 1.2000000000000002,
+                "5": 2.4000000000000004
+            },
+            "Jack": {
+                "3": 1.2000000000000002,
+                "4": 2.4000000000000004,
+                "5": 4.5
+            },
+            "Queen": {
+                "3": 1.2000000000000002,
+                "4": 2.4000000000000004,
+                "5": 4.5
+            },
+            "King": {
+                "3": 2.4000000000000004,
+                "4": 4.5,
+                "5": 9
+            },
+            "Ace": {
+                "3": 3,
+                "4": 6,
+                "5": 12
+            },
+            "Scatter1": {
+                "3": 6,
+                "4": 15,
+                "5": 30
+            }
+        },
+        "4": {
+            "Nine": {
+                "3": 0.8,
+                "4": 1.6,
+                "5": 3.2
+            },
+            "Ten": {
+                "3": 0.8,
+                "4": 1.6,
+                "5": 3.2
+            },
+            "Jack": {
+                "3": 1.6,
+                "4": 3.2,
+                "5": 6
+            },
+            "Queen": {
+                "3": 1.6,
+                "4": 3.2,
+                "5": 6
+            },
+            "King": {
+                "3": 3.2,
+                "4": 6,
+                "5": 12
+            },
+            "Ace": {
+                "3": 4,
+                "4": 8,
+                "5": 16
+            },
+            "Scatter1": {
+                "3": 8,
+                "4": 20,
+                "5": 40
+            }
+        },
+        "5": {
+            "Nine": {
+                "3": 1,
+                "4": 2,
+                "5": 4
+            },
+            "Ten": {
+                "3": 1,
+                "4": 2,
+                "5": 4
+            },
+            "Jack": {
+                "3": 2,
+                "4": 4,
+                "5": 7.5
+            },
+            "Queen": {
+                "3": 2,
+                "4": 4,
+                "5": 7.5
+            },
+            "King": {
+                "3": 4,
+                "4": 7.5,
+                "5": 15
+            },
+            "Ace": {
+                "3": 5,
+                "4": 10,
+                "5": 20
+            },
+            "Scatter1": {
+                "3": 10,
+                "4": 25,
+                "5": 50
+            }
+        },
+        "10": {
+            "Nine": {
+                "3": 2,
+                "4": 4,
+                "5": 8
+            },
+            "Ten": {
+                "3": 2,
+                "4": 4,
+                "5": 8
+            },
+            "Jack": {
+                "3": 4,
+                "4": 8,
+                "5": 15
+            },
+            "Queen": {
+                "3": 4,
+                "4": 8,
+                "5": 15
+            },
+            "King": {
+                "3": 8,
+                "4": 15,
+                "5": 30
+            },
+            "Ace": {
+                "3": 10,
+                "4": 20,
+                "5": 40
+            },
+            "Scatter1": {
+                "3": 20,
+                "4": 50,
+                "5": 100
+            }
+        },
+        "15": {
+            "Nine": {
+                "3": 3,
+                "4": 6,
+                "5": 12
+            },
+            "Ten": {
+                "3": 3,
+                "4": 6,
+                "5": 12
+            },
+            "Jack": {
+                "3": 6,
+                "4": 12,
+                "5": 22.5
+            },
+            "Queen": {
+                "3": 6,
+                "4": 12,
+                "5": 22.5
+            },
+            "King": {
+                "3": 12,
+                "4": 22.5,
+                "5": 45
+            },
+            "Ace": {
+                "3": 15,
+                "4": 30,
+                "5": 60
+            },
+            "Scatter1": {
+                "3": 30,
+                "4": 75,
+                "5": 150
+            }
+        },
+        "20": {
+            "Nine": {
+                "3": 4,
+                "4": 8,
+                "5": 16
+            },
+            "Ten": {
+                "3": 4,
+                "4": 8,
+                "5": 16
+            },
+            "Jack": {
+                "3": 8,
+                "4": 16,
+                "5": 30
+            },
+            "Queen": {
+                "3": 8,
+                "4": 16,
+                "5": 30
+            },
+            "King": {
+                "3": 16,
+                "4": 30,
+                "5": 60
+            },
+            "Ace": {
+                "3": 20,
+                "4": 40,
+                "5": 80
+            },
+            "Scatter1": {
+                "3": 40,
+                "4": 100,
+                "5": 200
+            }
+        },
+        "25": {
+            "Nine": {
+                "3": 5,
+                "4": 10,
+                "5": 20
+            },
+            "Ten": {
+                "3": 5,
+                "4": 10,
+                "5": 20
+            },
+            "Jack": {
+                "3": 10,
+                "4": 20,
+                "5": 37.5
+            },
+            "Queen": {
+                "3": 10,
+                "4": 20,
+                "5": 37.5
+            },
+            "King": {
+                "3": 20,
+                "4": 37.5,
+                "5": 75
+            },
+            "Ace": {
+                "3": 25,
+                "4": 50,
+                "5": 100
+            },
+            "Scatter1": {
+                "3": 50,
+                "4": 125,
+                "5": 250
+            }
+        },
+        "30": {
+            "Nine": {
+                "3": 6,
+                "4": 12,
+                "5": 24
+            },
+            "Ten": {
+                "3": 6,
+                "4": 12,
+                "5": 24
+            },
+            "Jack": {
+                "3": 12,
+                "4": 24,
+                "5": 45
+            },
+            "Queen": {
+                "3": 12,
+                "4": 24,
+                "5": 45
+            },
+            "King": {
+                "3": 24,
+                "4": 45,
+                "5": 90
+            },
+            "Ace": {
+                "3": 30,
+                "4": 60,
+                "5": 120
+            },
+            "Scatter1": {
+                "3": 60,
+                "4": 150,
+                "5": 300
+            }
+        },
+        "35": {
+            "Nine": {
+                "3": 7,
+                "4": 14,
+                "5": 28
+            },
+            "Ten": {
+                "3": 7,
+                "4": 14,
+                "5": 28
+            },
+            "Jack": {
+                "3": 14,
+                "4": 28,
+                "5": 52.5
+            },
+            "Queen": {
+                "3": 14,
+                "4": 28,
+                "5": 52.5
+            },
+            "King": {
+                "3": 28,
+                "4": 52.5,
+                "5": 105
+            },
+            "Ace": {
+                "3": 35,
+                "4": 70,
+                "5": 140
+            },
+            "Scatter1": {
+                "3": 70,
+                "4": 175,
+                "5": 350
+            }
+        },
+        "40": {
+            "Nine": {
+                "3": 8,
+                "4": 16,
+                "5": 32
+            },
+            "Ten": {
+                "3": 8,
+                "4": 16,
+                "5": 32
+            },
+            "Jack": {
+                "3": 16,
+                "4": 32,
+                "5": 60
+            },
+            "Queen": {
+                "3": 16,
+                "4": 32,
+                "5": 60
+            },
+            "King": {
+                "3": 32,
+                "4": 60,
+                "5": 120
+            },
+            "Ace": {
+                "3": 40,
+                "4": 80,
+                "5": 160
+            },
+            "Scatter1": {
+                "3": 80,
+                "4": 200,
+                "5": 400
+            }
+        },
+        "50": {
+            "Nine": {
+                "3": 10,
+                "4": 20,
+                "5": 40
+            },
+            "Ten": {
+                "3": 10,
+                "4": 20,
+                "5": 40
+            },
+            "Jack": {
+                "3": 20,
+                "4": 40,
+                "5": 75
+            },
+            "Queen": {
+                "3": 20,
+                "4": 40,
+                "5": 75
+            },
+            "King": {
+                "3": 40,
+                "4": 75,
+                "5": 150
+            },
+            "Ace": {
+                "3": 50,
+                "4": 100,
+                "5": 200
+            },
+            "Scatter1": {
+                "3": 100,
+                "4": 250,
+                "5": 500
+            }
         }
-      ],
-      "scatterWin": 0,
-      "freeSpins": {
-        "triggered": false,
-        "spinCount": 0
-      }
+    },
+    "linesDefinitions": {
+        "0": [
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        "1": [
+            1,
+            1,
+            1,
+            1,
+            1
+        ],
+        "2": [
+            2,
+            2,
+            2,
+            2,
+            2
+        ],
+        "3": [
+            3,
+            3,
+            3,
+            3,
+            3
+        ],
+        "4": [
+            0,
+            1,
+            2,
+            1,
+            0
+        ],
+        "5": [
+            1,
+            2,
+            3,
+            2,
+            1
+        ],
+        "6": [
+            3,
+            2,
+            1,
+            2,
+            3
+        ],
+        "7": [
+            2,
+            1,
+            0,
+            1,
+            2
+        ],
+        "8": [
+            0,
+            0,
+            1,
+            2,
+            2
+        ],
+        "9": [
+            1,
+            1,
+            2,
+            3,
+            3
+        ],
+        "10": [
+            3,
+            3,
+            2,
+            1,
+            1
+        ],
+        "11": [
+            2,
+            2,
+            1,
+            0,
+            0
+        ],
+        "12": [
+            0,
+            1,
+            0,
+            1,
+            0
+        ],
+        "13": [
+            1,
+            2,
+            1,
+            2,
+            1
+        ],
+        "14": [
+            2,
+            3,
+            2,
+            3,
+            2
+        ],
+        "15": [
+            1,
+            0,
+            1,
+            0,
+            1
+        ],
+        "16": [
+            2,
+            1,
+            2,
+            1,
+            2
+        ],
+        "17": [
+            3,
+            2,
+            3,
+            2,
+            3
+        ],
+        "18": [
+            0,
+            1,
+            2,
+            3,
+            2
+        ],
+        "19": [
+            3,
+            2,
+            1,
+            0,
+            1
+        ],
+        "20": [
+            0,
+            2,
+            0,
+            2,
+            0
+        ],
+        "21": [
+            1,
+            3,
+            1,
+            3,
+            1
+        ],
+        "22": [
+            1,
+            0,
+            0,
+            0,
+            1
+        ],
+        "23": [
+            2,
+            3,
+            3,
+            3,
+            2
+        ],
+        "24": [
+            0,
+            2,
+            1,
+            2,
+            0
+        ]
     }
-    ```
-
-### Response Body Details
-
-| Field             | Type    | Description                                                                                             |
-| :---------------- | :------ | :------------------------------------------------------------------------------------------------------ |
-| `initialGrid`     | Array   | A 5x3 array of strings representing the grid *before* any cascades.                                     |
-| `totalWinnings`   | Number  | The total amount won from this spin, including all cascades and scatter payouts.                        |
-| `finalBalance`    | Number  | The player's balance *after* the spin (bet deducted and winnings added).                                |
-| `cascadeSteps`    | Array   | An array of objects, where each object details a single step of the cascade (the initial spin is step 0). |
-| `scatterWin`      | Number  | Winnings from scatter symbols. This is separate from payline wins.                                      |
-| `freeSpins`       | Object  | An object detailing if the free spins feature was triggered.                                            |
-| `freeSpins.triggered` | Boolean | `true` if 3+ scatters landed, otherwise `false`.                                                     |
-| `freeSpins.spinCount` | Number  | The number of free spins awarded (e.g., 10, 15, or 20).                                               |
-
----
-
-### Error Response (400 Bad Request)
-
-If the request is invalid (e.g., missing `totalBet`, invalid bet amount), the server will respond with an error.
-
--   **Body Example:**
-
-    ```json
-    {
-      "error": "Invalid totalBet provided. It must be a positive number."
-    }
-    ```
+}
