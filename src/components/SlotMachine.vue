@@ -17,7 +17,7 @@ import { computed, ref, watch, onBeforeUpdate } from 'vue';
 import Reel from './Reel.vue';
 import { useSlotGame } from '../composables/useSlotGame';
 
-const { reelsForDisplay, symbolPaths, isSpinning, outcome, finishSpin, sounds } = useSlotGame();
+const { reelsForDisplay, symbolPaths, isSpinning, outcome, finishSpin, sounds, winningSymbolPositions } = useSlotGame();
 
 const reels = computed(() => {
   return reelsForDisplay.value.map(reelSymbols => {
@@ -103,6 +103,8 @@ watch(isSpinning, (newValue) => {
       });
     });
   }
+
+  console.log(winningSymbolPositions.value);
 });
 </script>
 

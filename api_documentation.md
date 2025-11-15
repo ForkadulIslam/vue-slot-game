@@ -727,3 +727,77 @@ Sample response: {
         ]
     }
 }
+
+
+POST Endpoint '/spin'
+Payload: {
+    "bet":5,
+    "sessionId": "b0ff18e8-6010-4aef-b769-53a31c53c549"
+}
+Samploe response: {
+    "credits": 633.5,
+    "bet": 5,
+    "reelsSymbols": [
+        [
+            "Nine",
+            "Nine",
+            "Ten",
+            "Ace"
+        ],
+        [
+            "Scatter2",
+            "Scatter2",
+            "Ace",
+            "Jack"
+        ],
+        [
+            "Jack",
+            "Ten",
+            "Queen",
+            "King"
+        ],
+        [
+            "Jack",
+            "Nine",
+            "Nine",
+            "Nine"
+        ],
+        [
+            "Wild",
+            "King",
+            "Nine",
+            "Nine"
+        ]
+    ],
+    "winningLines": {
+        "0": {
+            "definition": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "pattern": [
+                0,
+                0,
+                1,
+                1,
+                1
+            ],
+            "symbolId": "Jack",
+            "lineId": "0",
+            "symbolsPositions": [
+                2,
+                3,
+                4
+            ],
+            "wildSymbolsPositions": [
+                4
+            ],
+            "winAmount": 2
+        }
+    },
+    "totalWin": 2,
+    "freeGamesResult": null
+}

@@ -1,58 +1,53 @@
-# Implementation Plan: Advanced Reel Animations
+### Plan for Win Animations
 
-This document outlines the plan to refactor the existing 5x3 slot game to incorporate a smooth, vertical reel-spinning animation and a cascading win mechanic, inspired by the provided sample project.
+Hello! I've reviewed the codebase and your request. Using GSAP for the win animations is an excellent idea, as it's already integrated for the reel spinning and is highly capable for the effects you've described.
 
-## Phase 1: Refactor the Reel Component for Vertical Spinning
+Here is a proposed plan for how we can implement these stunning animations.
 
-The current animation scales symbols in and out. To achieve a vertical spinning effect, we need to change how reels are rendered. Instead of a static 3-symbol view, each reel will be a long vertical strip of symbols that moves within a masked container.
+#### Current State Analysis
 
-**Step 1.1: Modify `Reel.vue` Structure**
-- The root element of `Reel.vue` will become a container with a fixed height and `overflow: hidden`.
-- Inside, create a `div` with a class like `symbol-strip`. This strip will hold all the symbols for the spin and will be animated vertically.
-- Remove the old `v-for` that iterates over `displaySymbols`.
+*   **Components:** `SlotMachine.vue` handles the visual reels, `ControlPanel.vue` displays the win amount, and `useSlotGame.js` manages the game's state and logic.
+*   **Animation:** GSAP is used effectively in `SlotMachine.vue` for the reel spinning effect, which gives us a great foundation.
+*   **Game Flow:** The `spin` action calls an API, which returns the outcome, including the final reel symbols and the total win amount. The `finishSpin` function is called when the reel animation completes.
 
-**Step 1.2: Create the Symbol Strips**
-- In the `useSlotGame.js` composable, create a new reactive reference, `spinningReels`, which will hold the long arrays of symbols for each of the 5 reels during a spin.
-- When `spin()` is called, for each reel, generate a strip:
-    1. Start with the current symbols.
-    2. Add a configurable number of random symbols (e.g., 20-30) to create the spinning "blur".
-    3. End with the 3 symbols from the final outcome for that reel.
-- Pass these generated strips as props to the `Reel.vue` components.
+#### Proposed Animation Implementation Plan
 
-**Step 1.3: Implement the Vertical Animation**
-- In `Reel.vue`, use a computed property to calculate the `transform: translateY()` value for the `symbol-strip`.
-- The animation will be controlled by CSS transitions for smoothness. We'll use Vue's state to apply different classes for different animation phases (e.g., `is-spinning`, `is-stopping`).
-- The `translateY` value will be calculated based on the symbol height and the index of the target symbol in the strip.
-- We will add a `cubic-bezier` timing function to the transition to create a realistic ease-out and a subtle "bounce" or "overshoot" effect when the reel stops, mimicking the sample.
+To create a rich user experience, we can break down the win animations into several distinct, layered effects that trigger after a winning spin.
 
-## Phase 2: Implement Cascading Wins
+**1. Data Foundation (The "Brain")**
 
-This phase implements the "tumble" or "cascade" feature where winning symbols disappear and are replaced by new ones from above, allowing for consecutive wins in a single spin.
+*   **Task:** Before we can animate a win, we need to know *what* to animate. The API response from the `/spin` call is key. We'll need to ensure it provides not just the `totalWin`, but also which paylines have won and which symbols on those lines are part of the win.
+*   **Implementation:** We will update the `processOutcome` function in `useSlotGame.js`. It will parse the API response and populate the `winningPaylines` ref, and potentially a new ref to hold the coordinates of the winning symbols (e.g., `winningSymbolPositions`).
 
-**Step 2.1: Win Detection and State Management**
-- Modify the `calculateWins` function in `useSlotGame.js` to return the coordinates of all winning symbols (e.g., `[{reel: 0, row: 1}, ...]`).
-- Create a new state in `useSlotGame.js` to track the lifecycle of a cascade (e.g., `win-pop`, `exploding`, `refilling`).
+**2. Winning Line Highlighting (The "Path")**
 
-**Step 2.2: Animate Winning Symbols**
-- In `Symbol.vue`, add props to reflect the symbol's state (e.g., `isWinning`, `isExploding`).
-- Add CSS keyframe animations (`win-pop`, `symbol-explode`) to the `Symbol.vue` style section. These will be triggered by classes bound to the new props.
-- When a win is detected, `useSlotGame.js` will update the state for the winning symbols, triggering the "pop" animation, followed by the "explode" animation.
+*   **Task:** Visually indicate the payline(s) that resulted in a win.
+*   **Implementation:**
+    1.  We'll add an SVG overlay layer within the `SlotMachine.vue` component, positioned directly on top of the reels.
+    2.  After a spin, if there are winning lines, we will dynamically generate SVG `<path>` elements for each one. The path coordinates will be calculated based on the symbol positions defined in our `PAYLINES` constant.
+    3.  We'll use GSAP to animate these paths. A common effect is to make them "draw" themselves across the screen and then pulse with a glow effect to keep them visible.
 
-**Step 2.3: Create a `FlyingSymbol.vue` Component**
-- To handle the "fly-in" effect of new symbols, we will create a new, absolutely positioned overlay in `SlotMachine.vue`.
-- A new component, `FlyingSymbol.vue`, will be responsible for rendering a single symbol that animates from off-screen to its target position in the grid.
-- When a cascade is triggered, `useSlotGame.js` will:
-    1. Determine the new symbols that will replace the exploded ones.
-    2. Add these new symbols to a reactive array that is rendered within the overlay using a `v-for`.
-    3. Each `FlyingSymbol.vue` instance will animate itself into place using a CSS transition on its `transform` and `opacity` properties.
+**3. Symbol Animation (The "Action")**
 
-**Step 2.4: Update the Grid and Re-evaluate Wins**
-- The original symbols in the grid that are exploding will be made invisible (`opacity: 0`).
-- Once a `FlyingSymbol` completes its animation (detected via the `@transitionend` event), it will emit an event.
-- When all flying symbols have "landed", `useSlotGame.js` will:
-    1. Update the main `reelsForDisplay` grid with the new symbols.
-    2. Clear the flying symbols from the overlay.
-    3. Make the grid symbols visible again.
-    4. Re-run the `calculateWins` function on the new grid. If new wins are found, the cascade process repeats from Step 2.1. If not, the spin is concluded.
+*   **Task:** Make the winning symbols themselves come alive.
+*   **Implementation:**
+    1.  Once the winning lines are drawn, we'll target the specific symbol `<img>` elements that form the win.
+    2.  Using GSAP, we can create a timeline for these symbols:
+        *   **Simple Win:** A subtle pulse (scale up and down) and a bright `drop-shadow` glow.
+        *   **Bigger Win / Feature Symbol:** A more elaborate "explosion" or "burst" animation. This could involve the symbol quickly scaling up, fading out, and being replaced by a small particle burst effect (which we can create with a few small, animated divs or images).
 
-This plan modularizes the implementation, starting with the core spinning mechanic and then building the more complex cascading logic on top of it. This ensures a robust and maintainable animation system.
+**4. Big Win Celebration (The "Spectacle")**
+
+*   **Task:** Create a high-impact, full-screen event for significant wins (e.g., winning more than 10x the bet).
+*   **Implementation:**
+    1.  We'll create a new component, perhaps `<BigWinOverlay/>`, that is conditionally rendered from `App.vue`.
+    2.  This overlay will contain:
+        *   Animated text like "BIG WIN" or "MEGA WIN" using GSAP for effects like scaling, rotating, and color changes.
+        *   A "coin shower" effect: We'll dynamically create dozens of coin images and use GSAP's `stagger` feature to animate them falling down the screen with random trajectories and rotations.
+    3.  Simultaneously, in `ControlPanel.vue`, we can animate the `win-amount` display, making it rapidly count up from 0 to the final win amount, adding to the excitement.
+
+---
+
+This layered approach will create a visually rich and engaging experience for the player. We can start with the foundational data step and then build up each animation layer by layer.
+
+What do you think of this plan? We can adjust it based on your vision for the final product. To begin, could you confirm the structure of the JSON response from your `/spin` API endpoint, specifically how it communicates which paylines have won?
