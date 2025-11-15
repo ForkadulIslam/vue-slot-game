@@ -31,6 +31,7 @@ const winAmount = ref(0.00);
 const displayedWinAmount = ref(0.00);
 const winningPaylines = ref([]);
 const winningSymbolPositions = ref([]);
+const isWinAnimationPlaying = ref(false);
 
 const payTable = ref({});
 const linesDefinitions = ref({});
@@ -128,7 +129,7 @@ export function useSlotGame() {
 
   // --- 5. MAIN SPIN FUNCTION ---
   const spin = async() => {
-    if (isSpinning.value || balance.value < betAmount.value) return;
+    if (isSpinning.value || balance.value < betAmount.value || isWinAnimationPlaying.value) return;
     const finalOutcome = await getSpinAndOutcome();
     outcome.value = finalOutcome;
     isSpinning.value = true;
@@ -153,6 +154,10 @@ export function useSlotGame() {
       spin();
     }
   }
+
+  function setWinAnimationPlaying(value) {
+    isWinAnimationPlaying.value = value;
+  }
   
   return { 
     balance: readonly(balance), 
@@ -160,6 +165,8 @@ export function useSlotGame() {
     availableBets:readonly(availableBets),
     isSpinning: readonly(isSpinning), 
     isAutoplaying: readonly(isAutoplaying), 
+    isWinAnimationPlaying: readonly(isWinAnimationPlaying),
+    setWinAnimationPlaying,
     outcome: readonly(outcome), 
     reelsForDisplay: readonly(reelsForDisplay), 
     winAmount: readonly(winAmount),

@@ -45,6 +45,7 @@ const {
   reelsNumber,
   reelsSymbolsNumber,
   displayedWinAmount,
+  setWinAnimationPlaying,
 } = useSlotGame();
 
 const reelsContainerWidth = 325; // from CSS
@@ -75,10 +76,15 @@ onBeforeUpdate(() => {
 watch(winningPaylines, (newLines) => {
   if (newLines.length > 0 && !isSpinning.value) {
     nextTick(() => {
+      setWinAnimationPlaying(true);
       // Reset the display amount at the beginning of the animation sequence
       displayedWinAmount.value = 0;
 
-      const masterTimeline = gsap.timeline();
+      const masterTimeline = gsap.timeline({
+        onComplete: () => {
+          setWinAnimationPlaying(false);
+        }
+      });
       let cumulativeWin = 0;
 
       newLines.forEach((line, index) => {
