@@ -85,7 +85,8 @@ onMounted(() => {
 });
 
 defineExpose({
-  playAnimation
+  playAnimation,
+  pathElement
 });
 
 </script>

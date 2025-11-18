@@ -1,1 +1,1 @@
-SlotMachine.vue:103 [Vue warn] Set operation on key "value" failed: target is readonly. RefImpl {dep: Dep, __v_isRef: true, __v_isShallow: false, _rawValue: 0, _value: 0}
+gsap.min.js:10 GSAP target  not found. https://gsap.com

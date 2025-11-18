@@ -31,6 +31,8 @@ const winAmount = ref(0.00);
 const displayedWinAmount = ref(0.00);
 const winningPaylines = ref([]);
 const winningSymbolPositions = ref([]);
+const winningScatters = ref([]);
+const scatterWinAmount = ref(0);
 const isWinAnimationPlaying = ref(false);
 
 const payTable = ref({});
@@ -83,6 +85,8 @@ const processOutcome = () => {
   // Clear previous win data
   winningPaylines.value = [];
   winningSymbolPositions.value = [];
+  winningScatters.value = [];
+  scatterWinAmount.value = 0;
 
   if (_outcome.winningLines && Object.keys(_outcome.winningLines).length > 0) {
     const lines = Object.values(_outcome.winningLines);
@@ -98,6 +102,26 @@ const processOutcome = () => {
       });
     });
     winningSymbolPositions.value = symbolPositions;
+  }
+
+  if (_outcome.winningScatters) {
+    let totalScatterWin = 0;
+    const scatterPositions = [];
+
+    for (const key in _outcome.winningScatters) {
+        const scatterData = _outcome.winningScatters[key];
+        if (scatterData && scatterData.symbolsPositions) {
+            totalScatterWin += scatterData.winAmount;
+            scatterData.symbolsPositions.forEach(posArray => {
+                scatterPositions.push({ reel: posArray[0], row: posArray[1] });
+            });
+        }
+    }
+
+    if (scatterPositions.length > 0) {
+        winningScatters.value = scatterPositions;
+        scatterWinAmount.value = totalScatterWin;
+    }
   }
 };
 
@@ -179,6 +203,8 @@ export function useSlotGame() {
     toggleAutoplay, 
     winningPaylines: readonly(winningPaylines),
     winningSymbolPositions: readonly(winningSymbolPositions),
+    winningScatters: readonly(winningScatters),
+    scatterWinAmount: readonly(scatterWinAmount),
     payTable:readonly(payTable),
     linesDefinitions:readonly(linesDefinitions),
     availableSymbols: readonly(availableSymbols),
