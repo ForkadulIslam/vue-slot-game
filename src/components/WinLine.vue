@@ -13,6 +13,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { gsap } from 'gsap';
 
 const props = defineProps({
   lineDefinition: {

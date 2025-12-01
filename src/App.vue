@@ -1,16 +1,18 @@
 <template>
   <div id="app-container">
     <div class="game-area">
-      <SlotMachine />
+      <!-- <SlotMachine /> -->
+      <SlotMachinePixi/>
       <ControlPanel />
     </div>
   </div>
 </template>
 
 <script setup>
-import SlotMachine from './components/SlotMachine.vue';
+//import SlotMachine from './components/SlotMachine.vue';
 import ControlPanel from './components/ControlPanel.vue';
-import MachineGraphics from './components/MachineGraphics.vue';
+//import MachineGraphics from './components/MachineGraphics.vue';
+import SlotMachinePixi from './components/SlotMachinePixi.vue';
 </script>
 
 <style>
