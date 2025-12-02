@@ -17,59 +17,108 @@ let emitter = null;
 // Emitter configuration from PixiParticleV8.vue
 const emitterConfig = {
   "lifetime": {
-    "min": 0.5,
-    "max": 2
+    "min": 4,
+    "max": 4
   },
-  "frequency": 0.05,
+  "frequency": 0.004,
   "pos": {
     "x": 0,
     "y": 0
   },
   "spawnChance": 1,
-  "emitterLifetime": 3,
-  "maxParticles": 300,
-  "particlesPerWave": 10,
-  "addAtBack": true,
+  "emitterLifetime": 2,
+  "maxParticles": 1000,
+  "particlesPerWave": 1,
+  "addAtBack": false,
   "ease": [
-    { "s": 0, "cp": 0.379, "e": 0.548 },
-    { "s": 0.548, "cp": 0.717, "e": 0.676 },
-    { "s": 0.676, "cp": 0.635, "e": 1 }
+    {
+      "s": 0,
+      "cp": 0.379,
+      "e": 0.548
+    },
+    {
+      "s": 0.548,
+      "cp": 0.717,
+      "e": 0.676
+    },
+    {
+      "s": 0.676,
+      "cp": 0.635,
+      "e": 1
+    }
   ],
   "behaviors": [
     {
-      "type": "animatedSingle",
+      "type": "textureSingle",
       "config": {
-        "anim": {
-          "framerate": 20,
-          "loop": true,
-          "textures": [ coin1, coin2 ]
-        }
+        "texture": coin2
       }
     },
     {
       "type": "spawnShape",
       "config": {
         "type": "torus",
-        "data": { "x": 0, "y": 0, "radius": 40, "innerRadius": 39, "affectRotation": true }
-      }
-    },
-    {
-      "type": "moveSpeed",
-      "config": {
-        "speed": {
-          "list": [ { "time": 0, "value": 100 }, { "time": 1, "value": 500 } ],
-          "isStepped": true
+        "data": {
+          "x": 0,
+          "y": 0,
+          "radius": 90,
+          "innerRadius": 39,
+          "affectRotation": true
         }
       }
     },
-    { "type": "scaleStatic", "config": { "min": 0.5, "max": 0.5 } },
+    {
+      "type": "moveSpeedStatic",
+      "config": {
+        "min": 20,
+        "max": 100
+      }
+    },
+    {
+      "type": "scale",
+      "config": {
+        "scale": {
+          "list": [
+            {
+              "time": 0,
+              "value": 0.15
+            },
+            {
+              "time": 1,
+              "value": 0.5
+            }
+          ],
+          "isStepped": false
+        },
+        "minMult": 0.5
+      }
+    },
     {
       "type": "alpha",
       "config": {
         "alpha": {
-          "list": [ { "time": 0, "value": 1 }, { "time": 1, "value": 0.8 } ],
+          "list": [
+            {
+              "time": 0,
+              "value": 0.73
+            },
+            {
+              "time": 1,
+              "value": 0.46
+            }
+          ],
           "isStepped": false
         }
+      }
+    },
+    {
+      "type": "rotation",
+      "config": {
+        "minStart": 50,
+        "maxStart": 70,
+        "minSpeed": 0,
+        "maxSpeed": 200,
+        "accel": 0
       }
     }
   ]
@@ -155,7 +204,7 @@ const play = async () => {
     visible.value = false;
     // Clean up finished particles to prevent them from accumulating
     emitter.cleanup();
-  }, 4000); // 4 seconds is enough time for particles with 3s lifetime to fade out
+  }, 5000); // 4 seconds is enough time for particles with 3s lifetime to fade out
 };
 
 defineExpose({ play });

@@ -55,9 +55,13 @@ body {
   align-items: center;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(circle, #4A00B0 0%, #8B008B 100%); /* Vibrant gradient - Jili inspired */
+  /* background: radial-gradient(circle, #4A00B0 0%, #8B008B 100%); */
   padding: 0.5rem 0;
   box-sizing: border-box;
+  background-image: url('./assets/images/game_banner.png');
+  background-size: cover;
+  background-position: left;
+  background-repeat: no-repeat;
 }
 
 .game-area {

@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUpdate, nextTick, defineProps } from 'vue';
+import { computed, ref, watch, onBeforeUpdate, nextTick, defineProps, onMounted } from 'vue';
 import { gsap } from 'gsap';
 import Reel from './Reel.vue';
 import WinLine from './WinLine.vue';
@@ -107,6 +107,7 @@ const gifContainer = ref(null);
 const slotMachineEl = ref(null);
 const vignetteOverlay = ref(null);
 const winMessageContainer = ref(null);
+const sheenOverlay = ref(null);
 
 
 // Ensure refs are cleared before each update to prevent memory leaks
@@ -114,6 +115,23 @@ onBeforeUpdate(() => {
   reelElements.value = [];
   winLineElements.value = [];
 });
+
+onMounted(() => {
+  playSheenAnimation();
+});
+
+function playSheenAnimation() {
+  if (!sheenOverlay.value) return;
+
+  gsap.to(sheenOverlay.value, {
+    transform: 'translateX(150%)',
+    duration: 1.5,
+    ease: 'power1.inOut',
+    delay: 5, // Wait 5 seconds before the first sweep
+    repeat: -1, // Repeat indefinitely
+    repeatDelay: 8, // Wait 8 seconds between sweeps
+  });
+}
 
 function playScatterWinSequence() {
     const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
@@ -659,11 +677,12 @@ watch(isSpinning, (spinning) => {
 
 <style>
 .slot-machine {
-  position: relative; /* Needed for overlay positioning */
   display: flex;
   justify-content: center;
   align-items: center;
   perspective: 1000px;
+  /* height: 380px; */
+  border-radius: 20px 20px 0 0;
 }
 
 .win-lines-overlay {
@@ -698,7 +717,7 @@ watch(isSpinning, (spinning) => {
     display: flex;
     width: 325px;
     overflow: hidden;
-    background-color: #111;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.05) 100%);
     justify-content: flex-start;
     height: 260px;
     transition: filter 0.3s ease-in-out;
@@ -717,8 +736,8 @@ watch(isSpinning, (spinning) => {
 .symbol {
   width: 65px;
   height: 65px;
-  background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+  /* background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.7); */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -940,4 +959,5 @@ watch(isSpinning, (spinning) => {
 .glint {
     filter: blur(1px);
 }
+
 </style>
