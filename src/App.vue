@@ -2,25 +2,31 @@
   <div id="app-container">
     <div class="game-area">
       <!-- <SlotMachine /> -->
-      <!-- <SlotMachinePixi/> -->
-      <!-- <ControlPanel /> -->
+      <SlotMachinePixi :win-particles-ref="winParticles" />
+      <ControlPanel />
+      <WinParticles ref="winParticles" />
       <!-- <LearnPixiLighting/> -->
 
       <!-- <CartoonSmoke/> -->
 
-      <PixiParticleV8/>
+      <!-- <PixiParticleV8/> -->
     </div>
   </div>
 </template>
 
 <script setup>
-import PixiParticleV8 from './components/PixiParticleV8.vue';
+//import PixiParticleV8 from './components/PixiParticleV8.vue';
 
 //import SlotMachine from './components/SlotMachine.vue';
-//import ControlPanel from './components/ControlPanel.vue';
+import ControlPanel from './components/ControlPanel.vue';
 //import LearnPixiLighting from './components/LearnPixiLighting.vue';
 //import MachineGraphics from './components/MachineGraphics.vue';
-//import SlotMachinePixi from './components/SlotMachinePixi.vue';
+import SlotMachinePixi from './components/SlotMachinePixi.vue';
+import WinParticles from './components/WinParticles.vue';
+import { ref } from 'vue';
+
+const winParticles = ref(null);
+
 //import CartoonSmoke from './components/CartoonSmoke.vue'
 
 </script>

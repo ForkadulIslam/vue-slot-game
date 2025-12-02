@@ -10,7 +10,8 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import * as PIXI from 'pixi.js'; // Explicitly import PIXI
 import { Emitter, upgradeConfig } from '@spd789562/particle-emitter'; // Assume upgradeConfig exists for this package
-import goldCoinImage from '../assets/images/coinSprite.png';
+import coin1 from '../assets/images/coinParticle1.png';
+import coin2 from '../assets/images/coinParticle1.png';
 import { gsap } from 'gsap';
 
 
@@ -61,7 +62,8 @@ const emitterConfig ={
           "framerate": 20,
           "loop": true,
           "textures": [
-            goldCoinImage
+            coin1,
+            coin2
           ]
         }
       }
@@ -161,10 +163,10 @@ onMounted(async () => {
     app.stage.addChild(pixiParticleContainer);
 
     // Load the texture for the emitter
-    const loadedTexture = await PIXI.Assets.load(goldCoinImage);
+    const loadedTexture = await PIXI.Assets.load(coin1);
 
     // Upgrade config for the emitter (assuming upgradeConfig exists for this package)
-    const newConfig = upgradeConfig(emitterConfig, [loadedTexture]);
+    const newConfig = upgradeConfig(emitterConfig);
 
     emitter = new Emitter(
         pixiParticleContainer, // The PIXI.ParticleContainer to put the emitter in
