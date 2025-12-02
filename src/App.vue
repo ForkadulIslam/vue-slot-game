@@ -2,17 +2,27 @@
   <div id="app-container">
     <div class="game-area">
       <!-- <SlotMachine /> -->
-      <SlotMachinePixi/>
-      <ControlPanel />
+      <!-- <SlotMachinePixi/> -->
+      <!-- <ControlPanel /> -->
+      <!-- <LearnPixiLighting/> -->
+
+      <!-- <CartoonSmoke/> -->
+
+      <PixiParticleV8/>
     </div>
   </div>
 </template>
 
 <script setup>
+import PixiParticleV8 from './components/PixiParticleV8.vue';
+
 //import SlotMachine from './components/SlotMachine.vue';
-import ControlPanel from './components/ControlPanel.vue';
+//import ControlPanel from './components/ControlPanel.vue';
+//import LearnPixiLighting from './components/LearnPixiLighting.vue';
 //import MachineGraphics from './components/MachineGraphics.vue';
-import SlotMachinePixi from './components/SlotMachinePixi.vue';
+//import SlotMachinePixi from './components/SlotMachinePixi.vue';
+//import CartoonSmoke from './components/CartoonSmoke.vue'
+
 </script>
 
 <style>

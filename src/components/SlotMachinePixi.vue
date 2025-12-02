@@ -50,12 +50,14 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUpdate, nextTick } from 'vue';
+import { computed, ref, watch, onBeforeUpdate, nextTick, onMounted, onUnmounted } from 'vue';
 import { gsap } from 'gsap';
+import * as PIXI from 'pixi.js';
 import Reel from './Reel.vue';
 import WinLine from './WinLine.vue';
 import { useSlotGame } from '../composables/useSlotGame';
 import celebrationGif from '../assets/images/celebration_mystrybox.gif';
+import particleTextureUrl from '../assets/images/symblos/celebration/coin_particlejpg.jpg';
 
 const {
   reelsForDisplay,
@@ -101,6 +103,10 @@ const slotMachineEl = ref(null);
 const vignetteOverlay = ref(null);
 const winMessageContainer = ref(null);
 
+let app = null;
+let particles = [];
+let particleTexture = null;
+
 
 // Ensure refs are cleared before each update to prevent memory leaks
 onBeforeUpdate(() => {
@@ -108,10 +114,239 @@ onBeforeUpdate(() => {
   winLineElements.value = [];
 });
 
+// --- PARTICLE SYSTEM ---
+class Particle {
+  constructor(x, y, texture, config) {
+    this.sprite = new PIXI.Sprite(texture);
+    this.sprite.anchor.set(0.5);
+    this.sprite.position.set(x, y);
+    
+    const startScale = config.size / 100;
+    this.sprite.scale.set(startScale);
+    this.sprite.alpha = 1;
+    
+    this.startColor = hexToNumber(config.startColor);
+    this.endColor = hexToNumber(config.endColor);
+    this.sprite.tint = this.startColor;
+    
+    const speed = 6 + Math.random() * 4;
+    const angle = Math.random() * Math.PI * 2;
+    
+    this.velocity = {
+      x: Math.cos(angle) * speed,
+      y: Math.sin(angle) * speed - 2
+    };
+    
+    this.gravity = config.gravity;
+    this.friction = 0.95 + Math.random() * 0.04;
+    this.rotationSpeed = (Math.random() - 0.5) * 0.15;
+    this.scaleSpeed = 0.005 + Math.random() * 0.005;
+    this.targetScale = startScale * (1.5 + Math.random() * 0.5);
+    this.life = 1.0;
+    this.alphaSpeed = 0.005 + Math.random() * 0.005; // Slower fade for longer life
+    this.config = config;
+  }
+  
+  update() {
+    this.velocity.y += this.gravity;
+    this.velocity.x *= this.friction;
+    this.velocity.y *= this.friction;
+    
+    this.sprite.x += this.velocity.x;
+    this.sprite.y += this.velocity.y;
+    this.sprite.rotation += this.rotationSpeed;
+    
+    if (this.sprite.scale.x < this.targetScale) {
+      this.sprite.scale.x += this.scaleSpeed;
+      this.sprite.scale.y += this.scaleSpeed;
+    }
+    
+    this.life -= this.alphaSpeed;
+    this.sprite.alpha = Math.max(0, this.life);
+    
+    const t = 1 - this.life;
+    const color = interpolateColor(this.startColor, this.endColor, t);
+    this.sprite.tint = color;
+    
+    return this.life > 0;
+  }
+}
 
+const hexToNumber = (hex) => {
+  hex = hex.replace(/^#/, '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return (r << 16) | (g << 8) | b;
+};
 
+const interpolateColor = (color1, color2, factor) => {
+  const r1 = (color1 >> 16) & 0xff;
+  const g1 = (color1 >> 8) & 0xff;
+  const b1 = color1 & 0xff;
+  const r2 = (color2 >> 16) & 0xff;
+  const g2 = (color2 >> 8) & 0xff;
+  const b2 = color2 & 0xff;
+  const r = Math.round(r1 + (r2 - r1) * factor);
+  const g = Math.round(g1 + (g2 - g1) * factor);
+  const b = Math.round(b1 + (b2 - b1) * factor);
+  return (r << 16) | (g << 8) | b;
+};
 
+const createParticleBurst = (x, y, count) => {
+    if (!particleTexture) return;
+    const config = {
+        size: 5,
+        startColor: '#ffcc00',
+        endColor: '#ff6600',
+        gravity: 0.2
+    };
+    for (let i = 0; i < count; i++) {
+        const particle = new Particle(x, y, particleTexture, config);
+        particles.push(particle);
+        app.stage.addChild(particle.sprite);
+    }
+};
 
+// --- END PARTICLE SYSTEM ---
+
+// --- PARTICLE SYSTEM ---
+class Particle {
+  constructor(x, y, texture, config) {
+    this.sprite = new PIXI.Sprite(texture);
+    this.sprite.anchor.set(0.5);
+    this.sprite.position.set(x, y);
+    
+    const startScale = config.size / 100;
+    this.sprite.scale.set(startScale);
+    this.sprite.alpha = 1;
+    
+    this.startColor = hexToNumber(config.startColor);
+    this.endColor = hexToNumber(config.endColor);
+    this.sprite.tint = this.startColor;
+    
+    const speed = 6 + Math.random() * 4;
+    const angle = Math.random() * Math.PI * 2;
+    
+    this.velocity = {
+      x: Math.cos(angle) * speed,
+      y: Math.sin(angle) * speed
+    };
+    
+    this.gravity = config.gravity;
+    this.friction = 0.97 + Math.random() * 0.02;
+    this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+    this.life = 1.0;
+    this.alphaSpeed = 0.005 + Math.random() * 0.005; // Slower fade for longer life
+  }
+  
+  update() {
+    this.velocity.y += this.gravity;
+    this.velocity.x *= this.friction;
+    this.velocity.y *= this.friction;
+    
+    this.sprite.x += this.velocity.x;
+    this.sprite.y += this.velocity.y;
+    this.sprite.rotation += this.rotationSpeed;
+    
+    this.life -= this.alphaSpeed;
+    this.sprite.alpha = Math.max(0, this.life);
+    
+    const t = 1 - this.life;
+    const color = interpolateColor(this.startColor, this.endColor, t);
+    this.sprite.tint = color;
+    
+    return this.life > 0;
+  }
+}
+
+const hexToNumber = (hex) => {
+  hex = hex.replace(/^#/, '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return (r << 16) | (g << 8) | b;
+};
+
+const interpolateColor = (color1, color2, factor) => {
+  const r1 = (color1 >> 16) & 0xff;
+  const g1 = (color1 >> 8) & 0xff;
+  const b1 = color1 & 0xff;
+  const r2 = (color2 >> 16) & 0xff;
+  const g2 = (color2 >> 8) & 0xff;
+  const b2 = color2 & 0xff;
+  const r = Math.round(r1 + (r2 - r1) * factor);
+  const g = Math.round(g1 + (g2 - g1) * factor);
+  const b = Math.round(b1 + (b2 - b1) * factor);
+  return (r << 16) | (g << 8) | b;
+};
+
+const createParticleBurst = (x, y, count) => {
+    if (!particleTexture) return;
+    const config = {
+        size: 10,
+        startColor: '#ffdd77',
+        endColor: '#ff8800',
+        gravity: 0.1
+    };
+    for (let i = 0; i < count; i++) {
+        const particle = new Particle(x, y, particleTexture, config);
+        particles.push(particle);
+        app.stage.addChild(particle.sprite);
+    }
+};
+// --- END PARTICLE SYSTEM ---
+
+onMounted(async () => {
+  if (slotMachineEl.value) {
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '10';
+
+    slotMachineEl.value.appendChild(canvas);
+
+    app = new PIXI.Application();
+    await app.init({
+      canvas: canvas,
+      width: slotMachineEl.value.clientWidth,
+      height: slotMachineEl.value.clientHeight,
+      backgroundAlpha: 0,
+      antialias: true,
+      resolution: window.devicePixelRatio || 1,
+    });
+
+    particleTexture = await PIXI.Assets.load(particleTextureUrl);
+    
+    // Adjust lighting position to be relative to the new canvas size
+    const reelsContainerRect = reelsContainer.value.getBoundingClientRect();
+    const slotMachineRect = slotMachineEl.value.getBoundingClientRect();
+    const offsetX = reelsContainerRect.x - slotMachineRect.x;
+    
+    const adjustedLightX = offsetX + reelsContainerWidth / 2;
+
+    createReelsLighting(app, adjustedLightX);
+
+    // Main particle update loop
+    app.ticker.add(() => {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const particle = particles[i];
+        if (!particle.update()) {
+          app.stage.removeChild(particle.sprite);
+          particles.splice(i, 1);
+        }
+      }
+    });
+  }
+});
+
+onUnmounted(() => {
+    if (app) {
+        app.destroy(true, true);
+    }
+});
 
 const createSymbolElement = (symbol) => {
   const imgElement = document.createElement('img');
@@ -128,8 +363,9 @@ const createSymbolElement = (symbol) => {
 watch(isSpinning, (spinning) => {
   if (spinning) {
     // --- SPIN START ---
+    gsap.to(vignetteOverlay.value, { opacity: 0, duration: 0.5 });
+    gsap.to(reelsContainer.value, { filter: 'blur(0px)', duration: 0.5 });
     displayedWinAmount.value = 0;
-
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
     const symbolHeight = 65;
@@ -139,7 +375,6 @@ watch(isSpinning, (spinning) => {
       const finalSymbols = finalOutcome[reelIndex];
       const finalSymbolElements = finalSymbols.map(s => createSymbolElement(s));
       const startingSymbolElements = Array.from(reel.children);
-
       const randomSymbolElements = [];
       const symbolKeys = Object.keys(symbolPaths).filter(k => k !== 'gold_coin');
       for (let k = 0; k < 50; k++) {
@@ -148,10 +383,8 @@ watch(isSpinning, (spinning) => {
 
       reel.innerHTML = '';
       reel.append(...finalSymbolElements, ...randomSymbolElements, ...startingSymbolElements);
-
       const spinContentHeight = (finalSymbolElements.length + randomSymbolElements.length) * symbolHeight;
       gsap.set(reel, { y: -spinContentHeight });
-
       const reelTimeline = gsap.timeline({
         delay: reelIndex * .2,
         onComplete: () => {
@@ -164,7 +397,6 @@ watch(isSpinning, (spinning) => {
           }
         }
       });
-
       reelTimeline.to(reel, {
           y: 0,
           duration: reelAnimationDuration,
@@ -184,23 +416,13 @@ watch(isSpinning, (spinning) => {
     });
   } else {
     // --- SPIN END ---
-    // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(() => {
       const hasLineWins = winningPaylines.value.length > 0;
       const hasScatterWins = winningScatters.value.length > 0;
 
       if (hasLineWins) {
-        // --- NEW SEQUENTIAL LINE WIN SEQUENCE ---
-        console.log('Line wins:'+ winningPaylines.value.length);
-        const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
-
         const masterTimeline = gsap.timeline({
           onComplete: () => {
-            // Final cleanup
-            gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
-            
-            
-            // If there are also scatter wins, play them after line wins
             if (hasScatterWins) {
               console.log('Scatter win, Sequence start...')
             }
@@ -209,41 +431,18 @@ watch(isSpinning, (spinning) => {
 
         let cumulativeWin = 0;
 
-        winningPaylines.value.forEach((line, index) => {
-          const lineComponent = winLineElements.value[index];
-          //console.log(lineComponent);
+        winningPaylines.value.forEach((line) => {
+          const lineComponent = winLineElements.value.find(c => c && c.lineId === line.lineId);
           if (!lineComponent) return;
-
-          // Get the specific symbols for this line
-          const lineSymbolElements = [];
-          const lineDefinition = line.definition;
-          // Use line.symbolsPositions which contains the actual reel indices of the win
-          if (line.symbolsPositions) {
-            line.symbolsPositions.forEach(reelIndex => {
-              const rowIndex = lineDefinition[reelIndex];
-              const symbolIndex = reelIndex * reelsSymbolsNumber.value + rowIndex;
-              const symbol = allSymbolElements[symbolIndex];
-              if (symbol) {
-                  lineSymbolElements.push(symbol);
-              }
-            });
-          } else {
-            // Fallback for older data structure if needed
-            for (let i = 0; i < line.symbolsCount; i++) {
-              const reelIndex = i;
-              const rowIndex = lineDefinition[reelIndex];
-              const symbolIndex = reelIndex * reelsSymbolsNumber.value + rowIndex;
-              lineSymbolElements.push(allSymbolElements[symbolIndex]);
-            }
-          }
           
           const lineTimeline = gsap.timeline();
 
           // 1. Draw the line
           lineTimeline.add(() => {
             lineComponent.playAnimation();
-          })
-          // Animate the win amount for this line
+          }, 0)
+
+          // Animate win amount
           .add(() => {
             cumulativeWin += line.winAmount;
             gsap.to(displayedWinAmount, { 
@@ -251,36 +450,35 @@ watch(isSpinning, (spinning) => {
               duration: 0.5, 
               ease: 'power1.out'
             });
-          }, 0.2);
+          }, 0.2)
+          
+          // 2. Darken screen
+          .to(vignetteOverlay.value, { opacity: 0.8, duration: 0.5 }, 0.5)
+          .to(reelsContainer.value, { filter: 'blur(3px)', duration: 0.5 }, 0.5)
 
-          // 2. Explode the symbols on this line
-          lineTimeline.to(lineSymbolElements, {
-              scale: 3,
-              opacity: 0,
-              filter: 'blur(5px)',
-              duration: 0.4,
-              ease: 'power1.out',
-              stagger: 0.1,
-          }, '+=0.6'); // Wait for line to draw
+          // 3. Particle Burst from center
+          .add(() => {
+            if (app) {
+              createParticleBurst(app.screen.width / 2, app.screen.height / 2, 200);
+            }
+          }, 0.7)
 
-          // 3. Hide the line
-          lineTimeline.add(() => {
+          // 4. Wait for particles and restore screen
+          .to(vignetteOverlay.value, { opacity: 0, duration: 0.7 }, "+=2.5") // Wait 2.5s for particles to fade
+          .to(reelsContainer.value, { filter: 'blur(0px)', duration: 0.7 }, "-=0.7")
+
+          // 5. Hide the line
+          .add(() => {
               if (lineComponent.pathElement) {
-                  gsap.killTweensOf(lineComponent.pathElement);
                   gsap.to(lineComponent.pathElement, { opacity: 0, duration: 0.3 });
               }
-          }, '-=0.4');
-
-          // 4. Reset the symbols for this line before the next loop
-          lineTimeline.set(lineSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
+          });
 
           masterTimeline.add(lineTimeline);
         });
 
       } else if (hasScatterWins) {
-        // --- SCATTER WIN ONLY SEQUENCE ---
         console.log('Scatter win, Sequence start...')
-        
       }
     });
   }
@@ -288,12 +486,12 @@ watch(isSpinning, (spinning) => {
 </script>
 
 <style>
+
 .slot-machine {
   position: relative; /* Needed for overlay positioning */
   display: flex;
   justify-content: center;
   align-items: center;
-  perspective: 1000px;
 }
 
 .win-lines-overlay {
