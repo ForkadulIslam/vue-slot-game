@@ -1,7 +1,4 @@
-@spd789562_particle-emitter.js?v=d51e759d:2316 Uncaught (in promise) Error: No shape found with type 'point'
-    at new _ShapeSpawnBehavior2 (@spd789562_particle-emitter.js?v=d51e759d:2316:13)
-    at @spd789562_particle-emitter.js?v=d51e759d:956:14
-    at Array.map (<anonymous>)
-    at _Emitter2.init (@spd789562_particle-emitter.js?v=d51e759d:950:40)
-    at new _Emitter2 (@spd789562_particle-emitter.js?v=d51e759d:865:10)
-    at WinParticles.vue:142:15
+@spd789562_particle-emitter.js?v=d51e759d:1046 Uncaught (in promise) TypeError: Cannot set properties of undefined (setting 'x')
+    at _Emitter2.updateSpawnPos (@spd789562_particle-emitter.js?v=d51e759d:1046:21)
+    at Proxy.play (WinParticles.vue:248:11)
+    at async Tween2.<anonymous> (SlotMachinePixi.vue:625:15)

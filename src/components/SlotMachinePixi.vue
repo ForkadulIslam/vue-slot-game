@@ -100,14 +100,13 @@ const winLineElements = ref([]);
 const winAmountContainer = ref(null);
 const reelsContainer = ref(null);
 const turbulenceEl = ref(null);
-const shockwaveAnim = ref(null);
 const explosionOverlay = ref(null);
 const coinContainer = ref(null);
 const gifContainer = ref(null);
 const slotMachineEl = ref(null);
 const vignetteOverlay = ref(null);
 const winMessageContainer = ref(null);
-const sheenOverlay = ref(null);
+
 
 
 // Ensure refs are cleared before each update to prevent memory leaks
@@ -117,21 +116,10 @@ onBeforeUpdate(() => {
 });
 
 onMounted(() => {
-  playSheenAnimation();
+  //playSheenAnimation();
 });
 
-function playSheenAnimation() {
-  if (!sheenOverlay.value) return;
 
-  gsap.to(sheenOverlay.value, {
-    transform: 'translateX(150%)',
-    duration: 1.5,
-    ease: 'power1.inOut',
-    delay: 5, // Wait 5 seconds before the first sweep
-    repeat: -1, // Repeat indefinitely
-    repeatDelay: 8, // Wait 8 seconds between sweeps
-  });
-}
 
 function playScatterWinSequence() {
     const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
@@ -511,13 +499,14 @@ const createSymbolElement = (symbol) => {
 watch(isSpinning, (spinning) => {
   if (spinning) {
     // --- SPIN START ---
+    sounds.spin.play();
     displayedWinAmount.value = 0;
 
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
     const symbolHeight = 65;
     const reelAnimationDuration = 5;
-
+    sounds.spin.play();
     reelsEl.forEach((reel, reelIndex) => {
       const finalSymbols = finalOutcome[reelIndex];
       const finalSymbolElements = finalSymbols.map(s => createSymbolElement(s));
@@ -567,6 +556,9 @@ watch(isSpinning, (spinning) => {
     });
   } else {
     // --- SPIN END ---
+    // Fade out and stop the looping spin sound
+    sounds.spin.pause();
+    
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(() => {
       const hasLineWins = winningPaylines.value.length > 0;
@@ -577,22 +569,24 @@ watch(isSpinning, (spinning) => {
         setWinAnimationPlaying(true);
 
         const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
-
+        let cumulativeWin = 0;
         const masterTimeline = gsap.timeline({
-          onComplete: () => {
+          onComplete: async () => {
             // Final cleanup
             gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
             setWinAnimationPlaying(false);
-            
+            console.log('All Line win done');
             // If there are also scatter wins, play them after line wins
+
+            if(props.winParticlesRef && props.winParticlesRef.play) {
+              await props.winParticlesRef.play(cumulativeWin);
+            }
+
             if (hasScatterWins) {
-              playScatterWinSequence();
+              //playScatterWinSequence();
             }
           }
         });
-
-        let cumulativeWin = 0;
-
         winningPaylines.value.forEach((line, index) => {
           const lineComponent = winLineElements.value[index];
           //console.log(lineComponent);
@@ -621,14 +615,27 @@ watch(isSpinning, (spinning) => {
             }
           }
           
-          const lineTimeline = gsap.timeline();
+          const lineTimeline = gsap.timeline({
+            onComplete:() => {
+              sounds.linewin.stop();
+            }
+          });
 
-          // 1. Draw the line
-          lineTimeline.add(() => {
+          // 1. Play the sound
+          lineTimeline.call( async () => {
+            if(props.winParticlesRef && props.winParticlesRef.play) {
+              await props.winParticlesRef.play();
+            }
+            sounds.linewin.play();
+          })
+          
+          // 2. Draw the line
+          .add(() => {
             lineComponent.playAnimation();
           })
           // Animate the win amount for this line
           .add(() => {
+            console.log('Line win:'+ line.winAmount)
             cumulativeWin += line.winAmount;
             gsap.to(displayedWinAmount, { 
               value: cumulativeWin, 
@@ -637,7 +644,7 @@ watch(isSpinning, (spinning) => {
             });
           }, 0.2);
 
-          // 2. Explode the symbols on this line
+          // 3. Explode the symbols on this line
           lineTimeline.to(lineSymbolElements, {
               scale: 3,
               opacity: 0,
@@ -647,7 +654,7 @@ watch(isSpinning, (spinning) => {
               stagger: 0.1,
           }, '+=0.6'); // Wait for line to draw
 
-          // 3. Hide the line
+          // 4. Hide the line
           lineTimeline.add(() => {
               if (lineComponent.pathElement) {
                   gsap.killTweensOf(lineComponent.pathElement);
@@ -655,7 +662,7 @@ watch(isSpinning, (spinning) => {
               }
           }, '-=0.4');
 
-          // 4. Reset the symbols for this line before the next loop
+          // 5. Reset the symbols for this line before the next loop
           lineTimeline.set(lineSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
 
           masterTimeline.add(lineTimeline);
@@ -663,12 +670,12 @@ watch(isSpinning, (spinning) => {
 
       } else if (hasScatterWins) {
         // --- SCATTER WIN ONLY SEQUENCE ---
-        playScatterWinSequence();
+        //playScatterWinSequence();
       }
 
       // Temporarily trigger WinParticles for every spin completion for testing
       if (props.winParticlesRef && props.winParticlesRef.play) {
-        props.winParticlesRef.play();
+        //props.winParticlesRef.play();
       }
     });
   }

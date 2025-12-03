@@ -1,7 +1,6 @@
 <template>
   <div v-show="visible" ref="particleContainerEl" class="particle-overlay">
-    <div :class="enableSheen? 'sheen-overlay' : ''"></div>
-    <div ref="storageNumberEl" id="storage_number">0</div>
+    
   </div>
 </template>
 
@@ -21,19 +20,20 @@ let emitter = null;
 let enableSheen = ref(false);
 
 // Emitter configuration from PixiParticleV8.vue
+
 const emitterConfig = {
   "lifetime": {
-    "min": 0.5,
-    "max": 0.7
+    "min": 0.1,
+    "max": 0.75
   },
-  "frequency": 0.008,
+  "frequency": 0.001,
   "pos": {
     "x": 0,
     "y": 0
   },
   "spawnChance": 1,
-  "emitterLifetime": 0.55,
-  "maxParticles": 500,
+  "emitterLifetime": 0,
+  "maxParticles": 1000,
   "particlesPerWave": 1,
   "addAtBack": false,
   "ease": [
@@ -55,27 +55,129 @@ const emitterConfig = {
   ],
   "behaviors": [
     {
-      "type": "textureSingle",
+      "type": "textureRandom",
       "config": {
-        "texture": hardRain
+        "textures": [
+          "fireSpark_particle.png",
+          "fireSpark_Fire.png"
+        ]
       }
     },
     {
-      "type": "moveSpeed",
+      "type": "spawnShape",
       "config": {
-        "speed": {
-          "list": [
+        "type": "polygonalChain",
+        "data": [
+          [
             {
-              "time": 0,
-              "value": 600
+              "x": -300,
+              "y": 100
             },
             {
-              "time": 1,
-              "value": 200
+              "x": -300,
+              "y": -100
             }
           ],
-          "isStepped": true
-        }
+          [
+            {
+              "x": -300,
+              "y": -100
+            },
+            {
+              "x": -250,
+              "y": -100
+            }
+          ],
+          [
+            {
+              "x": -300,
+              "y": 0
+            },
+            {
+              "x": -250,
+              "y": 0
+            }
+          ],
+          [
+            {
+              "x": -200,
+              "y": 100
+            },
+            {
+              "x": -200,
+              "y": -100
+            }
+          ],
+          [
+            {
+              "x": -100,
+              "y": 100
+            },
+            {
+              "x": -100,
+              "y": -100
+            },
+            {
+              "x": -50,
+              "y": -50
+            },
+            {
+              "x": -100,
+              "y": 0
+            },
+            {
+              "x": -50,
+              "y": 100
+            }
+          ],
+          [
+            {
+              "x": 0,
+              "y": 100
+            },
+            {
+              "x": 0,
+              "y": -100
+            }
+          ],
+          [
+            {
+              "x": 0,
+              "y": -100
+            },
+            {
+              "x": 50,
+              "y": -100
+            }
+          ],
+          [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 50,
+              "y": 0
+            }
+          ],
+          [
+            {
+              "x": 0,
+              "y": 100
+            },
+            {
+              "x": 50,
+              "y": 100
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "type": "moveSpeedStatic",
+      "config": {
+        "min": 50,
+        "max": 50
       }
     },
     {
@@ -85,11 +187,11 @@ const emitterConfig = {
           "list": [
             {
               "time": 0,
-              "value": 0.1
+              "value": 0.05
             },
             {
               "time": 1,
-              "value": 1.5
+              "value": 0.15
             }
           ],
           "isStepped": false
@@ -104,7 +206,7 @@ const emitterConfig = {
           "list": [
             {
               "time": 0,
-              "value": 1
+              "value": 0.62
             },
             {
               "time": 1,
@@ -121,26 +223,22 @@ const emitterConfig = {
         "color": {
           "list": [
             {
-              "value": "#10FB3B",
+              "value": "#fff191",
               "time": 0
             },
             {
-              "value": "#FFE2A8",
+              "value": "#ff622c",
               "time": 1
             }
-          ],
-          "isStepped": false
+          ]
         }
       }
     },
     {
-      "type": "rotation",
+      "type": "rotationStatic",
       "config": {
-        "minStart": 260,
-        "maxStart": 280,
-        "minSpeed": 0,
-        "maxSpeed": 20,
-        "accel": 0
+        "min": 265,
+        "max": 275
       }
     }
   ]
@@ -281,16 +379,5 @@ defineExpose({ play });
   animation-delay: calc(var(--reel-index) * 0.7s);
 }
 
-#storage_number {
-  position: absolute;
-  top: 6%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 40px;
-  color: gold;
-  font-weight: bold;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
-  z-index: 1001; /* Ensure it's above the particles */
-  pointer-events: none; /* Allow interaction with elements behind */
-}
+
 </style>

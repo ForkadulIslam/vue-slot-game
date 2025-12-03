@@ -129,13 +129,13 @@ const emitterConfig ={
 
 
 onMounted(async () => {
-    gsap.from("#storage_number", {
-  innerText: 0,
-  duration: 5,
-  snap : {
-     innerText: 0.01
-  }
-});
+  gsap.from("#storage_number", {
+    innerText: 0,
+    duration: 5,
+    snap : {
+      innerText: 0.01
+    }
+  });
 
 
   if (particleContainerEl.value) {

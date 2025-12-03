@@ -44,10 +44,11 @@ const sessionId = ref(0);
 
 // --- 3. SOUNDS ---
 const sounds = {
-  spin: new Howl({ src: [new URL('../assets/sounds/spin.wav', import.meta.url).href] }),
+  spin: new Howl({ src: [new URL('../assets/sounds/spin.wav', import.meta.url).href], loop: true }),
   win: new Howl({ src: [new URL('../assets/sounds/win-alert.wav', import.meta.url).href] }),
   payout: new Howl({ src: [new URL('../assets/sounds/payout-award.wav', import.meta.url).href] }),
   explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
+  linewin: new Howl({ src: [new URL('../assets/sounds/linewin.mp3', import.meta.url).href] }),
 };
 
 // --- Helper function to generate outcome from API response ---
