@@ -1,45 +1,71 @@
 <template>
   <div class="control-panel-container">
-    <div class="top-controls">
-      <BalanceDisplay :balance="balance" />
-      <div class="win-display">
-        <span class="win-label">Win</span>
-        <span class="win-amount">{{ displayedWinAmount.toFixed(2) }}</span>
+    
+    <!-- Top Information Bar (Recessed into the stone) -->
+    <div class="info-slab">
+      <div class="info-group">
+        <span class="label">Balance</span>
+        <span class="value">{{ balance }}</span>
+      </div>
+      <div class="info-group win-group">
+        <span class="label">Win</span>
+        <span class="value win-text">{{ displayedWinAmount.toFixed(2) }}</span>
       </div>
     </div>
-    <div class="control-panel">
-      <div class="bet-selection-container">
-        <button @click="toggleBetTable" class="control-button bet-toggle-button">
-          <svg class="bet-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-          </svg>
-          <span class="bet-amount-display">{{ betAmount }}</span>
-        </button>
-        <div v-if="showBetTable" class="bet-table">
-          <button v-for="bet in availableBets" :key="bet" @click="selectBet(bet)" class="bet-table-item">
-            {{ bet }}
+
+    <!-- Main Control Row -->
+    <div class="controls-row">
+      
+      <!-- Left: Bet Button (Circular) -->
+      <div class="side-control">
+        <div class="bet-container">
+          <button @click="toggleBetTable" class="stone-circle-btn small-btn">
+             <!-- Stack of coins icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" class="icon">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.86 0 .92-.81 1.5-2.19 1.5-1.65 0-2.35-.9-2.39-2.06H7.9c.06 1.92 1.41 3.05 2.97 3.42V20h2.12v-1.68c1.63-.25 2.92-1.32 2.92-2.92 0-2.01-1.66-3.04-3.6-3.54z"/>
+            </svg>
+            <span class="btn-label-floating">BET: {{ betAmount }}</span>
           </button>
+
+          <!-- Popup Bet Table -->
+          <div v-if="showBetTable" class="stone-popup">
+            <button v-for="bet in availableBets" :key="bet" @click="selectBet(bet)" class="popup-item">
+              {{ bet }}
+            </button>
+          </div>
         </div>
       </div>
-      <button @click="spin" class="control-button spin-button" :disabled="isSpinning" :class="{ 'spinning': isSpinning }">
-        <svg class="spin-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46c.9-.99 1.44-2.3 1.44-4.26 0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 9.74c-.9.99-1.44 2.3-1.44 4.26 0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-        </svg>
-      </button>
-      <button @click="toggleAutoplay" class="control-button autoplay-button" :class="{ 'active': isAutoplaying }">
-        <img src="../assets/images/autoplay-icon.svg" alt="Autoplay" class="autoplay-icon" />
-        <span>{{ isAutoplaying ? 'Stop' : 'Auto' }}</span>
-      </button>
+
+      <!-- Center: Spin Button (Big Stone/Gem) -->
+      <div class="center-control">
+        <button @click="spin" class="spin-stone-btn" :disabled="isSpinning" :class="{ 'spinning': isSpinning }">
+          <div class="inner-ring">
+             <span v-if="!isSpinning" class="spin-text">SPIN</span>
+             <!-- Simple Refresh Icon for spinning state -->
+             <svg v-else class="spin-icon-anim" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46c.9-.99 1.44-2.3 1.44-4.26 0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 9.74c-.9.99-1.44 2.3-1.44 4.26 0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+             </svg>
+          </div>
+        </button>
+      </div>
+
+      <!-- Right: Auto Button (Circular) -->
+      <div class="side-control">
+         <button @click="toggleAutoplay" class="stone-circle-btn small-btn" :class="{ 'active': isAutoplaying }">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="icon">
+               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+            <span class="btn-label-floating">{{ isAutoplaying ? 'STOP' : 'AUTO' }}</span>
+         </button>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import BalanceDisplay from './BalanceDisplay.vue';
+import { ref } from 'vue';
 import { useSlotGame } from '../composables/useSlotGame';
-
-
 
 const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, displayedWinAmount } = useSlotGame();
 
@@ -56,266 +82,211 @@ const selectBet = (bet) => {
 </script>
 
 <style scoped>
+/* 1. The Stone Altar Container */
 .control-panel-container {
-  width: 325px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem 0rem;
-  background-color: rgba(0, 0, 0, 0.2);
-  margin-top: 10px;
-}
-
-.top-controls {
-  display: flex;
-  justify-content: space-around;
   width: 100%;
-  gap: 1rem; /* Added gap for spacing between balance and win displays */
-  margin-bottom: 1rem; /* Added space between top-controls and control-panel */
+  max-width: 500px; /* Constrain on desktop */
+  padding: 10px 20px 20px 20px;
+  
+  /* Creates a dark stone texture using gradients */
+  background: 
+    linear-gradient(to bottom, #2b2b2b, #1a1a1a);
+  
+  border-top: 3px solid #555; /* Highlight edge */
+  border-radius: 30px 30px 0 0; /* Rounded top like a tombstone */
+  
+  /* 3D Depth Shadow */
+  box-shadow: 
+    0 -5px 15px rgba(0,0,0,0.5), 
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+  z-index: 10;
 }
 
-.win-display {
+/* 2. Top Info Slab (Recessed Screen) */
+.info-slab {
+  display: flex;
+  justify-content: space-between;
+  background: #111;
+  border-radius: 12px;
+  padding: 8px 20px;
+  /* Inner shadow makes it look carved IN */
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1);
+  border-bottom: 1px solid #333;
+}
+
+.info-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 0.5rem 1.5rem;
-  border-radius: 10px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
 
-.win-label {
-  font-size: 1rem;
-  color: var(--light-gray);
+.label {
+  font-size: 0.7rem;
+  color: #888;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.win-amount {
-  font-size: 1.2rem;
+.value {
+  font-family: 'Courier New', monospace; /* Digital look */
+  font-size: 1.1rem;
+  color: #ddd;
   font-weight: bold;
-  color: #32CD32;
-  text-shadow: 0 0 20px rgba(50, 205, 50, 1), 0 0 30px rgba(50, 205, 50, 0.8);
-  display: inline-block;
+}
+
+.win-text {
+  color: #4ade80; /* Bright Green */
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+}
+
+/* 3. Controls Layout */
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.center-control {
+  transform: translateY(-10px); /* Push the spin button UP slightly */
+}
+
+/* 4. Side Buttons (Bet & Auto) - Stone Circles */
+.stone-circle-btn {
   width: 60px;
-  text-align: center;
-}
-
-.control-panel {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 0 0.5rem;
-  gap: 2rem; /* Add some gap between buttons */
-}
-
-.autoplay-button {
-  background-color: #9370DB; /* Medium Purple - Jili inspired */
-  color: white;
+  height: 60px;
+  border-radius: 50%;
   border: none;
-  border-radius: 10px;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.8rem;
-  font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
   
-}
-
-.control-button:hover {
-  background-color: var(--brand-pink);
-  transform: translateY(-2px);
-}
-
-.control-button:disabled {
-  background-color: var(--mid-gray);
-  cursor: not-allowed;
-}
-
-.spin-button {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  /* Metallic/Stone Gradient */
+  background: radial-gradient(circle at 30% 30%, #4a4a4a, #222);
+  
+  /* 3D Button Bevel */
+  box-shadow: 
+    0 5px 10px rgba(0,0,0,0.5), 
+    inset 0 2px 3px rgba(255,255,255,0.2),
+    0 0 0 2px #333; /* Dark rim */
+    
+  color: #fbbf24; /* Gold Icon */
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   position: relative;
-  overflow: hidden;
+  transition: transform 0.1s;
+}
+
+.stone-circle-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.stone-circle-btn.active {
+  background: radial-gradient(circle at 30% 30%, #7f1d1d, #450a0a); /* Red for Stop */
+  color: white;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 2px;
+}
+
+.btn-label-floating {
+  position: absolute;
+  bottom: -20px;
+  font-size: 0.7rem;
+  color: #aaa;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 5. Main Spin Button (The Artifact) */
+.spin-stone-btn {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
+  padding: 5px;
+  
+  /* Outer Gold/Bronze Rim */
+  background: linear-gradient(145deg, #d4af37, #8a6e05);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+  transition: transform 0.2s;
 }
 
-.spin-button.spinning {
-  animation: spin-button-pulse 1s infinite alternate;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), 0 0 30px rgba(255, 223, 0, 0.7);
+.spin-stone-btn:active {
+  transform: scale(0.95);
 }
 
-@keyframes spin-button-pulse {
-  from {
-    transform: scale(1);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 25px rgba(255, 223, 0, 0.5);
-  }
-  to {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 0 40px rgba(255, 223, 0, 0.8);
-  }
-}
-
-.spin-button::before {
-  content: '';
-  position: absolute;
+.inner-ring {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  z-index: -1;
+  /* Inner Green Gem/Stone */
+  background: radial-gradient(circle at 30% 30%, #10b981, #064e3b);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid rgba(0,0,0,0.3);
+  box-shadow: inset 0 5px 10px rgba(0,0,0,0.4);
 }
 
-/* Normal state: small golden line along border */
-.spin-button:not(.spinning)::before {
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: conic-gradient(transparent 0%, transparent 90%, gold 95%, transparent 100%);
-  animation: rotate-slow 8s linear infinite;
-  mask: radial-gradient(circle at center, transparent 65%, black 70%);
-  -webkit-mask: radial-gradient(circle at center, transparent 65%, black 70%);
+.spin-text {
+  font-weight: 900;
+  color: white;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 2px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
 }
 
-/* Spinning state: broad golden glow */
-.spin-button.spinning::before {
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(transparent, rgba(255, 215, 0, 0.8), transparent 50%, rgba(255, 215, 0, 0.8), transparent);
-  animation: rotate 4s linear infinite;
-  mask: none;
-  -webkit-mask: none;
+.spin-icon-anim {
+  width: 40px;
+  height: 40px;
+  color: white;
+  animation: spin 1s linear infinite;
 }
 
-.spin-button::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  background: linear-gradient(45deg, var(--brand-pink), var(--brand-purple));
-  border-radius: 50%;
-  z-index: 0;
-}
-
-.spin-button .spin-icon {
-  position: relative;
-  z-index: 1;
-  width: 60%; /* Adjust size to fit */
-  height: 60%; /* Adjust size to fit */
-  color: gold; /* Make the icon golden */
-}
-
-@keyframes rotate-slow {
+@keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.bet-selection-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.bet-toggle-button {
-  background: linear-gradient(45deg, #FFD700, #FFA500); /* Golden gradient */
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 25px rgba(255, 223, 0, 0.5); /* Added golden glow */
-  width: 70px; /* Small width */
-  height: 40px; /* Small height */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.bet-toggle-button .bet-icon {
-  width: 30px;
-  height: 30px;
-  color: #fff; /* White color for the icon */
-  margin-right: 5px; /* Add some space between icon and text */
-}
-
-.bet-toggle-button .bet-amount-display {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
-
-
-
-.bet-table {
+/* 6. Bet Popup Table */
+.stone-popup {
   position: absolute;
-  top: -10px; /* Adjust as needed to position above the button */
-  left: 50%;
-  transform: translateX(-50%) translateY(-100%); /* Position above and center */
-  background-color: rgba(0, 0, 0, 0.9);
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 0 25px rgba(255, 223, 0, 0.3);
+  bottom: 80px;
+  left: 0;
+  background: #222;
+  border: 2px solid #555;
   border-radius: 10px;
   padding: 10px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(1, 1fr);
   gap: 5px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+  z-index: 100;
 }
 
-.bet-table-item {
-  background-color: #9370DB; /* Medium Purple - Jili inspired */
-  color: white;
-  border: none;
+.popup-item {
+  background: #333;
+  color: gold;
+  border: 1px solid #444;
+  padding: 8px 15px;
   border-radius: 5px;
-  padding: 0.5rem;
-  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  
+  font-weight: bold;
 }
 
-.bet-table-item:hover {
-  background-color: var(--brand-pink);
-}
-
-.autoplay-button.active {
-  background-color: #e74c3c;
-}
-
-
-
-.autoplay-icon {
-  width: 25px; /* Make icon smaller */
-  height: 25px; /* Make icon smaller */
-}
-
-.control-button span {
-  font-size: 0.9rem;
+.popup-item:hover {
+  background: #444;
 }
 </style>
