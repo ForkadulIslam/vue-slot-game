@@ -1,4 +1,4 @@
-import { ref, readonly, nextTick } from 'vue';
+import { ref, readonly, watch, onMounted } from 'vue';
 import { Howl } from 'howler';
 import axios from 'axios';
 
@@ -19,11 +19,11 @@ const symbolPaths = {
 };
 
 // --- 2. SHARED REACTIVE STATE ---
-// By defining the state outside the function, it becomes a singleton.
 const balance = ref(0);
 const betAmount = ref(0);
 const availableBets = ref(new Set());
 const isSpinning = ref(false);
+const isCelebrationPlaying = ref(false); // Typo corrected
 const isAutoplaying = ref(false);
 const outcome = ref([]); 
 const reelsForDisplay = ref([]);
@@ -34,7 +34,6 @@ const winningSymbolPositions = ref([]);
 const winningScatters = ref([]);
 const scatterWinAmount = ref(0);
 const isWinAnimationPlaying = ref(false);
-
 const payTable = ref({});
 const linesDefinitions = ref({});
 const reelsNumber = ref(5);
@@ -44,15 +43,50 @@ const sessionId = ref(0);
 
 // --- 3. SOUNDS ---
 const sounds = {
-  spin: new Howl({ src: [new URL('../assets/sounds/spin.wav', import.meta.url).href], loop: true }),
   win: new Howl({ src: [new URL('../assets/sounds/win-alert.wav', import.meta.url).href] }),
   payout: new Howl({ src: [new URL('../assets/sounds/payout-award.wav', import.meta.url).href] }),
   explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
-  linewin: new Howl({ src: [new URL('../assets/sounds/linewin.mp3', import.meta.url).href] }),
+  linewin: new Howl({ src: [new URL('../assets/sounds/linewin.mp3', import.meta.url).href], volume:0.1 }),
+  backgroundMusic: new Howl({ src: [new URL('../assets/sounds/background_music.mp3', import.meta.url).href], loop: true, volume: 0 }),
+  spinningMusic: new Howl({ src: [new URL('../assets/sounds/spinning_music.mp3', import.meta.url).href], loop: true, volume: 0 }),
+  celebrationMusic: new Howl({ src: [new URL('../assets/sounds/celebration_music.mp3', import.meta.url).href], loop: true, volume: 0 })
+};
+
+// --- AUDIO MANAGEMENT ---
+let activeMusic = null;
+
+const manageSound = () => {
+  const musicOut = activeMusic;
+  let musicIn = null;
+
+  if (isCelebrationPlaying.value) {
+    musicIn = sounds.celebrationMusic;
+  } else if (isSpinning.value) {
+    musicIn = sounds.spinningMusic;
+  } else {
+    musicIn = sounds.backgroundMusic;
+  }
+
+  if (musicOut === musicIn) return;
+
+  if (musicOut) {
+    // Fade out the old music
+    musicOut.fade(musicOut.volume(), 0, 500);
+    musicOut.once('fade', () => {
+      musicOut.pause();
+    });
+  }
+
+  // Fade in the new music
+  musicIn.play();
+  musicIn.fade(0, 0.5, 500); // Target volume for background is 0.5
+  
+  activeMusic = musicIn;
 };
 
 // --- Helper function to generate outcome from API response ---
 const endpoint = import.meta.env.VITE_API_BASE_URL;
+
 const startGameSession = async ()=> {
   try {
     const response = await axios.post(`${endpoint}/start-session`, {
@@ -140,10 +174,26 @@ payTable.value = gameSession.paytable;
 linesDefinitions.value = gameSession.linesDefinitions;
 availableSymbols.value = gameSession.availableSymbols;
 
-
-
+let audioUnlocked = false;
 
 export function useSlotGame() {
+  const unlockAudio = () => {
+    if (audioUnlocked) return;
+    if (Howler.ctx && Howler.ctx.state === 'suspended') {
+      Howler.ctx.resume().then(() => {
+        manageSound(); // Start music after context is resumed
+        audioUnlocked = true;
+      });
+    } else if (Howler.ctx) {
+      // If context is already running, just start the music
+      manageSound();
+      audioUnlocked = true;
+    }
+  };
+
+  watch(isSpinning, manageSound);
+  watch(isCelebrationPlaying, manageSound);
+
   // --- 4. CORE GAME LOGIC ---
   const calculateWins = () => {
     let totalWinnings = 0;
@@ -154,6 +204,7 @@ export function useSlotGame() {
 
   // --- 5. MAIN SPIN FUNCTION ---
   const spin = async() => {
+    unlockAudio();
     if (isSpinning.value || balance.value < betAmount.value || isWinAnimationPlaying.value) return;
     const finalOutcome = await getSpinAndOutcome();
     outcome.value = finalOutcome;
@@ -170,10 +221,12 @@ export function useSlotGame() {
   };
 
   function setBetAmount(bet) {
+    unlockAudio();
     betAmount.value = bet;
-  }
+  };
 
   function toggleAutoplay() {
+    unlockAudio();
     isAutoplaying.value = !isAutoplaying.value;
     if (isAutoplaying.value) {
       spin();
@@ -183,6 +236,14 @@ export function useSlotGame() {
   function setWinAnimationPlaying(value) {
     isWinAnimationPlaying.value = value;
   }
+
+  function startCelebration() {
+    isCelebrationPlaying.value = true;
+  }
+
+  function endCelebration() {
+    isCelebrationPlaying.value = false;
+  }
   
   return { 
     balance: readonly(balance), 
@@ -191,7 +252,10 @@ export function useSlotGame() {
     isSpinning: readonly(isSpinning), 
     isAutoplaying: readonly(isAutoplaying), 
     isWinAnimationPlaying: readonly(isWinAnimationPlaying),
+    isCelebrationPlaying: readonly(isCelebrationPlaying),
     setWinAnimationPlaying,
+    startCelebration,
+    endCelebration,
     outcome: readonly(outcome), 
     reelsForDisplay: readonly(reelsForDisplay), 
     winAmount: readonly(winAmount),

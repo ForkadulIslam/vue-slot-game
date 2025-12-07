@@ -1,4 +1,2 @@
-@spd789562_particle-emitter.js?v=d51e759d:1046 Uncaught (in promise) TypeError: Cannot set properties of undefined (setting 'x')
-    at _Emitter2.updateSpawnPos (@spd789562_particle-emitter.js?v=d51e759d:1046:21)
-    at Proxy.play (WinParticles.vue:248:11)
-    at async Tween2.<anonymous> (SlotMachinePixi.vue:625:15)
+Position: x:392.8000183105469, y:157.5
+WinParticles.vue:97 Position: x:457.8000183105469, y:222.5

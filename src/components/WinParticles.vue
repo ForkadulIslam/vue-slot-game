@@ -1,5 +1,5 @@
 <template>
-  <div v-show="visible" ref="particleContainerEl" class="particle-overlay">
+  <div v-show="visible" ref="particleContainerEl" class="particle-overlay" :class="{ 'dimmed': isDimmed }">
     <div :class="enableSheen? 'sheen-overlay' : ''"></div>
     <div ref="storageNumberEl" id="storage_number">0</div>
   </div>
@@ -10,141 +10,18 @@ import { ref, onMounted, onUnmounted, defineExpose, nextTick } from 'vue';
 import * as PIXI from 'pixi.js';
 import { Emitter, upgradeConfig } from '@spd789562/particle-emitter';
 import { gsap } from 'gsap';
-
-import hardRain from '../assets/images/hard_rain.png'
+import { lineWinEffectConfig, fireReelEffectConfig, coinFloodinEffectConfig } from '../composables/particleConfigs';
+import { hardRainTexturePath, fireSparkParticleTexturePath, fireSparkFireTexturePath, coinParticle2 } from '../composables/particleConfigs';
 
 const particleContainerEl = ref(null);
-const storageNumberEl = ref(null); // New ref for the number counter
+const storageNumberEl = ref(null);
 const visible = ref(false);
-let app = null;
-let emitter = null;
-let enableSheen = ref(false);
+const showWinAmount = ref(false);
+const isDimmed = ref(false);
 
-// Emitter configuration from PixiParticleV8.vue
-const emitterConfig = {
-  "lifetime": {
-    "min": 0.5,
-    "max": 0.7
-  },
-  "frequency": 0.008,
-  "pos": {
-    "x": 0,
-    "y": 0
-  },
-  "spawnChance": 1,
-  "emitterLifetime": 0.55,
-  "maxParticles": 500,
-  "particlesPerWave": 1,
-  "addAtBack": false,
-  "ease": [
-    {
-      "s": 0,
-      "cp": 0.379,
-      "e": 0.548
-    },
-    {
-      "s": 0.548,
-      "cp": 0.717,
-      "e": 0.676
-    },
-    {
-      "s": 0.676,
-      "cp": 0.635,
-      "e": 1
-    }
-  ],
-  "behaviors": [
-    {
-      "type": "textureSingle",
-      "config": {
-        "texture": hardRain
-      }
-    },
-    {
-      "type": "moveSpeed",
-      "config": {
-        "speed": {
-          "list": [
-            {
-              "time": 0,
-              "value": 600
-            },
-            {
-              "time": 1,
-              "value": 200
-            }
-          ],
-          "isStepped": true
-        }
-      }
-    },
-    {
-      "type": "scale",
-      "config": {
-        "scale": {
-          "list": [
-            {
-              "time": 0,
-              "value": 0.1
-            },
-            {
-              "time": 1,
-              "value": 1.5
-            }
-          ],
-          "isStepped": false
-        },
-        "minMult": 1
-      }
-    },
-    {
-      "type": "alpha",
-      "config": {
-        "alpha": {
-          "list": [
-            {
-              "time": 0,
-              "value": 1
-            },
-            {
-              "time": 1,
-              "value": 0
-            }
-          ],
-          "isStepped": false
-        }
-      }
-    },
-    {
-      "type": "color",
-      "config": {
-        "color": {
-          "list": [
-            {
-              "value": "#10FB3B",
-              "time": 0
-            },
-            {
-              "value": "#FFE2A8",
-              "time": 1
-            }
-          ],
-          "isStepped": false
-        }
-      }
-    },
-    {
-      "type": "rotation",
-      "config": {
-        "minStart": 260,
-        "maxStart": 280,
-        "minSpeed": 0,
-        "maxSpeed": 20,
-        "accel": 0
-      }
-    }
-  ]
-};
+let app = null;
+const emitters = {};
+let enableSheen = ref(false);
 let handleResize;
 
 onMounted(async () => {
@@ -159,37 +36,50 @@ onMounted(async () => {
     });
     particleContainerEl.value.appendChild(app.canvas);
 
-    const pixiParticleContainer = new PIXI.ParticleContainer(1000, { // Adjusted for new maxParticles
-      uvs: true,
-      position: true,
-      rotation: true,
-      scale: true,
-      alpha: true,
-      color: true,
-    });
-    app.stage.addChild(pixiParticleContainer);
+    // Load all textures for all effects
+    const allTextures = [
+      hardRainTexturePath, 
+      fireSparkParticleTexturePath, 
+      fireSparkFireTexturePath,
+      coinParticle2
+    ];
+    await PIXI.Assets.load(allTextures);
 
-    // Pre-load the texture into the asset cache. This is the crucial step.
-    await PIXI.Assets.load(hardRain);
+    // Create Win Emitter
+    const winContainer = new PIXI.ParticleContainer(1000, { uvs: true, position: true, rotation: true, scale: true, alpha: true, color: true });
+    app.stage.addChild(winContainer);
+    const winConfig = upgradeConfig(lineWinEffectConfig);
+    emitters.win = new Emitter(winContainer, winConfig);
+    emitters.win.emit = false;
 
-    const newConfig = upgradeConfig(emitterConfig);
+    // Create FireOnReels Emitter
+    const fireContainer = new PIXI.ParticleContainer(1000, { uvs: true, position: true, rotation: true, scale: true, alpha: true, color: true });
+    app.stage.addChild(fireContainer);
+    const fireConfig = upgradeConfig(fireReelEffectConfig);
+    emitters.fire = new Emitter(fireContainer, fireConfig);
+    emitters.fire.emit = false;
 
-    emitter = new Emitter(pixiParticleContainer, newConfig);
-    emitter.emit = false; // Do not start emitting immediately
+    // Create CoinFlooding Emitter
+    const coinFloodingContainer = new PIXI.ParticleContainer(4000, { uvs: true, position: true, rotation: true, scale: true, alpha: true, color: true });
+    app.stage.addChild(coinFloodingContainer);
+    const coinFloodingConfig = upgradeConfig(coinFloodinEffectConfig);
+    emitters.coinFlooding = new Emitter(coinFloodingContainer, coinFloodingConfig);
+    emitters.coinFlooding.emit = false;
 
+    // Update all emitters in the ticker
     let elapsed = Date.now();
     app.ticker.add(() => {
         const now = Date.now();
-        emitter.update((now - elapsed) * 0.001);
+        const delta = (now - elapsed) * 0.001;
+        Object.values(emitters).forEach(emitter => {
+            if (emitter) emitter.update(delta);
+        });
         elapsed = now;
     });
 
     handleResize = () => {
         if (app && particleContainerEl.value) {
             app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
-            if (emitter) {
-              emitter.updateSpawnPos(0, 0);
-            }
         }
     };
     window.addEventListener('resize', handleResize);
@@ -198,51 +88,76 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
-  enableSheen.value = true;
-  if (emitter) {
-    emitter.destroy();
-    emitter = null;
-  }
+  Object.values(emitters).forEach(emitter => emitter.destroy());
   if (app) {
     app.destroy(true, true);
     app = null;
   }
 });
 
-const play = async (lineWinAmount=null) => {
+const playWin = async (symbolCoordinate) => {
+  const emitter = emitters['win'];
   if (!emitter || !app) return;
 
-  enableSheen.value = true;
   visible.value = true;
-  // Wait for the DOM to update after `v-show` makes the container visible
   await nextTick();
-
-  // Now that the container has its dimensions, explicitly tell the renderer to resize
+  
   app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
-  emitter.updateSpawnPos(particleContainerEl.value.clientWidth/2, particleContainerEl.value.clientHeight/2);
+  let spawnX = symbolCoordinate.x;
+  let spawnY = symbolCoordinate.y;
+  //console.log(`Position: x:${spawnX}, y:${spawnY}`);
+  emitter.updateSpawnPos(spawnX, spawnY);
   emitter.emit = true;
 
-  if(lineWinAmount){
-    // Animate the number counter
-
-    storageNumberEl.value.innerText = Math.round(lineWinAmount).toLocaleString()
-    gsap.from(storageNumberEl.value, { // Use ref instead of ID string
-      innerText: 0,
-      duration: 3,
-      snap : {
-        innerText: 0.01
-      },
-      onComplete: () => { // NEW onComplete for the number animation
-        if (storageNumberEl.value) {
-          visible.value = false;
-          enableSheen.value = false; 
-        }
-      }
-    });
-  }
 };
 
-defineExpose({ play });
+const playFireOnReels = async () => {
+  const emitter = emitters['fire'];
+  if (!emitter || !app) return;
+
+  visible.value = true;
+  await nextTick();
+  
+  app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
+  
+  const spawnPos = {
+    x: particleContainerEl.value.clientWidth / 2,
+    y: particleContainerEl.value.clientHeight / 2,
+  };
+  emitter.updateSpawnPos(spawnPos.x, spawnPos.y);
+  emitter.emit = true;
+}
+
+
+const coinFlooding = async (winAmount)=>{
+  const emitter = emitters['coinFlooding'];
+  if (!emitter || !app) return;
+
+  visible.value = true;
+  await nextTick();
+  
+  app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
+  emitter.updateSpawnPos(particleContainerEl.value.clientWidth/2, particleContainerEl.value.clientHeight/2);
+
+  const effectDuration = coinFloodinEffectConfig.emitterLifetime + coinFloodinEffectConfig.lifetime.max;
+
+  // Use gsap to control the start and end of the effect
+  gsap.to({}, { // Dummy object for tweening
+    duration: 2, // emitter lifetime + particle lifetime
+    onStart: () => {
+      isDimmed.value = true;
+      emitter.emit = true;
+    },
+    onComplete: () => {
+      emitter.emit = false;
+      isDimmed.value = false;
+      visible.value = false; // Hide after effect is complete
+    }
+  });
+}
+
+
+defineExpose({ playWin, playFireOnReels, coinFlooding });
 
 
 </script>
@@ -256,7 +171,11 @@ defineExpose({ play });
   height: 100%;
   z-index: 1000;
   pointer-events: none;
-  
+}
+
+.particle-overlay.dimmed{
+  background-color: rgba(0, 0, 0, 0.7); /* A semi-transparent black overlay */
+  transition: background-color 0.5s ease;
 }
 
 @keyframes sheen-sweep {

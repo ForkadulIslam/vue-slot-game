@@ -6,10 +6,10 @@
       <ControlPanel />
       <WinParticles ref="winParticles" />
       <!-- <LearnPixiLighting/> -->
-
       <!-- <CartoonSmoke/> -->
 
       <!-- <PixiParticleV8/> -->
+      <!-- <ManualParticleEmitter/> -->
     </div>
   </div>
 </template>
@@ -23,6 +23,7 @@ import ControlPanel from './components/ControlPanel.vue';
 //import MachineGraphics from './components/MachineGraphics.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
 import WinParticles from './components/WinParticles.vue';
+//import ManualParticleEmitter from './components/ManualParticleEmitter.vue';
 import { ref } from 'vue';
 
 const winParticles = ref(null);
