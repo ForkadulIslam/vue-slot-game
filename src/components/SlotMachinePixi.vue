@@ -2,7 +2,11 @@
   <div class="slot-machine" ref="slotMachineEl">
     
     <div ref="reelsContainer" class="reels-container">,
+      <!-- NEW: Ambient Lantern Glow (Animated via GSAP) -->
+      <div class="lantern-glow" ref="lanternGlow"></div>
       
+      <!-- NEW: Static Gloss Reflection -->
+      <div class="gloss-reflection"></div>
       <Reel
         v-for="(reel, index) in reels"
         :key="index"
@@ -89,6 +93,7 @@ const gifContainer = ref(null);
 const slotMachineEl = ref(null);
 const vignetteOverlay = ref(null);
 const winMessageContainer = ref(null);
+const lanternGlow = ref(null);
 
 
 
@@ -100,6 +105,19 @@ onBeforeUpdate(() => {
 
 onMounted(() => {
   //playSheenAnimation();
+
+  // --- NEW: Lantern Flicker Effect ---
+  if (lanternGlow.value) {
+    gsap.to(lanternGlow.value, {
+      opacity: 0.6, // Flicker between 0.3 (css) and 0.6
+      duration: 0.15,
+      yoyo: true,
+      repeat: -1,
+      ease: "rough({ template: power1.inOut, strength: 1, points: 20, taper: 'none', randomize: true, clamp: false })",
+      // If "rough" ease isn't loaded, use "sine.inOut" with random duration:
+      // onRepeat: () => gsap.globalTimeline.timeScale(0.8 + Math.random() * 0.5) 
+    });
+  }
 });
 
 
@@ -305,6 +323,7 @@ watch(isSpinning, (spinning) => {
   perspective: 1000px;
   /* height: 380px; */
   border-radius: 20px 20px 0 0;
+  margin-bottom: 20px; /* Space between reels and stone control panel */
 }
 
 .win-lines-overlay {
@@ -330,12 +349,28 @@ watch(isSpinning, (spinning) => {
 .reels-container {
     display: flex;
     width: 325px;
-    overflow: hidden;
-    background: radial-gradient(ellipse at 50% 30%, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.05) 100%);
-    justify-content: flex-start;
     height: 260px;
-    transition: filter 0.3s ease-in-out;
-    border-radius: 10px;
+    justify-content: flex-start;
+    overflow: hidden;
+    position: relative; /* Needed for overlays */
+    border-radius: 12px;
+    
+    /* 1. Dark Glass Background */
+    background: linear-gradient(
+      to bottom, 
+      rgba(20, 10, 10, 0.7) 0%, 
+      rgba(10, 5, 5, 0.85) 100%
+    );
+    
+    /* 2. Gold/Bronze Border with glow */
+    border: 2px solid rgba(255, 180, 50, 0.3);
+    box-shadow: 
+      0 0 15px rgba(0, 0, 0, 0.9),  /* Deep shadow behind */
+      inset 0 0 20px rgba(0, 0, 0, 0.8), /* Inner shadow for depth */
+      0 0 5px rgba(255, 160, 0, 0.2); /* Subtle outer glow */
+      
+    /* 3. Blur the forest behind the reels */
+    backdrop-filter: blur(4px); 
 }
 
 .reel{
@@ -345,6 +380,24 @@ watch(isSpinning, (spinning) => {
   justify-content: flex-start;
   align-items: center;
   box-sizing: border-box;
+  z-index: 2; /* Ensure symbols are above the glow */
+  
+  /* Vertical separation lines */
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(0, 0, 0, 0.3);
+  
+  /* Cylinder effect on the strip */
+  background: linear-gradient(
+    to right, 
+    rgba(0,0,0,0.4) 0%, 
+    transparent 30%, 
+    transparent 70%, 
+    rgba(0,0,0,0.4) 100%
+  );
+}
+
+.reel:last-child {
+  border-right: none;
 }
 
 .symbol {
@@ -360,10 +413,59 @@ watch(isSpinning, (spinning) => {
   position: relative;
 }
 
-.symbol img {
-  width: 70%;
+/* --- NEW: LANTERN GLOW OVERLAY --- */
+.lantern-glow {
+  position: absolute;
+  top: -50px; /* Position near the top center */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 80%;
+  background: radial-gradient(
+    circle at 50% 0%, 
+    rgba(255, 140, 0, 0.4) 0%, /* Warm Orange center */
+    rgba(255, 100, 0, 0.1) 40%, 
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1; /* Behind symbols */
+  opacity: 0.3; /* Base opacity */
+  mix-blend-mode: screen; /* Blends nicely with dark bg */
 }
 
+/* --- NEW: GLOSS REFLECTION (The "Wet" Look) --- */
+.gloss-reflection {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 35%; /* Top third only */
+  
+  /* Stronger white gradient at the top center to match the lantern */
+  background: linear-gradient(
+    180deg, 
+    rgba(255, 255, 255, 0.4) 0%, /* Bright highlight edge */
+    rgba(255, 215, 0, 0.1) 20%,   /* Hint of gold reflection */
+    transparent 100%
+  );
+  
+  /* Creates the "curved glass" shape */
+  border-radius: 10px 10px 100% 100% / 10px 10px 20px 20px; 
+  
+  /* Add a "hotspot" reflection in the center */
+  box-shadow: inset 0 10px 20px -5px rgba(255, 255, 255, 0.3);
+  
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Improve Symbol Depth */
+.symbol img {
+  width: 70%;
+  /* Make symbols pop off the screen */
+  filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.6));
+  transition: transform 0.1s;
+}
 
 
 </style>
