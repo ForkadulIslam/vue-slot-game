@@ -4,6 +4,7 @@
     <div class="atmospheric-light" ref="atmosLight"></div>
 
     <div class="game-area">
+      <MultiplierBar/>
       <!-- <SlotMachine /> -->
       <SlotMachinePixi :win-particles-ref="winParticles" />
       <ControlPanel />
@@ -27,6 +28,7 @@ import ControlPanel from './components/ControlPanel.vue';
 //import MachineGraphics from './components/MachineGraphics.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
 import WinParticles from './components/WinParticles.vue';
+import MultiplierBar from './components/MultiplierBar.vue';
 //import ManualParticleEmitter from './components/ManualParticleEmitter.vue';
 //import SlotMachinePixiReels from './components/SlotMachinePixiReels.vue';
 
@@ -77,12 +79,10 @@ body {
   display: flex;
   flex-direction: column;
   /* CHANGE THIS: Push content to the bottom instead of center */
-  justify-content: flex-end; 
+  justify-content: flex-start;
   align-items: center;
   width: 100vw;
   height: 100vh;
-  /* Add padding to lift it slightly off the absolute bottom edge */
-  padding-bottom: 80px; 
   box-sizing: border-box;
   background-image: url('./assets/images/game_banner.png');
   background-size: cover;

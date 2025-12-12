@@ -84,8 +84,7 @@ const selectBet = (bet) => {
 <style scoped>
 /* 1. The Stone Altar Container */
 .control-panel-container {
-  width: 100%;
-  max-width: 500px; /* Constrain on desktop */
+  width: 300px; /* Constrain on desktop */
   padding: 10px 20px 20px 20px;
   
   /* Creates a dark stone texture using gradients */
@@ -290,3 +289,4 @@ const selectBet = (bet) => {
   background: #444;
 }
 </style>
+

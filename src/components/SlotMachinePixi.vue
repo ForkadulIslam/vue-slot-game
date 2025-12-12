@@ -1,12 +1,16 @@
 <template>
   <div class="slot-machine" ref="slotMachineEl">
-    
+
     <div ref="reelsContainer" class="reels-container">,
       <!-- NEW: Ambient Lantern Glow (Animated via GSAP) -->
       <div class="lantern-glow" ref="lanternGlow"></div>
-      
+
       <!-- NEW: Static Gloss Reflection -->
       <div class="gloss-reflection"></div>
+
+      <!-- 3. Bottom Shadow Vignette -->
+      <div class="bottom-vignette"></div>
+
       <Reel
         v-for="(reel, index) in reels"
         :key="index"
@@ -30,8 +34,8 @@
         :reels-symbols-number="reelsSymbolsNumber"
       />
     </svg>
-    
-  
+
+
   </div>
 </template>
 
@@ -41,6 +45,12 @@ import { gsap } from 'gsap';
 import Reel from './Reel.vue';
 import WinLine from './WinLine.vue';
 import { useSlotGame } from '../composables/useSlotGame';
+
+
+
+// Define which symbols should "Pop"
+const SPECIAL_SYMBOLS = ['scatter1', 'scatter2', 'wild'];
+
 
 const props = defineProps({
   winParticlesRef: {
@@ -68,15 +78,18 @@ const {
   endCelebration,
 } = useSlotGame();
 
-const reelsContainerWidth = 325; // from CSS
-const reelsContainerHeight = 400; // from CSS
+const reelsSymbolHeight = 70;
+const reelsContainerWidth = 350; // from CSS
+const reelsContainerHeight = reelsSymbolHeight*4; // from CSS
 
 const reels = computed(() => {
   return reelsForDisplay.value.map(reelSymbols => {
     return reelSymbols.map(symbolName => {
+      const isSpecial = SPECIAL_SYMBOLS.includes(symbolName.toLowerCase());
       return {
         name: symbolName,
         className: symbolPaths[symbolName],
+        isSpecial: isSpecial
       };
     });
   });
@@ -115,7 +128,7 @@ onMounted(() => {
       repeat: -1,
       ease: "rough({ template: power1.inOut, strength: 1, points: 20, taper: 'none', randomize: true, clamp: false })",
       // If "rough" ease isn't loaded, use "sine.inOut" with random duration:
-      // onRepeat: () => gsap.globalTimeline.timeScale(0.8 + Math.random() * 0.5) 
+      // onRepeat: () => gsap.globalTimeline.timeScale(0.8 + Math.random() * 0.5)
     });
   }
 });
@@ -126,12 +139,25 @@ onMounted(() => {
 
 
 const createSymbolElement = (symbol) => {
+  const isSpecial = SPECIAL_SYMBOLS.includes(symbol.toLowerCase());
+
   const imgElement = document.createElement('div');
   imgElement.classList.add('symbol-icon');
   imgElement.classList.add(symbolPaths[symbol]);
+  if(isSpecial){
+    imgElement.classList.add('is-special');
+  }
+
+  const symboxBoxSheenEffect = document.createElement('div');
+  symboxBoxSheenEffect.classList.add('symbol-box');
+  if(isSpecial){
+    symboxBoxSheenEffect.classList.add('shine-effect');
+  }
+  symboxBoxSheenEffect.appendChild(imgElement);
+
   const symbolDiv = document.createElement('div');
   symbolDiv.classList.add('symbol');
-  symbolDiv.appendChild(imgElement);
+  symbolDiv.appendChild(symboxBoxSheenEffect);
   return symbolDiv;
 };
 
@@ -143,7 +169,7 @@ watch(isSpinning, (spinning) => {
 
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
-    const symbolHeight = 100;
+    const symbolHeight = reelsSymbolHeight;
     const reelAnimationDuration = 1;
     reelsEl.forEach((reel, reelIndex) => {
       const finalSymbols = finalOutcome[reelIndex];
@@ -182,14 +208,14 @@ watch(isSpinning, (spinning) => {
           ease: "power2.inOut",
           force3D: true,
           onUpdate: function() {
-             
+
           }
       });
     });
   } else {
     // --- SPIN END ---
     // Fade out and stop the looping spin sound
-    
+
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(() => {
       const hasLineWins = winningPaylines.value.length > 0;
@@ -236,7 +262,7 @@ watch(isSpinning, (spinning) => {
               }
             });
           }
-        
+
           const lineTimeline = gsap.timeline({
             onComplete:() => {
               sounds.linewin.stop();
@@ -244,7 +270,7 @@ watch(isSpinning, (spinning) => {
           });
 
 
-          
+
           //console.log(symbolCoordinates);
           lineTimeline.call( async () => {
             let symbolCoordinate;
@@ -262,7 +288,7 @@ watch(isSpinning, (spinning) => {
             // 1. Play the sound
             sounds.linewin.play();
           })
-          
+
           // 2. Draw the line
           .add(() => {
             lineComponent.playAnimation();
@@ -271,9 +297,9 @@ watch(isSpinning, (spinning) => {
           .add(() => {
             console.log('Line win:'+ line.winAmount)
             cumulativeWin += line.winAmount;
-            gsap.to(displayedWinAmount, { 
-              value: cumulativeWin, 
-              duration: 1, 
+            gsap.to(displayedWinAmount, {
+              value: cumulativeWin,
+              duration: 1,
               ease: 'power1.out'
             });
           }, 0.2);
@@ -328,86 +354,46 @@ watch(isSpinning, (spinning) => {
   margin-bottom: 20px; /* Space between reels and stone control panel */
 }
 
-.win-lines-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* Allows clicks to pass through */
-}
-
-.win-amount-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10;
-}
+.win-lines-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+.win-amount-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 
 
 .reels-container {
     position: relative;
-    width: 450px; /* same as containerWidth */
-    height: 400px; /* same as containerHeight */
+    width: 350px; /* same as containerWidth */
+    height: 280px; /* same as containerHeight */
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 15px;
     display: flex;
     justify-content: space-between;
-    background: linear-gradient(180deg, #111 0%, #0b0b12 100%);
-    border: 2px solid rgba(255,180,50,0.2);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 4px 30px rgba(0,0,0,0.6);
-    contain: layout paint;
+    background: radial-gradient(circle at 50% 30%, #2a1a3a 0%, #08050c 90%);
+
+  box-shadow:
+          0 0 0 2px #000, /* Inner black stroke for contrast */
+          inset 0 0 30px rgba(0,0,0,0.9), /* Inner depth shadow */
+          0 0 25px rgba(255, 180, 0, 0.4); /* Outer Gold Glow */
+
+  contain: layout paint;
 }
 
 
 /* --- NEW: LANTERN GLOW OVERLAY --- */
 .lantern-glow {
-  position: absolute;
-  top: -50px; /* Position near the top center */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  height: 80%;
-  background: radial-gradient(
-    circle at 50% 0%, 
-    rgba(255, 140, 0, 0.4) 0%, /* Warm Orange center */
-    rgba(255, 100, 0, 0.1) 40%, 
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 1; /* Behind symbols */
-  opacity: 0.3; /* Base opacity */
-  mix-blend-mode: screen; /* Blends nicely with dark bg */
-  will-change: opacity;
+  position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+  width: 100%; height: 60%;
+  /* Subtle top lighting */
+  background: radial-gradient(ellipse at center, rgba(255, 200, 100, 0.2) 0%, transparent 70%);
+  pointer-events: none; z-index: 1;
 }
 
 /* --- NEW: GLOSS REFLECTION (The "Wet" Look) --- */
 .gloss-reflection {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 35%; /* Top third only */
-  
-  /* Stronger white gradient at the top center to match the lantern */
-  background: linear-gradient(
-    180deg, 
-    rgba(255, 255, 255, 0.4) 0%, /* Bright highlight edge */
-    rgba(255, 215, 0, 0.1) 20%,   /* Hint of gold reflection */
-    transparent 100%
-  );
-  
-  /* Creates the "curved glass" shape */
-  border-radius: 10px 10px 100% 100% / 10px 10px 20px 20px; 
-  
-  /* Add a "hotspot" reflection in the center */
-  box-shadow: inset 0 10px 20px -5px rgba(255, 255, 255, 0.3);
-  
-  pointer-events: none;
-  z-index: 5;
+  position: absolute; top: 0; left: 0; width: 100%; height: 30%;
+  /* Sharp glass reflection */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255,255,255,0.02) 40%, transparent 100%);
+  border-top: 1px solid rgba(255,255,255,0.5);
+  border-radius: 12px 12px 0 0;
+  pointer-events: none; z-index: 5;
 }
 
 /* Improve Symbol Depth */
