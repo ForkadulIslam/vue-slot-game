@@ -69,14 +69,14 @@ const {
 } = useSlotGame();
 
 const reelsContainerWidth = 325; // from CSS
-const reelsContainerHeight = 260; // from CSS
+const reelsContainerHeight = 400; // from CSS
 
 const reels = computed(() => {
   return reelsForDisplay.value.map(reelSymbols => {
     return reelSymbols.map(symbolName => {
       return {
         name: symbolName,
-        url: symbolPaths[symbolName],
+        className: symbolPaths[symbolName],
       };
     });
   });
@@ -126,12 +126,11 @@ onMounted(() => {
 
 
 const createSymbolElement = (symbol) => {
-  const imgElement = document.createElement('img');
-  imgElement.src = symbolPaths[symbol];
+  const imgElement = document.createElement('div');
+  imgElement.classList.add('symbol-icon');
+  imgElement.classList.add(symbolPaths[symbol]);
   const symbolDiv = document.createElement('div');
   symbolDiv.classList.add('symbol');
-  symbolDiv.style.width = '65px';
-  symbolDiv.style.height = '65px';
   symbolDiv.appendChild(imgElement);
   return symbolDiv;
 };
@@ -144,8 +143,8 @@ watch(isSpinning, (spinning) => {
 
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
-    const symbolHeight = 65;
-    const reelAnimationDuration = 5;
+    const symbolHeight = 100;
+    const reelAnimationDuration = 1;
     reelsEl.forEach((reel, reelIndex) => {
       const finalSymbols = finalOutcome[reelIndex];
       const finalSymbolElements = finalSymbols.map(s => createSymbolElement(s));
@@ -153,7 +152,7 @@ watch(isSpinning, (spinning) => {
 
       const randomSymbolElements = [];
       const symbolKeys = Object.keys(symbolPaths).filter(k => k !== 'gold_coin');
-      for (let k = 0; k < 50; k++) {
+      for (let k = 0; k < 12; k++) {
         randomSymbolElements.push(createSymbolElement(symbolKeys[Math.floor(Math.random() * symbolKeys.length)]));
       }
 
@@ -161,10 +160,12 @@ watch(isSpinning, (spinning) => {
       reel.append(...finalSymbolElements, ...randomSymbolElements, ...startingSymbolElements);
 
       const spinContentHeight = (finalSymbolElements.length + randomSymbolElements.length) * symbolHeight;
-      gsap.set(reel, { y: -spinContentHeight });
+      gsap.set(reel, { y: -spinContentHeight,force3D: true, });
+
+      gsap.ticker.fps(60);
 
       const reelTimeline = gsap.timeline({
-        delay: reelIndex * .2,
+        delay: reelIndex * .3,
         onComplete: () => {
           const finalClones = finalSymbolElements.map(s => s.cloneNode(true));
           reel.innerHTML = '';
@@ -179,6 +180,7 @@ watch(isSpinning, (spinning) => {
           y: 0,
           duration: reelAnimationDuration,
           ease: "power2.inOut",
+          force3D: true,
           onUpdate: function() {
              
           }
@@ -204,7 +206,7 @@ watch(isSpinning, (spinning) => {
             // Final cleanup
             gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
             setWinAnimationPlaying(false);
-            console.log('All Line win done');
+            //console.log('All Line win done');
             // If there are also scatter wins, play them after line wins
 
             if(props.winParticlesRef && props.winParticlesRef.coinFlooding) {
@@ -287,13 +289,13 @@ watch(isSpinning, (spinning) => {
           }, 0.2)
 
           // 4. Hide the line
-          // lineTimeline.add(() => {
-          //     console.log(lineComponent);
-          //     if (lineComponent.pathElement) {
-          //         gsap.killTweensOf(lineComponent.pathElement);
-          //         gsap.to(lineComponent.pathElement, { opacity: 0, duration: 0.3 });
-          //     }
-          // }, '-=0.4');
+          lineTimeline.add(() => {
+              //console.log(lineComponent);
+              if (lineComponent.pathElement) {
+                  gsap.killTweensOf(lineComponent.pathElement);
+                  gsap.to(lineComponent.pathElement, { opacity: 0, duration: 0.3 });
+              }
+          }, '-=0.4');
 
           // 5. Reset the symbols for this line before the next loop
           lineTimeline.set(lineSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
@@ -315,7 +317,7 @@ watch(isSpinning, (spinning) => {
 });
 </script>
 
-<style>
+<style scoped>
 .slot-machine {
   display: flex;
   justify-content: center;
@@ -347,71 +349,19 @@ watch(isSpinning, (spinning) => {
 
 
 .reels-container {
-    display: flex;
-    width: 325px;
-    height: 260px;
-    justify-content: flex-start;
+    position: relative;
+    width: 450px; /* same as containerWidth */
+    height: 400px; /* same as containerHeight */
     overflow: hidden;
-    position: relative; /* Needed for overlays */
     border-radius: 12px;
-    
-    /* 1. Dark Glass Background */
-    background: linear-gradient(
-      to bottom, 
-      rgba(20, 10, 10, 0.7) 0%, 
-      rgba(10, 5, 5, 0.85) 100%
-    );
-    
-    /* 2. Gold/Bronze Border with glow */
-    border: 2px solid rgba(255, 180, 50, 0.3);
-    box-shadow: 
-      0 0 15px rgba(0, 0, 0, 0.9),  /* Deep shadow behind */
-      inset 0 0 20px rgba(0, 0, 0, 0.8), /* Inner shadow for depth */
-      0 0 5px rgba(255, 160, 0, 0.2); /* Subtle outer glow */
-      
-    /* 3. Blur the forest behind the reels */
-    backdrop-filter: blur(4px); 
+    display: flex;
+    justify-content: space-between;
+    background: linear-gradient(180deg, #111 0%, #0b0b12 100%);
+    border: 2px solid rgba(255,180,50,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 4px 30px rgba(0,0,0,0.6);
+    contain: layout paint;
 }
 
-.reel{
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  box-sizing: border-box;
-  z-index: 2; /* Ensure symbols are above the glow */
-  
-  /* Vertical separation lines */
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  border-left: 1px solid rgba(0, 0, 0, 0.3);
-  
-  /* Cylinder effect on the strip */
-  background: linear-gradient(
-    to right, 
-    rgba(0,0,0,0.4) 0%, 
-    transparent 30%, 
-    transparent 70%, 
-    rgba(0,0,0,0.4) 100%
-  );
-}
-
-.reel:last-child {
-  border-right: none;
-}
-
-.symbol {
-  width: 65px;
-  height: 65px;
-  /* background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.7); */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden; /* Ensure images don't overflow */
-  flex-shrink: 0; /* Prevent symbols from shrinking */
-  position: relative;
-}
 
 /* --- NEW: LANTERN GLOW OVERLAY --- */
 .lantern-glow {
@@ -431,6 +381,7 @@ watch(isSpinning, (spinning) => {
   z-index: 1; /* Behind symbols */
   opacity: 0.3; /* Base opacity */
   mix-blend-mode: screen; /* Blends nicely with dark bg */
+  will-change: opacity;
 }
 
 /* --- NEW: GLOSS REFLECTION (The "Wet" Look) --- */
@@ -460,12 +411,7 @@ watch(isSpinning, (spinning) => {
 }
 
 /* Improve Symbol Depth */
-.symbol img {
-  width: 70%;
-  /* Make symbols pop off the screen */
-  filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.6));
-  transition: transform 0.1s;
-}
+
 
 
 </style>

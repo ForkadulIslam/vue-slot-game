@@ -10,9 +10,10 @@
       <WinParticles ref="winParticles" />
       <!-- <LearnPixiLighting/> -->
       <!-- <CartoonSmoke/> -->
-
       <!-- <PixiParticleV8/> -->
       <!-- <ManualParticleEmitter/> -->
+
+      <!-- <SlotMachinePixiReels/> -->
     </div>
   </div>
 </template>
@@ -27,6 +28,8 @@ import ControlPanel from './components/ControlPanel.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
 import WinParticles from './components/WinParticles.vue';
 //import ManualParticleEmitter from './components/ManualParticleEmitter.vue';
+//import SlotMachinePixiReels from './components/SlotMachinePixiReels.vue';
+
 import { onMounted, ref } from 'vue';
 import gsap from 'gsap';
 
@@ -40,6 +43,7 @@ onMounted(() => {
   if (atmosLight.value) {
     // Make the light pulse slowly like a fire/lantern
     gsap.to(atmosLight.value, {
+      force3D:true,
       opacity: 0.8, // Pulse between 0.4 (css) and 0.8
       scale: 1.1,   // Slight expansion
       duration: 3,

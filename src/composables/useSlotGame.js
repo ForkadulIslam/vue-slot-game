@@ -4,18 +4,18 @@ import axios from 'axios';
 
 // --- 1. GAME CONFIGURATION ---
 const symbolPaths = {
-  Wild: new URL('../assets/images/symblos/celebration/wild.png', import.meta.url).href,
-  Scatter1: new URL('../assets/images/symblos/celebration/scatter.png', import.meta.url).href,
-  seven: new URL('../assets/images/symblos/seven.svg', import.meta.url).href,
-  Nine: new URL('../assets/images/symblos/bar.svg', import.meta.url).href,
-  Jack: new URL('../assets/images/symblos/melon.svg', import.meta.url).href,
-  Ten: new URL('../assets/images/symblos/bell.svg', import.meta.url).href,
-  King: new URL('../assets/images/symblos/plum.svg', import.meta.url).href,
-  Queen: new URL('../assets/images/symblos/orange.svg', import.meta.url).href,
-  lemon: new URL('../assets/images/symblos/lemon.svg', import.meta.url).href,
-  Ace: new URL('../assets/images/symblos/cherry.svg', import.meta.url).href,
-  banana: new URL('../assets/images/symblos/banana.svg', import.meta.url).href,
-  Scatter2: new URL('../assets/images/symblos/celebration/gold_coin.png', import.meta.url).href,
+  Wild: 'icon-wild',
+  Scatter1: 'icon-scatter',
+  seven: 'icon-777',
+  Nine: 'icon-spade',
+  Jack: 'icon-J',
+  Ten: 'icon-diamond',
+  King: 'icon-K',
+  Queen: 'icon-Q',
+  lemon: 'icon-heart',
+  Ace: 'icon-A',
+  banana: 'icon-club',
+  Scatter2: 'icon-bonus',
 };
 
 // --- 2. SHARED REACTIVE STATE ---
@@ -79,7 +79,7 @@ const manageSound = () => {
 
   // Fade in the new music
   musicIn.play();
-  musicIn.fade(0, 0.5, 500); // Target volume for background is 0.5
+  musicIn.fade(0, 0.9, 500); // Target volume for background is 0.5
   
   activeMusic = musicIn;
 };
