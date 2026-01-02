@@ -38,8 +38,8 @@ onMounted(async () => {
 
     // Load all textures for all effects
     const allTextures = [
-      hardRainTexturePath, 
-      fireSparkParticleTexturePath, 
+      hardRainTexturePath,
+      fireSparkParticleTexturePath,
       fireSparkFireTexturePath,
       coinParticle2
     ];
@@ -65,6 +65,9 @@ onMounted(async () => {
     const coinFloodingConfig = upgradeConfig(coinFloodinEffectConfig);
     emitters.coinFlooding = new Emitter(coinFloodingContainer, coinFloodingConfig);
     emitters.coinFlooding.emit = false;
+
+
+
 
     // Update all emitters in the ticker
     let elapsed = Date.now();
@@ -101,7 +104,7 @@ const playWin = async (symbolCoordinate) => {
 
   visible.value = true;
   await nextTick();
-  
+
   app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
   let spawnX = symbolCoordinate.x;
   let spawnY = symbolCoordinate.y;
@@ -117,9 +120,9 @@ const playFireOnReels = async () => {
 
   visible.value = true;
   await nextTick();
-  
+
   app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
-  
+
   const spawnPos = {
     x: particleContainerEl.value.clientWidth / 2,
     y: particleContainerEl.value.clientHeight / 2,
@@ -135,7 +138,7 @@ const coinFlooding = async (winAmount)=>{
 
   visible.value = true;
   await nextTick();
-  
+
   app.renderer.resize(particleContainerEl.value.clientWidth, particleContainerEl.value.clientHeight);
   emitter.updateSpawnPos(particleContainerEl.value.clientWidth/2, particleContainerEl.value.clientHeight/2);
 
@@ -155,6 +158,7 @@ const coinFlooding = async (winAmount)=>{
     }
   });
 }
+
 
 
 defineExpose({ playWin, playFireOnReels, coinFlooding });

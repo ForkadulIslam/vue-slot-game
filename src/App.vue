@@ -1,45 +1,41 @@
 <template>
   <div id="app-container">
-    <!-- NEW: The Light Source Overlay -->
-    <div class="atmospheric-light" ref="atmosLight"></div>
+
+    <EpicWinParticles ref="epicWinRef"/>
+    <WinParticles ref="winParticles" />
 
     <div class="game-area">
       <MultiplierBar/>
-      <!-- <SlotMachine /> -->
-      <SlotMachinePixi :win-particles-ref="winParticles" />
+      <SlotMachinePixi
+          :win-particles-ref="winParticles"
+          :epic-win-ref="epicWinRef"
+      />
       <ControlPanel />
-      <WinParticles ref="winParticles" />
-      <!-- <LearnPixiLighting/> -->
-      <!-- <CartoonSmoke/> -->
-      <!-- <PixiParticleV8/> -->
-      <!-- <ManualParticleEmitter/> -->
-
-      <!-- <SlotMachinePixiReels/> -->
     </div>
   </div>
 </template>
 
 <script setup>
-//import PixiParticleV8 from './components/PixiParticleV8.vue';
 
-//import SlotMachine from './components/SlotMachine.vue';
-import ControlPanel from './components/ControlPanel.vue';
-//import LearnPixiLighting from './components/LearnPixiLighting.vue';
-//import MachineGraphics from './components/MachineGraphics.vue';
-import SlotMachinePixi from './components/SlotMachinePixi.vue';
+
+import EpicWinParticles from './components/EpicWinParticles.vue';
 import WinParticles from './components/WinParticles.vue';
 import MultiplierBar from './components/MultiplierBar.vue';
-//import ManualParticleEmitter from './components/ManualParticleEmitter.vue';
-//import SlotMachinePixiReels from './components/SlotMachinePixiReels.vue';
+import SlotMachinePixi from './components/SlotMachinePixi.vue';
+import ControlPanel from './components/ControlPanel.vue';
 
 import { onMounted, ref } from 'vue';
 import gsap from 'gsap';
+
+
+
 
 const atmosLight = ref(null);
 
 const winParticles = ref(null);
 
-//import CartoonSmoke from './components/CartoonSmoke.vue'
+const epicWinRef = ref(null); // Reference for epic win
+
 
 onMounted(() => {
   if (atmosLight.value) {
@@ -78,16 +74,24 @@ body {
 #app-container {
   display: flex;
   flex-direction: column;
-  /* CHANGE THIS: Push content to the bottom instead of center */
   justify-content: flex-start;
   align-items: center;
   width: 100vw;
-  height: 100vh;
+  /* Use dynamic viewport height to handle mobile browser bars */
+  height: 100dvh;
+
+  /* FIX 2: Reduce padding to just encompass the safe area */
+  /* Was 80px, changed to 10px + safe-area */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+
   box-sizing: border-box;
-  background-image: url('./assets/images/game_banner.png');
+  background-image: url('./assets/images/game_banner.jpg');
   background-size: cover;
-  background-position: center top; /* Ensure the top (lantern) is visible */
+  background-position: center top;
   background-repeat: no-repeat;
+
+  /* FIX 3: Prevent any scrolling */
+  overflow: hidden;
 }
 
 .atmospheric-light {
@@ -119,6 +123,15 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+
+/* Optional: Add this media query to ensure elements scale down on very short screens */
+@media (max-height: 700px) {
+  /*.game-area {*/
+  /*  transform: scale(0.9);*/
+  /*  transform-origin: bottom center;*/
+  /*}*/
 }
 
 </style>

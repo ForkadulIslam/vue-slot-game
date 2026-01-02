@@ -49,11 +49,15 @@ import { useSlotGame } from '../composables/useSlotGame';
 
 
 // Define which symbols should "Pop"
-const SPECIAL_SYMBOLS = ['scatter1', 'scatter2', 'wild'];
+const SPECIAL_SYMBOLS = ['scatter1', 'scatter2'];
 
 
 const props = defineProps({
   winParticlesRef: {
+    type: Object,
+    default: null
+  },
+  epicWinRef: {
     type: Object,
     default: null
   }
@@ -78,8 +82,8 @@ const {
   endCelebration,
 } = useSlotGame();
 
-const reelsSymbolHeight = 70;
-const reelsContainerWidth = 350; // from CSS
+const reelsSymbolHeight = 90;
+const reelsContainerWidth = 390; // from CSS
 const reelsContainerHeight = reelsSymbolHeight*4; // from CSS
 
 const reels = computed(() => {
@@ -99,13 +103,6 @@ const reelElements = ref([]);
 const winLineElements = ref([]);
 const winAmountContainer = ref(null);
 const reelsContainer = ref(null);
-const turbulenceEl = ref(null);
-const explosionOverlay = ref(null);
-const coinContainer = ref(null);
-const gifContainer = ref(null);
-const slotMachineEl = ref(null);
-const vignetteOverlay = ref(null);
-const winMessageContainer = ref(null);
 const lanternGlow = ref(null);
 
 
@@ -117,25 +114,34 @@ onBeforeUpdate(() => {
 });
 
 onMounted(() => {
-  //playSheenAnimation();
 
   // --- NEW: Lantern Flicker Effect ---
   if (lanternGlow.value) {
+    // Warm, fire-like pulse
     gsap.to(lanternGlow.value, {
-      opacity: 0.6, // Flicker between 0.3 (css) and 0.6
-      duration: 0.15,
+      opacity: 0.6,
+      duration: 0.2,
       yoyo: true,
       repeat: -1,
-      ease: "rough({ template: power1.inOut, strength: 1, points: 20, taper: 'none', randomize: true, clamp: false })",
-      // If "rough" ease isn't loaded, use "sine.inOut" with random duration:
-      // onRepeat: () => gsap.globalTimeline.timeScale(0.8 + Math.random() * 0.5)
+      ease: "rough({ strength: 1, points: 20, taper: 'none', randomize: true })"
     });
   }
+
+
 });
 
 
 
 
+// --- FIX 1: TEST ANIMATION SAFELY ---
+// Watch for the prop to become available, THEN play the test
+// watch(() => props.epicWinRef, (newVal) => {
+//   if (newVal) {
+//     console.log("Epic Win Ref connected. Playing Test...");
+//     newVal.playEpicWin(1200); // Uncomment this line to test on load
+//
+//   }
+// });
 
 
 const createSymbolElement = (symbol) => {
@@ -161,16 +167,19 @@ const createSymbolElement = (symbol) => {
   return symbolDiv;
 };
 
-// --- SPIN AND WIN ORCHESTRATION ---
+// --- SPIN LOGIC ---
 watch(isSpinning, (spinning) => {
+
   if (spinning) {
+
+
     // --- SPIN START ---
     displayedWinAmount.value = 0;
 
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
     const symbolHeight = reelsSymbolHeight;
-    const reelAnimationDuration = 1;
+    const reelAnimationDuration = 1.2;
     reelsEl.forEach((reel, reelIndex) => {
       const finalSymbols = finalOutcome[reelIndex];
       const finalSymbolElements = finalSymbols.map(s => createSymbolElement(s));
@@ -178,7 +187,7 @@ watch(isSpinning, (spinning) => {
 
       const randomSymbolElements = [];
       const symbolKeys = Object.keys(symbolPaths).filter(k => k !== 'gold_coin');
-      for (let k = 0; k < 12; k++) {
+      for (let k = 0; k < 10; k++) {
         randomSymbolElements.push(createSymbolElement(symbolKeys[Math.floor(Math.random() * symbolKeys.length)]));
       }
 
@@ -188,10 +197,14 @@ watch(isSpinning, (spinning) => {
       const spinContentHeight = (finalSymbolElements.length + randomSymbolElements.length) * symbolHeight;
       gsap.set(reel, { y: -spinContentHeight,force3D: true, });
 
-      gsap.ticker.fps(60);
+      //gsap.ticker.fps(60);
 
-      const reelTimeline = gsap.timeline({
-        delay: reelIndex * .3,
+      gsap.to(reel, {
+        y: 0,
+        duration: reelAnimationDuration,
+        delay: reelIndex * 0.15, // Stagger
+        ease: "back.out(0.4)",   // Bouncy stop
+        force3D: true,
         onComplete: () => {
           const finalClones = finalSymbolElements.map(s => s.cloneNode(true));
           reel.innerHTML = '';
@@ -201,23 +214,20 @@ watch(isSpinning, (spinning) => {
           }
         }
       });
-
-      reelTimeline.to(reel, {
-          y: 0,
-          duration: reelAnimationDuration,
-          ease: "power2.inOut",
-          force3D: true,
-          onUpdate: function() {
-
-          }
-      });
     });
   } else {
     // --- SPIN END ---
-    // Fade out and stop the looping spin sound
 
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
-    nextTick(() => {
+    nextTick(async () => {
+      if (props.epicWinRef) {
+        props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
+        return;
+      }
+
+      // if(props.winParticlesRef && props.winParticlesRef.playEpicWin) {
+      //   await props.winParticlesRef.playEpicWin();
+      // }
       const hasLineWins = winningPaylines.value.length > 0;
       const hasScatterWins = winningScatters.value.length > 0;
 
@@ -338,6 +348,7 @@ watch(isSpinning, (spinning) => {
       if (props.winParticlesRef && props.winParticlesRef.play) {
         //props.winParticlesRef.play();
       }
+
     });
   }
 });
@@ -349,55 +360,234 @@ watch(isSpinning, (spinning) => {
   justify-content: center;
   align-items: center;
   perspective: 1000px;
-  /* height: 380px; */
-  border-radius: 20px 20px 0 0;
-  margin-bottom: 20px; /* Space between reels and stone control panel */
+  margin: 20px 0 30px 0
 }
 
-.win-lines-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
-.win-amount-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+
 
 
 .reels-container {
-    position: relative;
-    width: 350px; /* same as containerWidth */
-    height: 280px; /* same as containerHeight */
-    overflow: hidden;
-    border-radius: 15px;
-    display: flex;
-    justify-content: space-between;
-    background: radial-gradient(circle at 50% 30%, #2a1a3a 0%, #08050c 90%);
+  position: relative;
+  width: 390px;
+  height: 360px;
+  overflow: hidden;
 
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+
+  /* BACKGROUND CHANGE:
+     Make it nearly opaque (95%) and darker at edges.
+     This blocks the background image from distracting the eye.
+  */
+  background: radial-gradient(
+          circle at 50% 40%,
+          #2d1b2e 0%,   /* Deep Purple/Brown Center (Lit) */
+          #050305 80%   /* Pitch Black Corners */
+  );
+
+  /* FRAME: Thicker, more physical look */
+  border: 3px solid #8d6e63; /* Bronze */
+  border-bottom: 5px solid #3e2723; /* Heavy bottom lip */
+
+  /* SEPARATION: Massive shadow to lift it off the forest floor */
   box-shadow:
-          0 0 0 2px #000, /* Inner black stroke for contrast */
-          inset 0 0 30px rgba(0,0,0,0.9), /* Inner depth shadow */
-          0 0 25px rgba(255, 180, 0, 0.4); /* Outer Gold Glow */
+          0 0 0 2px #1a0b00, /* Outer dark rim */
+          0 30px 60px rgba(0,0,0,0.9), /* Heavy Drop Shadow */
+          inset 0 0 40px rgba(0,0,0,0.8); /* Inner depth */
 
   contain: layout paint;
+  z-index: 2;
+}
+
+.reels-container::before,
+.reels-container::after {
+  content: "";
+  position: absolute;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  border-radius: 16px;
 }
 
 
-/* --- NEW: LANTERN GLOW OVERLAY --- */
+/* Gold Corner Accents */
+.reels-container::before {
+  box-shadow:
+          inset 1px 1px 0 rgba(255, 215, 0, 0.4),  /* Top Left Gold glint */
+          inset -1px -1px 0 rgba(255, 215, 0, 0.2); /* Bottom Right faint glint */
+}
+
+/* --- OVERLAYS --- */
 .lantern-glow {
-  position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
-  width: 100%; height: 60%;
-  /* Subtle top lighting */
-  background: radial-gradient(ellipse at center, rgba(255, 200, 100, 0.2) 0%, transparent 70%);
-  pointer-events: none; z-index: 1;
+  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 100%; height: 70%;
+  /* Warm "God Ray" casting down */
+  background: radial-gradient(ellipse at center, rgba(255, 160, 50, 0.2) 0%, transparent 70%);
+  pointer-events: none; z-index: 20;
+  mix-blend-mode: screen;
 }
 
-/* --- NEW: GLOSS REFLECTION (The "Wet" Look) --- */
 .gloss-reflection {
-  position: absolute; top: 0; left: 0; width: 100%; height: 30%;
+  position: absolute; top: 0; left: 0; width: 100%; height: 40%;
   /* Sharp glass reflection */
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255,255,255,0.02) 40%, transparent 100%);
-  border-top: 1px solid rgba(255,255,255,0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 30%, transparent 100%);
   border-radius: 12px 12px 0 0;
-  pointer-events: none; z-index: 5;
+  pointer-events: none; z-index: 20;
 }
 
-/* Improve Symbol Depth */
 
+
+/* --- WIN OVERLAYS --- */
+.win-lines-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 20;
+}
+.win-amount-container {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 20;
+}
+
+</style>
+
+<style>
+  .reel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 2;
+
+    /* GAP: Dark gaps between reels instead of lines */
+    border-right: 1px solid rgba(0, 0, 0, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.05); /* Highlight on left edge */
+
+    /* CYLINDER SHADING: Dark sides, lighter center */
+    background: linear-gradient(
+            to right,
+            rgba(0,0,0,0.8) 0%,
+            rgba(40, 30, 40, 0.4) 20%, /* Slight color tint */
+            transparent 50%,
+            rgba(40, 30, 40, 0.4) 80%,
+            rgba(0,0,0,0.8) 100%
+    );
+
+    will-change: transform;
+    transform: translate3d(0,0,0);
+  }
+
+  .reel:last-child {
+    border-right: none;
+  }
+
+  .symbol {
+    width: 70px;
+    height: 90px;
+    /* background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.7); */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* Prevent symbols from shrinking */
+    position: relative;
+    will-change: transform;
+    transform: translateZ(0);
+    overflow: visible; /* Allow special symbols to glow outside */
+  }
+
+  .symbol-icon {
+
+    width: 153px;
+    height: 136px;
+
+    background-image: url('@/assets/images/symbols_sprite.png');
+    background-repeat: no-repeat;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    /* Zoom in slightly and center */
+    transform: translate(-50%, -50%) scale(0.50);
+    transform-origin: center center;
+
+    will-change: transform;
+
+    transition: filter 0.3s;
+  }
+
+  /* Special Symbol Highlight */
+  .symbol-icon.is-special {
+    /* Slightly larger */
+    transform: translate(-50%, -50%) scale(0.50);
+    z-index: 10;
+    /* Gold Glow */
+    /* filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 180, 0, 0.6)); */
+  }
+
+  /* SPRITE POSITIONS */
+  /* Low Value */
+  .icon-diamond { background-position: -28px 1px }
+  .icon-heart   { background-position: -153px 0 }
+  .icon-club    { background-position: -306px 0 }
+  .icon-spade   { background-position: -428px -1px }
+  .icon-K       { background-position: -35px -120px }
+  .icon-Q       { background-position: -172px -118px }
+  .icon-J       { background-position: -302px -120px }
+  .icon-A       { background-position: -427px -118px }
+
+  /* High Value (These will get the is-special class) */
+  .icon-scatter { background-position: -33px -247px }
+  .icon-bonus   { background-position: -163px -242px }
+  .icon-wild    { background-position: -295px -242px }
+  .icon-777     { background-position: -459px -272px }
+
+  /* --- ANIMATIONS --- */
+  @keyframes sheen-sweep {
+    0% { transform: translateX(-150%) skewX(-25deg); }
+    100% { transform: translateX(150%) skewX(-25deg); }
+  }
+
+  @keyframes pulse-pop {
+    0% { transform: translate(-50%, -50%) scale(0.75); }
+    50% { transform: translate(-50%, -50%) scale(0.82); } /* Pop bigger */
+    100% { transform: translate(-50%, -50%) scale(0.75); }
+  }
+
+
+  /* The Box holds the icon and the sheen */
+  .symbol-box {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden; /* Contains the sheen sweep */
+    border-radius: 8px; /* Slight rounding */
+  }
+
+  /* --- THE SHEEN EFFECT (Light Sweep) --- */
+  /*.symbol-box.shine-effect::after {*/
+  /*  content: "";*/
+  /*  position: absolute;*/
+  /*  top: 0;*/
+  /*  left: 0;*/
+  /*  width: 100%;*/
+  /*  height: 100%;*/
+  /*  !* The white bar of light *!*/
+  /*  background: linear-gradient(*/
+  /*          90deg,*/
+  /*          rgba(255,255,255,0) 0%,*/
+  /*          rgba(255, 255, 255, 0.4) 50%,*/
+  /*          rgba(255,255,255,0) 100%*/
+  /*  );*/
+  /*  !* Start hidden to the left *!*/
+  /*  transform: translateX(-150%) skewX(-25deg);*/
+  /*  !* Sweep across every 3 seconds *!*/
+  /*  animation: sheen-sweep 3s ease-in-out;*/
+  /*  pointer-events: none;*/
+  /*  z-index: 10;*/
+  /*}*/
 
 
 </style>

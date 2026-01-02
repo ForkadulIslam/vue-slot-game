@@ -1,2 +1,0 @@
-Position: x:392.8000183105469, y:157.5
-WinParticles.vue:97 Position: x:457.8000183105469, y:222.5

@@ -8,12 +8,19 @@ import hardRainTexturePath from '../assets/images/hard_rain.png';
 import fireSparkParticleTexturePath from '../assets/images/fireSpark_particle.png';
 import fireSparkFireTexturePath from '../assets/images/fireSpark_Fire.png';
 import coinParticle2 from '../assets/images/coinParticle2.png'
+import spartanCoinUrl from '@/assets/images/themed/spartan_coin.png';
+import shieldHelmet from '@/assets/images/transparent_shield_helmet.png';
+import backgroundGlow from '@/assets/images/transparent_glow.png';
+
 
 export 
 { hardRainTexturePath, 
   fireSparkFireTexturePath, 
   fireSparkParticleTexturePath,
-  coinParticle2
+  coinParticle2,
+  spartanCoinUrl,
+  shieldHelmet,
+  backgroundGlow
 }
 
 // Configuration for the win particles
@@ -477,3 +484,4 @@ export const coinFloodinEffectConfig = {
     }
   ]
 }
+
