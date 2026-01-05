@@ -5,11 +5,11 @@
     <WinParticles ref="winParticles" />
 
     <div class="game-area">
-      <MultiplierBar/>
+      <MultiplierBarPixi ref="multiplierBarRef"/>
       <SlotMachinePixi
           :win-particles-ref="winParticles"
           :epic-win-ref="epicWinRef"
-          @spin-triggered="handleMultiplierFly"
+          @multiplier-triggered="handleMultiplierFly"
       />
       <ControlPanel />
     </div>
@@ -21,15 +21,16 @@
 
 import EpicWinParticles from './components/EpicWinParticles.vue';
 import WinParticles from './components/WinParticles.vue';
-import MultiplierBar from './components/MultiplierBar.vue';
+//import MultiplierBar from './components/MultiplierBar.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
 import ControlPanel from './components/ControlPanel.vue';
 
 import { onMounted, ref } from 'vue';
 import gsap from 'gsap';
+import MultiplierBarPixi from './components/MultiplierBarPixi.vue';
 
 
-
+const multiplierBarRef = ref(null); // NEW: Ref for MultiplierBar
 
 const atmosLight = ref(null);
 
@@ -38,7 +39,11 @@ const winParticles = ref(null);
 const epicWinRef = ref(null); // Reference for epic win
 
 
-const handleMultiplierFly = () => {
+const handleMultiplierFly = (multiplier) => {
+  if (multiplierBarRef.value) {
+    console.log(multiplier);
+    multiplierBarRef.value.setActiveMultiplier(multiplier);
+  }
 
   // 1. Find Source (The active multiplier text)
   const sourceEl = document.querySelector('.mul-item.active');

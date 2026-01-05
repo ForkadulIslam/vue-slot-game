@@ -38,16 +38,26 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, watch, nextTick } from 'vue';
+    import { ref, onMounted, watch, nextTick, defineExpose } from 'vue';
     import { gsap } from 'gsap';
-
+    
     // Multipliers typical for this genre
     const multipliers = [1, 2, 4, 8, 16];
-    const activeIndex = ref(1);
-
+    const activeIndex = ref(0); // Default to x2, as per existing code
+    
+    const setActiveMultiplier = (multiplier) => {
+        const index = multipliers.indexOf(multiplier);
+        if (index !== -1) {
+            activeIndex.value = index;
+        }
+    };
+    
+    defineExpose({
+        setActiveMultiplier
+    });
+    
     // --- ANIMATION LOGIC ---
-    const animateActive = () => {
-        // 1. Reset old states
+    const animateActive = () => {        // 1. Reset old states
         gsap.killTweensOf('.mul-item');
         gsap.killTweensOf('.sunburst');
 
@@ -155,7 +165,7 @@
         font-family: 'Georgia', serif;
         font-weight: 900;
         font-size: 1.3rem;
-        color: #3e2723;
+        color: #00ff8f;
         text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1), -1px -1px 2px rgba(0, 0, 0, 0.8);
         opacity: 0.5; /* Dim inactive numbers */
         transition: all 0.4s ease-out;
@@ -210,7 +220,7 @@
         position: absolute;
         width: 80px; height: 80px;
         background: radial-gradient(circle, rgba(255, 255, 200, 0.9) 0%, rgba(255, 140, 0, 0.6) 40%, transparent 70%);
-        filter: blur(5px); /* Soften the edges */
+        /* filter: blur(5px); */
     }
 
     /* 3. NEW: Horizontal Lens Flare (The Premium Polish) */
@@ -220,7 +230,7 @@
         width: 140px;
         height: 2px;
         background: linear-gradient(90deg, transparent 0%, white 50%, transparent 100%);
-        filter: blur(1px);
+        /* filter: blur(1px); */
         opacity: 0.8;
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
     }

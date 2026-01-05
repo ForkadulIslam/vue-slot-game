@@ -52,7 +52,7 @@ import { useSlotGame } from '../composables/useSlotGame';
 const SPECIAL_SYMBOLS = ['scatter1', 'scatter2'];
 
 
-const emit = defineEmits(['spin-triggered']);
+const emit = defineEmits(['multiplier-triggered']);
 
 
 const props = defineProps({
@@ -262,6 +262,9 @@ watch(isSpinning, (spinning) => {
         winningPaylines.value.forEach((line, index) => {
           const lineComponent = winLineElements.value[index];
           if (!lineComponent) return;
+
+          let multiplier = 1+index;
+
           // Get the specific symbols for this line
           const lineSymbolElements = [];
           const lineDefinition = line.definition;
@@ -280,6 +283,8 @@ watch(isSpinning, (spinning) => {
           const lineTimeline = gsap.timeline({
             onComplete:() => {
               sounds.linewin.stop();
+              //Test trigger multiplier fly animation
+              emit('multiplier-triggered', multiplier);
             }
           });
 
@@ -299,8 +304,6 @@ watch(isSpinning, (spinning) => {
 
             if(props.winParticlesRef && props.winParticlesRef.playWin) {
               await props.winParticlesRef.playWin(symbolCoordinate);
-              //Test trigger multiplier fly animation
-              emit('spin-triggered');
             }
             // 1. Play the sound
             sounds.linewin.play();
@@ -387,11 +390,6 @@ watch(isSpinning, (spinning) => {
      Make it nearly opaque (95%) and darker at edges.
      This blocks the background image from distracting the eye.
   */
-  background: radial-gradient(
-          circle at 50% 40%,
-          #2d1b2e 0%,   /* Deep Purple/Brown Center (Lit) */
-          #050305 80%   /* Pitch Black Corners */
-  );
 
   /* FRAME: Thicker, more physical look */
   border: 3px solid #8d6e63; /* Bronze */
