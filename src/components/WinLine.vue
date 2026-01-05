@@ -6,7 +6,6 @@
     stroke-width="5"
     stroke-linecap="round"
     stroke-linejoin="round"
-    :style="{ filter: 'drop-shadow(0 0 5px gold)' }"
     ref="pathElement"
   />
 </template>

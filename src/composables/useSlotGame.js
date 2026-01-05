@@ -142,7 +142,6 @@ const processOutcome = () => {
   if (_outcome.winningScatters) {
     let totalScatterWin = 0;
     const scatterPositions = [];
-
     for (const key in _outcome.winningScatters) {
         const scatterData = _outcome.winningScatters[key];
         if (scatterData && scatterData.symbolsPositions) {
@@ -152,12 +151,13 @@ const processOutcome = () => {
             });
         }
     }
-
     if (scatterPositions.length > 0) {
         winningScatters.value = scatterPositions;
         scatterWinAmount.value = totalScatterWin;
     }
   }
+
+
 };
 
 // --- Initialize the game with a random grid ---

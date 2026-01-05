@@ -1,7 +1,6 @@
 <template>
   <div v-show="visible" ref="particleContainerEl" class="particle-overlay" :class="{ 'dimmed': isDimmed }">
     <div :class="enableSheen? 'sheen-overlay' : ''"></div>
-    <div ref="storageNumberEl" id="storage_number">0</div>
   </div>
 </template>
 

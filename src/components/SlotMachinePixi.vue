@@ -52,6 +52,9 @@ import { useSlotGame } from '../composables/useSlotGame';
 const SPECIAL_SYMBOLS = ['scatter1', 'scatter2'];
 
 
+const emit = defineEmits(['spin-triggered']);
+
+
 const props = defineProps({
   winParticlesRef: {
     type: Object,
@@ -173,6 +176,7 @@ watch(isSpinning, (spinning) => {
   if (spinning) {
 
 
+
     // --- SPIN START ---
     displayedWinAmount.value = 0;
 
@@ -220,10 +224,11 @@ watch(isSpinning, (spinning) => {
 
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(async () => {
-      if (props.epicWinRef) {
-        props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
-        return;
-      }
+      // if (props.epicWinRef) {
+      //   props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
+      //   return;
+      // }
+
 
       // if(props.winParticlesRef && props.winParticlesRef.playEpicWin) {
       //   await props.winParticlesRef.playEpicWin();
@@ -245,9 +250,9 @@ watch(isSpinning, (spinning) => {
             //console.log('All Line win done');
             // If there are also scatter wins, play them after line wins
 
-            if(props.winParticlesRef && props.winParticlesRef.coinFlooding) {
-              await props.winParticlesRef.coinFlooding(100);
-            }
+            // if(props.winParticlesRef && props.winParticlesRef.coinFlooding) {
+            //   await props.winParticlesRef.coinFlooding(100);
+            // }
 
             if (hasScatterWins) {
               //playScatterWinSequence();
@@ -257,7 +262,6 @@ watch(isSpinning, (spinning) => {
         winningPaylines.value.forEach((line, index) => {
           const lineComponent = winLineElements.value[index];
           if (!lineComponent) return;
-
           // Get the specific symbols for this line
           const lineSymbolElements = [];
           const lineDefinition = line.definition;
@@ -292,8 +296,11 @@ watch(isSpinning, (spinning) => {
                 y: rect.top + rect.height / 2,
               }
             }
+
             if(props.winParticlesRef && props.winParticlesRef.playWin) {
               await props.winParticlesRef.playWin(symbolCoordinate);
+              //Test trigger multiplier fly animation
+              emit('spin-triggered');
             }
             // 1. Play the sound
             sounds.linewin.play();
