@@ -1,18 +1,20 @@
 <template>
-    <div class="multiplier-header">
-        <div class="chain left"></div>
-        <div class="chain right"></div>
+  <div class="multiplier-header">
+    <div class="chain left"></div>
+    <div class="chain right"></div>
 
-        <div ref="pixiContainer" class="pixi-multiplier-canvas"></div>
+    <div ref="pixiContainer" class="pixi-multiplier-canvas"></div>
 
-        <!-- DOM Overlay for coordinates -->
-        <div class="mul-list dom-overlay">
-            <div v-for="(mul, index) in multipliers" :key="index"
-                class="mul-item" :class="{ 'active': activeIndex === index }">
-                <span class="mul-text-hidden">x{{ mul }}</span>
-            </div>
-        </div>
+    <!-- Coordinate Sync Layer for App.vue -->
+    <div class="mul-list dom-overlay">
+      <div 
+        v-for="(mul, index) in multipliers" 
+        :key="index"
+        :class="['mul-item', { 'active': activeIndex === index }]">
+        <span class="mul-text-hidden">x{{ mul }}</span>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
@@ -21,181 +23,202 @@ import * as PIXI from 'pixi.js';
 import { gsap } from 'gsap';
 import woodBar from '@/assets/images/wood_bar.webp';
 
+// --- CONFIG ---
 const multipliers = [1, 2, 4, 8, 16];
-const activeIndex = ref(0); 
+const activeIndex = ref(0);
 const pixiContainer = ref(null);
 
+// --- PIXI SCOPE VARIABLES ---
 let app = null;
 let activeGroup = null; 
 let sunburst = null;
+let core = null;      // ⚡ Scope Fixed
 let shine = null;
 let textSprites = [];
+let rotationSpeed = 0.005; 
+
+// --- PUBLIC METHODS ---
 
 const setActiveMultiplier = (multiplier) => {
-    const index = multipliers.indexOf(multiplier);
-    if (index !== -1) {
-        activeIndex.value = index;
-        animateTo(index);
-    }
+  const index = multipliers.indexOf(multiplier);
+  if (index !== -1) {
+    activeIndex.value = index;
+    triggerJump(index);
+  }
 };
 
-defineExpose({ setActiveMultiplier });
+const setSpinState = (isSpinning) => {
+  gsap.to({ val: rotationSpeed }, {
+    val: isSpinning ? 0.04 : 0.005, 
+    duration: 0.5,
+    onUpdate: function() { rotationSpeed = this.targets()[0].val; }
+  });
+  if (activeGroup) gsap.to(activeGroup, { alpha: isSpinning ? 1 : 0.7, duration: 0.5 });
+};
+
+defineExpose({ setActiveMultiplier, setSpinState });
+
+// --- INITIALIZATION ---
 
 const initPixi = async () => {
-    app = new PIXI.Application();
-    await app.init({
-        width: 420, height: 85, backgroundAlpha: 0,
-        antialias: false, resolution: Math.min(window.devicePixelRatio, 2), autoDensity: true,
+  if (!pixiContainer.value) return;
+
+  app = new PIXI.Application();
+  await app.init({
+    width: 420, 
+    height: 85, 
+    backgroundAlpha: 0,
+    antialias: false,
+    resolution: Math.min(window.devicePixelRatio, 2), 
+    autoDensity: true,
+  });
+
+  const canvas = app.canvas;
+  pixiContainer.value.appendChild(canvas);
+
+  const woodTex = await PIXI.Assets.load(woodBar);
+  
+  // 1. Wood Board
+  const board = new PIXI.Sprite(woodTex);
+  board.anchor.set(0.5); board.width = 420; board.height = 85;
+  board.position.set(210, 42.5);
+  app.stage.addChild(board);
+
+  // 2. Gold Framing Rails
+  const rails = new PIXI.Graphics()
+    .rect(0, 0, 420, 3).fill({ color: 0xD4AF37, alpha: 0.5 })
+    .rect(0, 82, 420, 3).fill({ color: 0xD4AF37, alpha: 0.5 });
+  app.stage.addChild(rails);
+
+  // 3. Lighting Container
+  activeGroup = new PIXI.Container();
+  app.stage.addChild(activeGroup);
+
+  sunburst = new PIXI.Sprite(createSunburstTexture());
+  sunburst.anchor.set(0.5); sunburst.blendMode = 'add'; sunburst.alpha = 0.3;
+  activeGroup.addChild(sunburst);
+
+  core = new PIXI.Sprite(createGlowTexture());
+  core.anchor.set(0.5); core.blendMode = 'add';
+  activeGroup.addChild(core);
+
+  // 4. Multiplier Texts
+  const spacing = 420 / 5;
+  multipliers.forEach((val, i) => {
+    const txt = new PIXI.Text({
+      text: `x${val}`,
+      style: {
+        fontFamily: 'Georgia, serif',
+        fontSize: 32, fontWeight: '900',
+        fill: 0xffffff,
+        stroke: { color: 0x000000, width: 5 },
+        dropShadow: { color: 0x000000, alpha: 0.8, blur: 4, distance: 4 }
+      }
     });
-    
-    const canvas = app.canvas || app.view;
-    if (pixiContainer.value) pixiContainer.value.appendChild(canvas);
+    txt.anchor.set(0.5);
+    txt.x = (spacing / 2) + (i * spacing);
+    txt.y = 42.5;
+    textSprites.push(txt);
+    app.stage.addChild(txt);
+  });
 
-    const woodTex = await PIXI.Assets.load(woodBar);
-    
-    const board = new PIXI.Sprite(woodTex);
-    board.anchor.set(0.5);
-    board.width = 420; board.height = 85;
-    board.position.set(210, 42.5);
-    app.stage.addChild(board);
+  // 5. Gloss Sweep
+  shine = new PIXI.Sprite(createShineTexture());
+  shine.anchor.set(0.5); shine.rotation = 0.5; shine.blendMode = 'add';
+  const mask = new PIXI.Graphics().roundRect(0, 0, 420, 85, 15).fill(0xffffff);
+  shine.mask = mask;
+  app.stage.addChild(mask); app.stage.addChild(shine);
 
-    // Vignette
-    const vignette = new PIXI.Graphics().rect(0, 0, 420, 85).fill({ color: 0x000000, alpha: 0.3 });
-    vignette.mask = new PIXI.Graphics().roundRect(0,0,420,85,15).fill(0xffffff);
-    app.stage.addChild(vignette);
-
-    // Gold Rails
-    const rails = new PIXI.Graphics()
-        .rect(0, 0, 420, 3).fill({ color: 0xD4AF37, alpha: 0.6 })
-        .rect(0, 82, 420, 3).fill({ color: 0xD4AF37, alpha: 0.6 });
-    app.stage.addChild(rails);
-
-    activeGroup = new PIXI.Container();
-    app.stage.addChild(activeGroup);
-
-    sunburst = new PIXI.Sprite(createSunburstTexture());
-    sunburst.anchor.set(0.5); sunburst.blendMode = 'add'; sunburst.alpha = 0.35;
-    activeGroup.addChild(sunburst);
-
-    const glow = new PIXI.Sprite(createGlowTexture());
-    glow.anchor.set(0.5); glow.blendMode = 'add';
-    activeGroup.addChild(glow);
-
-    // ⚡ FIXED TYPOGRAPHY: Using Hex Numbers and v8 Shadow syntax
-    const spacing = 420 / 5;
-    multipliers.forEach((val, i) => {
-        const txt = new PIXI.Text({
-            text: `x${val}`,
-            style: {
-                fontFamily: 'Georgia, serif',
-                fontSize: 30,
-                fontWeight: '900',
-                fill: 0xffffff, // Standard white
-                stroke: { color: 0x000000, width: 4 },
-                // v8 DropShadow structure
-                dropShadow: {
-                    color: 0x000000,
-                    alpha: 0.8,
-                    blur: 4,
-                    distance: 4
-                }
-            }
-        });
-        txt.anchor.set(0.5);
-        txt.x = (spacing / 2) + (i * spacing);
-        txt.y = 42.5;
-        txt.alpha = 0.4;
-        textSprites.push(txt);
-        app.stage.addChild(txt);
-    });
-
-    // Gloss Shine
-    shine = new PIXI.Sprite(createShineTexture());
-    shine.anchor.set(0.5); shine.rotation = 0.5; shine.blendMode = 'add';
-    const shineMask = new PIXI.Graphics().roundRect(0, 0, 420, 85, 15).fill(0xffffff);
-    shine.mask = shineMask;
-    app.stage.addChild(shineMask);
-    app.stage.addChild(shine);
-
-    animateTo(activeIndex.value);
-    startLoops();
+  triggerJump(activeIndex.value);
+  startTicker();
 };
 
-const animateTo = (index) => {
-    if (!activeGroup) return;
-    const spacing = 420 / 5;
-    const targetX = (spacing / 2) + (index * spacing);
+// --- ANIMATION ---
 
-    // Move Lighting
-    gsap.to(activeGroup, { x: targetX, y: 42.5, duration: 0.6, ease: "elastic.out(1, 0.75)" });
+const triggerJump = (index) => {
+  if (!activeGroup || !sunburst || !core) return; 
+  const targetX = (420 / 5 / 2) + (index * (420 / 5));
 
-    textSprites.forEach((txt, i) => {
-        const active = i === index;
-        
-        gsap.to(txt.scale, { x: active ? 1.3 : 1, y: active ? 1.3 : 1, duration: 0.4 });
-        
-        // ⚡ STABLE COLOR SWAP: Using simple Hex Numbers
-        gsap.to(txt, { 
-            alpha: active ? 1 : 0.4, 
-            duration: 0.4 
-        });
+  // Slam lighting to position
+  gsap.to(activeGroup, { 
+    x: targetX, y: 42.5, 
+    duration: 0.6, 
+    ease: "elastic.out(1, 0.75)" 
+  });
 
-        // Toggle color directly to avoid array/string conversion bugs
-        txt.style.fill = active ? 0xFFD700 : 0xFFFFFF; // Gold vs White
-    });
+  // Tiered Colors
+  let tintColor = 0xFFFFFF; // White/Silver
+  if (index >= 2) tintColor = 0xFFD700; // Gold
+  if (index === 4) tintColor = 0xFF4500; // Red
+
+  // ⚡ FIX: Direct property animation (Removed 'pixi:' wrapper)
+  gsap.to([sunburst, core], { tint: tintColor, duration: 0.5 });
+
+  textSprites.forEach((txt, i) => {
+    const active = i === index;
+    gsap.to(txt.scale, { x: active ? 1.4 : 1, y: active ? 1.4 : 1, duration: 0.4 });
+    gsap.to(txt, { alpha: active ? 1 : 0.4, duration: 0.3 });
+    // Stable color update
+    txt.style.fill = active ? tintColor : 0xFFFFFF;
+  });
 };
 
-const startLoops = () => {
-    app.ticker.add((ticker) => {
-        if (sunburst) sunburst.rotation += 0.008 * ticker.deltaTime;
+const startTicker = () => {
+  app.ticker.add((ticker) => {
+    if (sunburst) sunburst.rotation += rotationSpeed * ticker.deltaTime;
+  });
+
+  const runSweep = () => {
+    if (!shine || !app) return;
+    gsap.fromTo(shine, { x: -200, y: 42.5 }, { 
+      x: 650, duration: 1.8, ease: "power2.inOut", delay: 5, onComplete: runSweep 
     });
-    const runSweep = () => {
-        if (!shine || !app) return;
-        gsap.fromTo(shine, { x: -200, y: 42.5 }, { x: 650, duration: 1.8, ease: "power2.inOut", delay: 5, onComplete: runSweep });
-    };
-    runSweep();
+  };
+  runSweep();
 };
 
-// Procedural Generators (Numbers are faster than strings)
+// --- TEXTURE GENERATORS ---
 function createSunburstTexture() {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-    const ctx = c.getContext('2d');
-    const rays = 10; ctx.translate(128, 128);
-    for(let i=0; i<rays; i++) {
-        ctx.rotate((Math.PI * 2) / rays);
-        const g = ctx.createLinearGradient(0,0,128,0);
-        g.addColorStop(0, 'rgba(255, 215, 0, 0.4)');
-        g.addColorStop(1, 'rgba(255, 215, 0, 0)');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(128, -20); ctx.lineTo(128, 20); ctx.fill();
-    }
-    return PIXI.Texture.from(c);
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d'); ctx.translate(128, 128);
+  for(let i=0; i<10; i++) {
+    ctx.rotate((Math.PI * 2) / 10);
+    const g = ctx.createLinearGradient(0,0,128,0);
+    g.addColorStop(0, 'rgba(255, 215, 0, 0.5)');
+    g.addColorStop(1, 'rgba(255, 215, 0, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(128, -25); ctx.lineTo(128, 25); ctx.fill();
+  }
+  return PIXI.Texture.from(c);
 }
 
 function createGlowTexture() {
-    const c = document.createElement('canvas'); c.width = 128; c.height = 128;
-    const ctx = c.getContext('2d');
-    const g = ctx.createRadialGradient(64,64,0, 64,64,64);
-    g.addColorStop(0, 'rgba(255, 255, 230, 1)');
-    g.addColorStop(0.3, 'rgba(255, 200, 50, 0.6)');
-    g.addColorStop(1, 'rgba(255, 140, 0, 0)');
-    ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
-    return PIXI.Texture.from(c);
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64,64,0, 64,64,64);
+  g.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+  g.addColorStop(0.3, 'rgba(255, 200, 50, 0.6)');
+  g.addColorStop(1, 'rgba(255, 140, 0, 0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+  return PIXI.Texture.from(c);
 }
 
 function createShineTexture() {
-    const c = document.createElement('canvas'); c.width = 200; c.height = 300;
-    const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0,0,200,0);
-    g.addColorStop(0, 'rgba(255,255,255,0)');
-    g.addColorStop(0.5, 'rgba(255,255,255,0.3)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g; ctx.fillRect(0,0,200,300);
-    return PIXI.Texture.from(c);
+  const c = document.createElement('canvas'); 
+  c.width = 200; 
+  c.height = 300;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 200, 0);
+  g.addColorStop(0, 'rgba(255,255,255,0)');
+  g.addColorStop(0.5, 'rgba(255,255,255,0.3)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; 
+  ctx.fillRect(0, 0, 200, 300);
+  return PIXI.Texture.from(c);
 }
 
 onMounted(() => nextTick(() => initPixi()));
-onUnmounted(() => app?.destroy(true));
+onUnmounted(() => app?.destroy(true, { children: true, texture: true }));
 </script>
 
 <style scoped>
@@ -205,19 +228,18 @@ onUnmounted(() => app?.destroy(true));
 }
 .pixi-multiplier-canvas {
     width: 100%; height: 100%; border-radius: 15px; overflow: hidden;
-    box-shadow: 0 12px 25px rgba(0,0,0,0.8);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.5);
 }
 .dom-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: center; pointer-events: none;
+    display: flex; justify-content: space-around; align-items: center; pointer-events: none;
 }
-.mul-list { width: 100%; display: flex; justify-content: space-around; align-items: center; }
 .mul-item { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; }
 .mul-text-hidden { opacity: 0; font-size: 2rem; font-weight: 900; }
+
 .chain {
-    position: absolute; top: -20px; width: 4px; height: 25px;
-    background: #111; background-image: repeating-linear-gradient(to bottom, #333 0px, #111 4px);
-    z-index: -1;
+    position: absolute; top: -25px; width: 4px; height: 25px; background: #111;
+    background-image: repeating-linear-gradient(to bottom, #333 0px, #111 4px); z-index: -1;
 }
 .chain.left { left: 40px; } .chain.right { right: 40px; }
 </style>

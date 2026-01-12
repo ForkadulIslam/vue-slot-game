@@ -1,15 +1,19 @@
 <template>
   <div id="app-container">
 
+    <!-- Global dedicated celebration layer -->
+    <WinCelebrationLayer ref="winCelebrationRef" />
+
     <EpicWinParticles ref="epicWinRef"/>
     <WinParticles ref="winParticles" />
 
     <div class="game-area">
-      <MultiplierBarPixi ref="multiplierBarRef"/>
+      <MultiplierBarDeepSee ref="multiplierBarRef"/>
       <SlotMachinePixi
           :win-particles-ref="winParticles"
           :epic-win-ref="epicWinRef"
-          @multiplier-triggered="handleMultiplierFly"
+          @multiplier-triggered="handleMultiplier"
+          :win-celebration-ref="winCelebrationRef"
       />
       <ControlPanel />
     </div>
@@ -18,7 +22,7 @@
 
 <script setup>
 
-
+import WinCelebrationLayer from './components/WinCelebrationLayer.vue';
 import EpicWinParticles from './components/EpicWinParticles.vue';
 import WinParticles from './components/WinParticles.vue';
 //import MultiplierBar from './components/MultiplierBar.vue';
@@ -28,8 +32,10 @@ import ControlPanel from './components/ControlPanel.vue';
 import { onMounted, ref } from 'vue';
 import gsap from 'gsap';
 import MultiplierBarPixi from './components/MultiplierBarPixi.vue';
+import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
 
 
+const winCelebrationRef = ref(null);
 const multiplierBarRef = ref(null); // NEW: Ref for MultiplierBar
 
 const atmosLight = ref(null);
@@ -39,67 +45,14 @@ const winParticles = ref(null);
 const epicWinRef = ref(null); // Reference for epic win
 
 
-const handleMultiplierFly = (multiplier) => {
+const handleMultiplier = (multiplier) => {
   if (multiplierBarRef.value) {
     console.log(multiplier);
+    multiplierBarRef.value.setSpinState(true)
     multiplierBarRef.value.setActiveMultiplier(multiplier);
   }
 
-  // 1. Find Source (The active multiplier text)
-  const sourceEl = document.querySelector('.mul-item.active');
-  // 2. Find Destination (The Win info strip)
-  const targetEl = document.querySelector('.win-strip');
-
-  if (!sourceEl || !targetEl) return;
-
-  // 3. Get global coordinates
-  const sourceRect = sourceEl.getBoundingClientRect();
-  const targetRect = targetEl.getBoundingClientRect();
-
-  // 4. Create a "Ghost" element
-  const ghost = document.createElement('div');
-  ghost.innerHTML = sourceEl.innerHTML;
-  ghost.className = 'flying-multiplier';
   
-  // Style the ghost at starting position
-  Object.assign(ghost.style, {
-      position: 'fixed',
-      top: `${sourceRect.top}px`,
-      left: `${sourceRect.left}px`,
-      width: `${sourceRect.width}px`,
-      height: `${sourceRect.height}px`,
-      color: '#fff',
-      fontSize: '2rem',
-      fontWeight: '900',
-      zIndex: '10000',
-      pointerEvents: 'none'
-  });
-
-  document.body.appendChild(ghost);
-
-  // 5. GSAP Fly Animation
-  const tl = gsap.timeline({
-      onComplete: () => ghost.remove() // Cleanup
-  });
-
-  tl.to(ghost, {
-      x: targetRect.left - sourceRect.left + (targetRect.width / 4),
-      y: targetRect.top - sourceRect.top,
-      scale: 2.5,
-      //opacity: 1,
-      rotation: 360,
-      duration: 0.8,
-      ease: "back.out(0.4)"
-  });
-
-  // 6. Impact effect on the target
-  tl.to(targetEl, {
-      scale: 1.1,
-      backgroundColor: 'rgba(50, 205, 50, 0.4)',
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1
-  }, "-=0.1");
 };
 
 

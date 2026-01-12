@@ -20,22 +20,6 @@
       />
     </div>
     <div ref="winAmountContainer" class="win-amount-container"></div>
-    <svg class="win-lines-overlay"
-         :viewBox="`0 0 ${reelsContainerWidth} ${reelsContainerHeight}`"
-         v-if="winningPaylines.length > 0 && !isSpinning">
-      <WinLine
-        v-for="(line, index) in winningPaylines"
-        :key="line.lineId"
-        :ref="el => { if (el) winLineElements[index] = el }"
-        :line-definition="line.definition"
-        :container-width="reelsContainerWidth"
-        :container-height="reelsContainerHeight"
-        :reels-number="reelsNumber"
-        :reels-symbols-number="reelsSymbolsNumber"
-      />
-    </svg>
-
-
   </div>
 </template>
 
@@ -61,6 +45,10 @@ const props = defineProps({
     default: null
   },
   epicWinRef: {
+    type: Object,
+    default: null
+  },
+  winCelebrationRef: {
     type: Object,
     default: null
   }
@@ -107,6 +95,7 @@ const winLineElements = ref([]);
 const winAmountContainer = ref(null);
 const reelsContainer = ref(null);
 const lanternGlow = ref(null);
+const winCelebrationRef = ref(null)
 
 
 
@@ -237,119 +226,56 @@ watch(isSpinning, (spinning) => {
       const hasScatterWins = winningScatters.value.length > 0;
 
       if (hasLineWins) {
-        // --- NEW SEQUENTIAL LINE WIN SEQUENCE ---
         setWinAnimationPlaying(true);
-
         const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
         let cumulativeWin = 0;
+
+        // ⚡ STEP 1: Dim the background reels once
+        reelsContainer.value.classList.add('reels-dimmed');
+
         const masterTimeline = gsap.timeline({
-          onComplete: async () => {
-            // Final cleanup
-            gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
-            setWinAnimationPlaying(false);
-            //console.log('All Line win done');
-            // If there are also scatter wins, play them after line wins
-
-            // if(props.winParticlesRef && props.winParticlesRef.coinFlooding) {
-            //   await props.winParticlesRef.coinFlooding(100);
-            // }
-
-            if (hasScatterWins) {
-              //playScatterWinSequence();
+            onComplete: () => {
+                reelsContainer.value.classList.remove('reels-dimmed');
+                setWinAnimationPlaying(false);
+                gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
             }
-          }
         });
+
         winningPaylines.value.forEach((line, index) => {
-          const lineComponent = winLineElements.value[index];
-          if (!lineComponent) return;
-
-          let multiplier = 1+index;
-
-          // Get the specific symbols for this line
-          const lineSymbolElements = [];
-          const lineDefinition = line.definition;
-          // Use line.symbolsPositions which contains the actual reel indices of the win
-          if (line.symbolsPositions) {
-            line.symbolsPositions.forEach(reelIndex => {
-              const rowIndex = lineDefinition[reelIndex];
-              const symbolIndex = reelIndex * reelsSymbolsNumber.value + rowIndex;
-              const symbol = allSymbolElements[symbolIndex];
-              if (symbol) {
-                  lineSymbolElements.push(symbol);
-              }
+            const multiplier = 1 + index;
+            const lineTimeline = gsap.timeline({
+                onStart: async () => {
+                    sounds.linewin.play();
+                    
+                    // Trigger the Pixi Ghosts
+                    if (props.winCelebrationRef) {
+                        await props.winCelebrationRef.celebrateLine(line, allSymbolElements);
+                    }
+                },
+                onComplete: () => {
+                    sounds.linewin.stop();
+                    emit('multiplier-triggered', multiplier);
+                    
+                    // Clear Pixi visuals before next line starts
+                    if (props.winCelebrationRef) props.winCelebrationRef.clear();
+                }
             });
-          }
 
-          const lineTimeline = gsap.timeline({
-            onComplete:() => {
-              sounds.linewin.stop();
-              //Test trigger multiplier fly animation
-              emit('multiplier-triggered', multiplier);
-            }
-          });
+            // Payoff counter
+            lineTimeline.to(displayedWinAmount, {
+                value: (cumulativeWin += line.winAmount),
+                duration: 0.8,
+                ease: 'power1.out'
+            }, "+=0.3");
 
+            // Hold the line on screen for the player
+            const revealTime = (line.symbolsPositions.length * 0.18);
+            lineTimeline.to({}, { duration: revealTime });
 
-
-          //console.log(symbolCoordinates);
-          lineTimeline.call( async () => {
-            let symbolCoordinate;
-            if(lineSymbolElements.length > 0){
-              let lastSymbol = lineSymbolElements[lineSymbolElements.length -1];
-              const rect = lastSymbol.getBoundingClientRect();
-              symbolCoordinate = {
-                x: rect.left + rect.width / 2,
-                y: rect.top + rect.height / 2,
-              }
-            }
-
-            if(props.winParticlesRef && props.winParticlesRef.playWin) {
-              await props.winParticlesRef.playWin(symbolCoordinate);
-            }
-            // 1. Play the sound
-            sounds.linewin.play();
-          })
-
-          // 2. Draw the line
-          .add(() => {
-            lineComponent.playAnimation();
-          })
-          // Animate the win amount for this line
-          .add(() => {
-            console.log('Line win:'+ line.winAmount)
-            cumulativeWin += line.winAmount;
-            gsap.to(displayedWinAmount, {
-              value: cumulativeWin,
-              duration: 1,
-              ease: 'power1.out'
-            });
-          }, 0.2);
-
-          // Pulse the symbols on this line
-          lineTimeline.to(lineSymbolElements, {
-            scale: 1.3,
-            duration: 0.2,
-            repeat: 4,
-            yoyo: true,
-            ease: 'power2.inOut',
-            stagger: 0.1,
-          }, 0.2)
-
-          // 4. Hide the line
-          lineTimeline.add(() => {
-              //console.log(lineComponent);
-              if (lineComponent.pathElement) {
-                  gsap.killTweensOf(lineComponent.pathElement);
-                  gsap.to(lineComponent.pathElement, { opacity: 0, duration: 0.3 });
-              }
-          }, '-=0.4');
-
-          // 5. Reset the symbols for this line before the next loop
-          lineTimeline.set(lineSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
-
-          masterTimeline.add(lineTimeline);
+            masterTimeline.add(lineTimeline);
         });
-
-      } else if (hasScatterWins) {
+      }
+      else if (hasScatterWins) {
         // --- SCATTER WIN ONLY SEQUENCE ---
         //playScatterWinSequence();
       }
@@ -402,7 +328,6 @@ watch(isSpinning, (spinning) => {
           inset 0 0 40px rgba(0,0,0,0.8); /* Inner depth */
 
   contain: layout paint;
-  z-index: 2;
 }
 
 .reels-container::before,
@@ -593,6 +518,17 @@ watch(isSpinning, (spinning) => {
   /*  pointer-events: none;*/
   /*  z-index: 10;*/
   /*}*/
+
+
+
+  .reels-container {
+      transition: filter 0.5s ease;
+  }
+
+  /* This darkens the reels to make the Pixi Ghosts shine */
+  .reels-dimmed {
+      filter: brightness(0.4) saturate(0.9) contrast(1.2);
+  }
 
 
 </style>
