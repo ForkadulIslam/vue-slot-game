@@ -224,6 +224,7 @@ watch(isSpinning, (spinning) => {
 
         const masterTimeline = gsap.timeline({
             onComplete: () => {
+                if (props.winCelebrationRef) props.winCelebrationRef.clear();
                 reelsContainer.value.classList.remove('reels-dimmed');
                 setWinAnimationPlaying(false);
                 gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
@@ -246,8 +247,7 @@ watch(isSpinning, (spinning) => {
                     sounds.linewin.stop();
                     //emit('multiplier-triggered', multiplier);
                     
-                    // Clear Pixi visuals before next line starts
-                    if (props.winCelebrationRef) props.winCelebrationRef.clear();
+                    // The clear call is removed from here to prevent clearing between lines
                 }
             });
 

@@ -1,0 +1,935 @@
+{
+    "credits": 1004,
+    "bet": 1,
+    "reelsSymbols": [
+        [
+            "Nine",
+            "Scatter1",
+            "Queen",
+            "Wild"
+        ],
+        [
+            "Nine",
+            "Jack",
+            "Queen",
+            "Queen"
+        ],
+        [
+            "Ace",
+            "Ace",
+            "Nine",
+            "Scatter1"
+        ],
+        [
+            "Queen",
+            "Queen",
+            "Nine",
+            "Scatter1"
+        ],
+        [
+            "Queen",
+            "Wild",
+            "Scatter1",
+            "Jack"
+        ]
+    ],
+    "winningScatters": {
+        "Scatter1": {
+            "symbolId": "Scatter1",
+            "symbolsPositions": [
+                [
+                    0,
+                    1
+                ],
+                [
+                    2,
+                    3
+                ],
+                [
+                    3,
+                    3
+                ],
+                [
+                    4,
+                    2
+                ]
+            ],
+            "winAmount": 5
+        }
+    },
+    "totalWin": 5,
+    "freeGamesResult": {
+        "triggeredFreeGames": true,
+        "freeGamesSpins": [
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Jack",
+                        "Queen",
+                        "Nine",
+                        "Nine"
+                    ],
+                    [
+                        "Ten",
+                        "Ten",
+                        "Queen",
+                        "Jack"
+                    ],
+                    [
+                        "Queen",
+                        "Jack",
+                        "Ten",
+                        "Queen"
+                    ],
+                    [
+                        "Jack",
+                        "Nine",
+                        "Jack",
+                        "Ace"
+                    ],
+                    [
+                        "Nine",
+                        "Wild",
+                        "Wild",
+                        "Ten"
+                    ]
+                ],
+                "winningLines": {
+                    "5": {
+                        "definition": [
+                            1,
+                            2,
+                            3,
+                            2,
+                            1
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Queen",
+                        "lineId": "5",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [],
+                        "winAmount": 2
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "King",
+                        "Jack",
+                        "Ten",
+                        "King"
+                    ],
+                    [
+                        "Nine",
+                        "Nine",
+                        "Ace",
+                        "Wild"
+                    ],
+                    [
+                        "King",
+                        "King",
+                        "Jack",
+                        "Queen"
+                    ],
+                    [
+                        "Nine",
+                        "King",
+                        "King",
+                        "Nine"
+                    ],
+                    [
+                        "Nine",
+                        "Wild",
+                        "Wild",
+                        "Ten"
+                    ]
+                ],
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Jack",
+                        "Queen",
+                        "Nine",
+                        "Nine"
+                    ],
+                    [
+                        "King",
+                        "Nine",
+                        "Jack",
+                        "Ten"
+                    ],
+                    [
+                        "Nine",
+                        "Ten",
+                        "Ten",
+                        "Jack"
+                    ],
+                    [
+                        "Jack",
+                        "Ace",
+                        "Queen",
+                        "Nine"
+                    ],
+                    [
+                        "Ace",
+                        "Ten",
+                        "Nine",
+                        "Wild"
+                    ]
+                ],
+                "winningLines": {
+                    "7": {
+                        "definition": [
+                            2,
+                            1,
+                            0,
+                            1,
+                            2
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Nine",
+                        "lineId": "7",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [],
+                        "winAmount": 1
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Jack",
+                        "Ace",
+                        "Wild",
+                        "Wild"
+                    ],
+                    [
+                        "Wild",
+                        "Nine",
+                        "Jack",
+                        "Queen"
+                    ],
+                    [
+                        "Queen",
+                        "Ten",
+                        "Nine",
+                        "Jack"
+                    ],
+                    [
+                        "Jack",
+                        "Ace",
+                        "Queen",
+                        "Nine"
+                    ],
+                    [
+                        "Jack",
+                        "Ten",
+                        "Ace",
+                        "King"
+                    ]
+                ],
+                "winningLines": {
+                    "16": {
+                        "definition": [
+                            2,
+                            1,
+                            2,
+                            1,
+                            2
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Nine",
+                        "lineId": "16",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            0
+                        ],
+                        "winAmount": 1
+                    },
+                    "17": {
+                        "definition": [
+                            3,
+                            2,
+                            3,
+                            2,
+                            3
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Jack",
+                        "lineId": "17",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            0
+                        ],
+                        "winAmount": 2
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Nine",
+                        "Queen",
+                        "Nine",
+                        "Queen"
+                    ],
+                    [
+                        "King",
+                        "King",
+                        "Ten",
+                        "Wild"
+                    ],
+                    [
+                        "Wild",
+                        "King",
+                        "King",
+                        "Jack"
+                    ],
+                    [
+                        "Ten",
+                        "Queen",
+                        "Nine",
+                        "Ten"
+                    ],
+                    [
+                        "Ace",
+                        "Ten",
+                        "Nine",
+                        "Wild"
+                    ]
+                ],
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Ten",
+                        "Jack",
+                        "Nine",
+                        "Nine"
+                    ],
+                    [
+                        "Ten",
+                        "Ten",
+                        "Queen",
+                        "Jack"
+                    ],
+                    [
+                        "Wild",
+                        "Nine",
+                        "Ten",
+                        "Queen"
+                    ],
+                    [
+                        "Nine",
+                        "Ten",
+                        "Queen",
+                        "Queen"
+                    ],
+                    [
+                        "Ten",
+                        "Nine",
+                        "Queen",
+                        "Ace"
+                    ]
+                ],
+                "winningLines": {
+                    "0": {
+                        "definition": [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Ten",
+                        "lineId": "0",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            2
+                        ],
+                        "winAmount": 1
+                    },
+                    "4": {
+                        "definition": [
+                            0,
+                            1,
+                            2,
+                            1,
+                            0
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            1,
+                            1
+                        ],
+                        "symbolId": "Ten",
+                        "lineId": "4",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "wildSymbolsPositions": [],
+                        "winAmount": 4
+                    },
+                    "12": {
+                        "definition": [
+                            0,
+                            1,
+                            0,
+                            1,
+                            0
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            1,
+                            1
+                        ],
+                        "symbolId": "Ten",
+                        "lineId": "12",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "wildSymbolsPositions": [
+                            2
+                        ],
+                        "winAmount": 4
+                    },
+                    "18": {
+                        "definition": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            2
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Ten",
+                        "lineId": "18",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [],
+                        "winAmount": 1
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Nine",
+                        "Nine",
+                        "Queen",
+                        "Nine"
+                    ],
+                    [
+                        "Jack",
+                        "King",
+                        "King",
+                        "Ten"
+                    ],
+                    [
+                        "Nine",
+                        "Ten",
+                        "Ten",
+                        "Jack"
+                    ],
+                    [
+                        "Ace",
+                        "Jack",
+                        "Ten",
+                        "Ten"
+                    ],
+                    [
+                        "Jack",
+                        "Ten",
+                        "Ace",
+                        "King"
+                    ]
+                ],
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Wild",
+                        "Wild",
+                        "Jack",
+                        "Queen"
+                    ],
+                    [
+                        "Nine",
+                        "Jack",
+                        "Queen",
+                        "Jack"
+                    ],
+                    [
+                        "Jack",
+                        "Ace",
+                        "Nine",
+                        "Wild"
+                    ],
+                    [
+                        "Queen",
+                        "Nine",
+                        "Ten",
+                        "Queen"
+                    ],
+                    [
+                        "Ten",
+                        "Nine",
+                        "Wild",
+                        "Wild"
+                    ]
+                ],
+                "winningLines": {
+                    "5": {
+                        "definition": [
+                            1,
+                            2,
+                            3,
+                            2,
+                            1
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Queen",
+                        "lineId": "5",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            0,
+                            2
+                        ],
+                        "winAmount": 2
+                    },
+                    "7": {
+                        "definition": [
+                            2,
+                            1,
+                            0,
+                            1,
+                            2
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Jack",
+                        "lineId": "7",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [],
+                        "winAmount": 2
+                    },
+                    "12": {
+                        "definition": [
+                            0,
+                            1,
+                            0,
+                            1,
+                            0
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Jack",
+                        "lineId": "12",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            0
+                        ],
+                        "winAmount": 2
+                    },
+                    "17": {
+                        "definition": [
+                            3,
+                            2,
+                            3,
+                            2,
+                            3
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Queen",
+                        "lineId": "17",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            2
+                        ],
+                        "winAmount": 2
+                    },
+                    "23": {
+                        "definition": [
+                            2,
+                            3,
+                            3,
+                            3,
+                            2
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Jack",
+                        "lineId": "23",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            2
+                        ],
+                        "winAmount": 2
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Ten",
+                        "Jack",
+                        "Nine",
+                        "Nine"
+                    ],
+                    [
+                        "Nine",
+                        "Ace",
+                        "Wild",
+                        "Nine"
+                    ],
+                    [
+                        "King",
+                        "Jack",
+                        "Queen",
+                        "Ace"
+                    ],
+                    [
+                        "Nine",
+                        "Jack",
+                        "Ace",
+                        "Queen"
+                    ],
+                    [
+                        "Nine",
+                        "Jack",
+                        "Ten",
+                        "Ace"
+                    ]
+                ],
+                "winningLines": {
+                    "13": {
+                        "definition": [
+                            1,
+                            2,
+                            1,
+                            2,
+                            1
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Jack",
+                        "lineId": "13",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            1
+                        ],
+                        "winAmount": 2
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            },
+            {
+                "credits": null,
+                "bet": 1,
+                "reelsSymbols": [
+                    [
+                        "Ten",
+                        "Jack",
+                        "Nine",
+                        "Nine"
+                    ],
+                    [
+                        "Wild",
+                        "Ten",
+                        "Nine",
+                        "Ten"
+                    ],
+                    [
+                        "Jack",
+                        "Ace",
+                        "Nine",
+                        "Wild"
+                    ],
+                    [
+                        "Nine",
+                        "King",
+                        "King",
+                        "Nine"
+                    ],
+                    [
+                        "King",
+                        "Ten",
+                        "Nine",
+                        "Queen"
+                    ]
+                ],
+                "winningLines": {
+                    "2": {
+                        "definition": [
+                            2,
+                            2,
+                            2,
+                            2,
+                            2
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Nine",
+                        "lineId": "2",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [],
+                        "winAmount": 1
+                    },
+                    "17": {
+                        "definition": [
+                            3,
+                            2,
+                            3,
+                            2,
+                            3
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Nine",
+                        "lineId": "17",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            2
+                        ],
+                        "winAmount": 1
+                    },
+                    "22": {
+                        "definition": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            1
+                        ],
+                        "pattern": [
+                            1,
+                            1,
+                            1,
+                            0,
+                            0
+                        ],
+                        "symbolId": "Jack",
+                        "lineId": "22",
+                        "symbolsPositions": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "wildSymbolsPositions": [
+                            1
+                        ],
+                        "winAmount": 2
+                    }
+                },
+                "freeGamesNum": 0,
+                "freeGamesSum": 0,
+                "freeGamesBank": 0,
+                "wonFreeGamesNumber": 0
+            }
+        ],
+        "freeGamesTotalWin": 32,
+        "numberOfFreeSpins": 10,
+        "totalWinRound": 7
+    }
+}
