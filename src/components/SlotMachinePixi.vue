@@ -71,6 +71,7 @@ const {
   scatterWinAmount,
   startCelebration,
   endCelebration,
+  updateBalanceFromOutcome,
 } = useSlotGame();
 
 const reelsSymbolHeight = 90;
@@ -122,18 +123,6 @@ onMounted(() => {
 
 });
 
-
-
-
-// --- FIX 1: TEST ANIMATION SAFELY ---
-// Watch for the prop to become available, THEN play the test
-// watch(() => props.epicWinRef, (newVal) => {
-//   if (newVal) {
-//     console.log("Epic Win Ref connected. Playing Test...");
-//     newVal.playEpicWin(1200); // Uncomment this line to test on load
-//
-//   }
-// });
 
 
 const createSymbolElement = (symbol) => {
@@ -238,6 +227,7 @@ watch(isSpinning, (spinning) => {
                 reelsContainer.value.classList.remove('reels-dimmed');
                 setWinAnimationPlaying(false);
                 gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
+                updateBalanceFromOutcome();
             }
         });
 
@@ -254,7 +244,7 @@ watch(isSpinning, (spinning) => {
                 },
                 onComplete: () => {
                     sounds.linewin.stop();
-                    emit('multiplier-triggered', multiplier);
+                    //emit('multiplier-triggered', multiplier);
                     
                     // Clear Pixi visuals before next line starts
                     if (props.winCelebrationRef) props.winCelebrationRef.clear();
@@ -275,9 +265,10 @@ watch(isSpinning, (spinning) => {
             masterTimeline.add(lineTimeline);
         });
       }
-      else if (hasScatterWins) {
-        // --- SCATTER WIN ONLY SEQUENCE ---
-        //playScatterWinSequence();
+      else {
+        // For non-line-win spins (including scatter-only and losing spins),
+        // update the balance immediately.
+        updateBalanceFromOutcome();
       }
 
       // Temporarily trigger WinParticles for every spin completion for testing
@@ -299,9 +290,6 @@ watch(isSpinning, (spinning) => {
   margin: 20px 0 30px 0
 }
 
-
-
-
 .reels-container {
   position: relative;
   width: 390px;
@@ -311,21 +299,12 @@ watch(isSpinning, (spinning) => {
   border-radius: 14px;
   display: flex;
   justify-content: space-between;
-
-  /* BACKGROUND CHANGE:
-     Make it nearly opaque (95%) and darker at edges.
-     This blocks the background image from distracting the eye.
-  */
-
-  /* FRAME: Thicker, more physical look */
-  border: 3px solid #8d6e63; /* Bronze */
-  border-bottom: 5px solid #3e2723; /* Heavy bottom lip */
-
-  /* SEPARATION: Massive shadow to lift it off the forest floor */
+  border: 3px solid #8d6e63;
+  border-bottom: 5px solid #3e2723;
   box-shadow:
-          0 0 0 2px #1a0b00, /* Outer dark rim */
-          0 30px 60px rgba(0,0,0,0.9), /* Heavy Drop Shadow */
-          inset 0 0 40px rgba(0,0,0,0.8); /* Inner depth */
+          0 0 0 2px #1a0b00, 
+          0 30px 60px rgba(0,0,0,0.9), 
+          inset 0 0 40px rgba(0,0,0,0.8);
 
   contain: layout paint;
 }
@@ -340,19 +319,16 @@ watch(isSpinning, (spinning) => {
   border-radius: 16px;
 }
 
-
-/* Gold Corner Accents */
 .reels-container::before {
   box-shadow:
-          inset 1px 1px 0 rgba(255, 215, 0, 0.4),  /* Top Left Gold glint */
-          inset -1px -1px 0 rgba(255, 215, 0, 0.2); /* Bottom Right faint glint */
+          inset 1px 1px 0 rgba(255, 215, 0, 0.4),
+          inset -1px -1px 0 rgba(255, 215, 0, 0.2);
 }
 
 /* --- OVERLAYS --- */
 .lantern-glow {
   position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
   width: 100%; height: 70%;
-  /* Warm "God Ray" casting down */
   background: radial-gradient(ellipse at center, rgba(255, 160, 50, 0.2) 0%, transparent 70%);
   pointer-events: none; z-index: 20;
   mix-blend-mode: screen;
@@ -360,7 +336,6 @@ watch(isSpinning, (spinning) => {
 
 .gloss-reflection {
   position: absolute; top: 0; left: 0; width: 100%; height: 40%;
-  /* Sharp glass reflection */
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 30%, transparent 100%);
   border-radius: 12px 12px 0 0;
   pointer-events: none; z-index: 20;
@@ -415,8 +390,6 @@ watch(isSpinning, (spinning) => {
   .symbol {
     width: 70px;
     height: 90px;
-    /* background: radial-gradient(circle, #4a4a4a 0%, #2c2c2c 100%);
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.7); */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -495,30 +468,6 @@ watch(isSpinning, (spinning) => {
     overflow: hidden; /* Contains the sheen sweep */
     border-radius: 8px; /* Slight rounding */
   }
-
-  /* --- THE SHEEN EFFECT (Light Sweep) --- */
-  /*.symbol-box.shine-effect::after {*/
-  /*  content: "";*/
-  /*  position: absolute;*/
-  /*  top: 0;*/
-  /*  left: 0;*/
-  /*  width: 100%;*/
-  /*  height: 100%;*/
-  /*  !* The white bar of light *!*/
-  /*  background: linear-gradient(*/
-  /*          90deg,*/
-  /*          rgba(255,255,255,0) 0%,*/
-  /*          rgba(255, 255, 255, 0.4) 50%,*/
-  /*          rgba(255,255,255,0) 100%*/
-  /*  );*/
-  /*  !* Start hidden to the left *!*/
-  /*  transform: translateX(-150%) skewX(-25deg);*/
-  /*  !* Sweep across every 3 seconds *!*/
-  /*  animation: sheen-sweep 3s ease-in-out;*/
-  /*  pointer-events: none;*/
-  /*  z-index: 10;*/
-  /*}*/
-
 
 
   .reels-container {

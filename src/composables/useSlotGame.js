@@ -115,7 +115,6 @@ const getSpinAndOutcome = async ()=>{
 const processOutcome = () => {
   const _outcome = outcome.value;
   winAmount.value = _outcome.totalWin.toFixed(2);
-  balance.value = _outcome.credits.toFixed(2);
 
   // Clear previous win data
   winningPaylines.value = [];
@@ -244,6 +243,12 @@ export function useSlotGame() {
   function endCelebration() {
     isCelebrationPlaying.value = false;
   }
+
+  function updateBalanceFromOutcome() {
+    if (outcome.value && typeof outcome.value.credits !== 'undefined') {
+      balance.value = outcome.value.credits.toFixed(2);
+    }
+  }
   
   return { 
     balance: readonly(balance), 
@@ -256,6 +261,7 @@ export function useSlotGame() {
     setWinAnimationPlaying,
     startCelebration,
     endCelebration,
+    updateBalanceFromOutcome,
     outcome: readonly(outcome), 
     reelsForDisplay: readonly(reelsForDisplay), 
     winAmount: readonly(winAmount),

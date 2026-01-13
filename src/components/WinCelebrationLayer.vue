@@ -37,41 +37,103 @@ let app = null;
 let textures = {}; // Cache for preloaded textures
 let dimmer = null;
 let winGroup = null;
-let lineGraphics = null; //
+let lineGraphics = null; 
+
+// --- ⚡ OBJECT POOLING ---
+let ghostPool = [];
+const MAX_POOL_SIZE = 15; // Max potential ghosts (e.g., 3 lines of 5)
+const PRE_WARM_COUNT = 5; // Create 5 ghosts on startup
+
+/**
+ * Factory function to create a single, compound "ghost" object.
+ * This includes the container, sprites, and mask.
+ */
+const createGhostObject = () => {
+    const ghostContainer = new PIXI.Container();
+    ghostContainer.visible = false; // Start invisible
+
+    // 1. THE GLOW
+    const glow = new PIXI.Sprite(PIXI.Assets.get(glowBurst));
+    glow.anchor.set(0.5);
+    glow.blendMode = 'add';
+    glow.name = 'glow'; // Name for easy retrieval
+
+    // 2. THE MASK (to make the glow circular)
+    const mask = new PIXI.Graphics();
+    mask.name = 'mask';
+    glow.mask = mask;
+    
+    // 3. THE SYMBOL GHOST
+    const ghost = new PIXI.Sprite(); // Texture set on retrieval
+    ghost.anchor.set(0.5);
+    ghost.name = 'ghost';
+
+    ghostContainer.addChild(mask, glow, ghost);
+    return ghostContainer;
+};
+
+const getGhostFromPool = () => {
+    if (ghostPool.length > 0) {
+        const ghostObj = ghostPool.pop();
+        ghostObj.visible = true;
+        return ghostObj;
+    }
+    // Pool is empty, create a new object on-the-fly
+    return createGhostObject();
+};
+
+const returnGhostToPool = (ghostObj) => {
+    // Reset properties for reuse
+    ghostObj.visible = false;
+    ghostObj.position.set(0, 0);
+    ghostObj.scale.set(1);
+    ghostObj.alpha = 1;
+    
+    // Specifically reset animated properties on children
+    const ghost = ghostObj.getChildByName('ghost');
+    ghost.width = 0;
+    ghost.height = 0;
+    
+    const glow = ghostObj.getChildByName('glow');
+    glow.alpha = 0.7; // Default alpha
+
+    if (ghostPool.length < MAX_POOL_SIZE) {
+        ghostPool.push(ghostObj);
+    } else {
+        // If pool is full, destroy the object to prevent memory leaks
+        ghostObj.destroy({ children: true });
+    }
+};
+// --- END OBJECT POOLING ---
 
 onMounted(async () => {
     app = new PIXI.Application();
     await app.init({
-        resizeTo: window, // Automatically resizes canvas to match browser window
+        resizeTo: window,
         backgroundAlpha: 0,
         antialias: true,
-        // High resolution for crisp text on mobile Retina/OLED screens
         resolution: Math.min(window.devicePixelRatio, 2),
         autoDensity: true,
     });
     canvasContainer.value.appendChild(app.canvas);
 
-    // 1. Setup Layering
     dimmer = new PIXI.Graphics()
         .rect(0, 0, window.innerWidth, window.innerHeight)
-        .fill({ color: 0x0a0a1a, alpha: 0.6 }); // Semi-transparent dark overlay
+        .fill({ color: 0x0a0a1a, alpha: 0.6 });
     dimmer.visible = false;
     
     winGroup = new PIXI.Container();
-
-    lineGraphics = new PIXI.Graphics(); // ⚡ FIX: Actually create the object
+    lineGraphics = new PIXI.Graphics();
     
-    app.stage.addChild(dimmer);
-    app.stage.addChild(lineGraphics);
-    app.stage.addChild(winGroup);
+    app.stage.addChild(dimmer, lineGraphics, winGroup);
 
-    // 2. Preload and Prepare Textures All At Once
-    const [masterTexture, glowTex] = await Promise.all([
+    // Preload assets
+    const [masterTexture] = await Promise.all([
         PIXI.Assets.load(symbolsSprite),
-        PIXI.Assets.load(glowBurst)
+        PIXI.Assets.load(glowBurst) // Ensure glow texture is loaded
     ]);
 
-    
+    // Create symbol textures from spritesheet
     Object.keys(SYMBOL_MAP).forEach(key => {
         const frame = SYMBOL_MAP[key];
         textures[key] = new PIXI.Texture({
@@ -79,6 +141,11 @@ onMounted(async () => {
             frame: new PIXI.Rectangle(frame.x, frame.y, SYMBOL_W, SYMBOL_H)
         });
     });
+
+    // Pre-warm the object pool
+    for (let i = 0; i < PRE_WARM_COUNT; i++) {
+        ghostPool.push(createGhostObject());
+    }
 });
 
 const getSymbolKey = (id) => {
@@ -89,7 +156,7 @@ const getSymbolKey = (id) => {
 const celebrateLine = async (lineData, allSymbolElements) => {
     clear(); 
     dimmer.visible = true; 
-    const ghosts = [];
+    const activeGhosts = [];
 
     const symbolKey = getSymbolKey(lineData.symbolId);
     const texture = textures[symbolKey] || textures['icon-A'];
@@ -101,52 +168,41 @@ const celebrateLine = async (lineData, allSymbolElements) => {
         if (!domEl) continue;
 
         const rect = domEl.getBoundingClientRect();
-        const ghostContainer = new PIXI.Container();
-        ghostContainer.position.set(rect.left + rect.width/2, rect.top + rect.height/2);
-
-        // 1. THE GLOW (With a Mask to remove boxes)
-        const glow = new PIXI.Sprite(PIXI.Assets.get(glowBurst));
-        glow.anchor.set(0.5);
-        glow.blendMode = 'add';
-        glow.width = rect.width; 
-        glow.height = rect.height;
-        glow.alpha = 0.7;
-
-        const m = new PIXI.Graphics().circle(0, 0, rect.width / 2).fill(0xffffff);
-        glow.mask = m;
-        ghostContainer.addChild(m);
         
-        // 3. THE SYMBOL GHOST
-        const ghost = new PIXI.Sprite(texture);
-        ghost.anchor.set(0.5);
-        ghost.width = 0; 
-        ghost.height = 0;
+        // --- ⚡ POOL USAGE ---
+        const ghostContainer = getGhostFromPool();
+        ghostContainer.position.set(rect.left + rect.width / 2, rect.top + rect.height / 2);
 
-        ghostContainer.addChild(glow);
-        ghostContainer.addChild(ghost); // Symbol is on top
+        const glow = ghostContainer.getChildByName('glow');
+        const mask = ghostContainer.getChildByName('mask');
+        const ghost = ghostContainer.getChildByName('ghost');
+        
+        // Update properties of the recycled object
+        ghost.texture = texture;
+        glow.width = rect.width;
+        glow.height = rect.height;
+        
+        // Redraw mask for the specific symbol size
+        mask.clear().circle(0, 0, rect.width / 2).fill(0xffffff);
+
         winGroup.addChild(ghostContainer);
-        ghosts.push(ghostContainer); 
+        activeGhosts.push(ghostContainer); 
 
-        // 4. ANIMATION SEQUENCE
-        // Pop the symbol
+        // ANIMATION SEQUENCE (no changes needed here)
         gsap.to(ghost, { 
-            width: rect.width*0.7, 
-            height: rect.height*0.7, 
+            width: rect.width * 0.7, 
+            height: rect.height * 0.7, 
             duration: 0.4, 
             ease: "back.out(2)" 
         });
         
-        // Glow arrives with a pulse
-        //gsap.to(glow, { alpha: 0.5, duration: 0.3 });
         gsap.to(glow, { 
             alpha: 0.2, 
             duration: 0.5, 
             ease: "sine.inOut" 
         });
 
-
-        updateEnergyLine(ghosts);
-
+        updateEnergyLine(activeGhosts);
         await new Promise(r => setTimeout(r, 160));
     }
 };
@@ -157,7 +213,6 @@ function updateEnergyLine(ghosts) {
     lineGraphics.clear();
     lineGraphics.blendMode = 'add';
     
-    // ⚡ FIX: Safer check for Pixi v8 filters
     if (!lineGraphics.filters || lineGraphics.filters.length === 0) {
         lineGraphics.filters = [new PIXI.BlurFilter({ strength: 4 })];
     }
@@ -176,12 +231,24 @@ function updateEnergyLine(ghosts) {
 }
 
 const clear = () => {
-    if (winGroup) winGroup.removeChildren();
+    // --- ⚡ POOL USAGE ---
+    // Return all active ghosts to the pool instead of destroying them
+    for (let i = winGroup.children.length - 1; i >= 0; i--) {
+        returnGhostToPool(winGroup.children[i]);
+    }
+    winGroup.removeChildren(); // Efficiently detaches them all
+    
     if (lineGraphics) lineGraphics.clear();
     if (dimmer) dimmer.visible = false;
 };
 
-onUnmounted(() => app?.destroy(true));
+onUnmounted(() => {
+    // Destroy the app and any remaining objects in the pool
+    ghostPool.forEach(ghost => ghost.destroy({ children: true }));
+    ghostPool = [];
+    app?.destroy(true);
+});
+
 defineExpose({ celebrateLine, clear });
 </script>
 
