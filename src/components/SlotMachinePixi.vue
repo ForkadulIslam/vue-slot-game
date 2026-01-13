@@ -72,6 +72,10 @@ const {
   startCelebration,
   endCelebration,
   updateBalanceFromOutcome,
+  hasTriggeredFreeSpins,
+  freeSpinsAvailable,
+  freeSpinsTotal,
+  isInFreeSpinSession,
 } = useSlotGame();
 
 const reelsSymbolHeight = 90;
@@ -214,7 +218,12 @@ watch(isSpinning, (spinning) => {
       const hasLineWins = winningPaylines.value.length > 0;
       const hasScatterWins = winningScatters.value.length > 0;
 
-      if (hasLineWins) {
+      if (hasTriggeredFreeSpins.value) {
+        console.log(`%c FREE SPINS TRIGGERED! ${freeSpinsTotal.value} spins awarded!`, 'font-size: 20px; color: yellow; background: red; padding: 10px;');
+        // TODO: Play a "Free Spins Won!" announcement animation here
+        updateBalanceFromOutcome();
+      }
+      else if (hasLineWins) {
         setWinAnimationPlaying(true);
         const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
         let cumulativeWin = 0;
@@ -228,7 +237,9 @@ watch(isSpinning, (spinning) => {
                 reelsContainer.value.classList.remove('reels-dimmed');
                 setWinAnimationPlaying(false);
                 gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
-                updateBalanceFromOutcome();
+                if (!isInFreeSpinSession.value) {
+                    updateBalanceFromOutcome();
+                }
             }
         });
 
@@ -268,7 +279,9 @@ watch(isSpinning, (spinning) => {
       else {
         // For non-line-win spins (including scatter-only and losing spins),
         // update the balance immediately.
-        updateBalanceFromOutcome();
+        if (!isInFreeSpinSession.value) { // Balance shouldn't update during free spins themselves
+            updateBalanceFromOutcome();
+        }
       }
 
       // Temporarily trigger WinParticles for every spin completion for testing

@@ -41,6 +41,14 @@ const reelsSymbolsNumber = ref(4);
 const availableSymbols = ref([]);
 const sessionId = ref(0);
 
+// --- Free Spin State ---
+const isInFreeSpinSession = ref(false);
+const freeSpinsAvailable = ref(0);
+const freeSpinsTotal = ref(0);
+const freeSpinOutcomes = ref([]);
+const freeSpinTotalWin = ref(0);
+const hasTriggeredFreeSpins = ref(false);
+
 // --- 3. SOUNDS ---
 const sounds = {
   win: new Howl({ src: [new URL('../assets/sounds/win-alert.wav', import.meta.url).href] }),
@@ -114,7 +122,8 @@ const getSpinAndOutcome = async ()=>{
 }
 const processOutcome = () => {
   const _outcome = outcome.value;
-  winAmount.value = _outcome.totalWin.toFixed(2);
+  winAmount.value = _outcome.totalWin ? _outcome.totalWin.toFixed(2) : parseFloat(0).toFixed(2);
+  hasTriggeredFreeSpins.value = false;
 
   // Clear previous win data
   winningPaylines.value = [];
@@ -156,7 +165,14 @@ const processOutcome = () => {
     }
   }
 
-
+  if (_outcome.freeGamesResult?.triggeredFreeGames) {
+    hasTriggeredFreeSpins.value = true;
+    isInFreeSpinSession.value = true;
+    freeSpinsAvailable.value = _outcome.freeGamesResult.numberOfFreeSpins;
+    freeSpinsTotal.value = _outcome.freeGamesResult.numberOfFreeSpins;
+    freeSpinOutcomes.value = [..._outcome.freeGamesResult.freeGamesSpins];
+    freeSpinTotalWin.value = 0;
+  }
 };
 
 // --- Initialize the game with a random grid ---
@@ -204,16 +220,37 @@ export function useSlotGame() {
   // --- 5. MAIN SPIN FUNCTION ---
   const spin = async() => {
     unlockAudio();
-    if (isSpinning.value || balance.value < betAmount.value || isWinAnimationPlaying.value) return;
-    const finalOutcome = await getSpinAndOutcome();
-    outcome.value = finalOutcome;
-    isSpinning.value = true;
-    winAmount.value = parseFloat(0).toFixed(2);
+    if (isSpinning.value || isWinAnimationPlaying.value) return;
+
+    if (isInFreeSpinSession.value) {
+      if (freeSpinsAvailable.value > 0) {
+        const freeSpinOutcome = freeSpinOutcomes.value.shift();
+        outcome.value = freeSpinOutcome;
+        freeSpinsAvailable.value--;
+        isSpinning.value = true;
+        winAmount.value = parseFloat(0).toFixed(2);
+      } else {
+        isInFreeSpinSession.value = false;
+        // Logic to add freeSpinTotalWin to balance and show summary will be needed here
+        return;
+      }
+    } else {
+      if (balance.value < betAmount.value) return;
+      const finalOutcome = await getSpinAndOutcome();
+      outcome.value = finalOutcome;
+      isSpinning.value = true;
+      winAmount.value = parseFloat(0).toFixed(2);
+    }
   };
 
   const finishSpin = () => {
     isSpinning.value = false;
     processOutcome();
+
+    if (isInFreeSpinSession.value) {
+      freeSpinTotalWin.value += parseFloat(winAmount.value);
+    }
+
     if (isAutoplaying.value) {
       spin();
     }
@@ -280,6 +317,13 @@ export function useSlotGame() {
     linesDefinitions:readonly(linesDefinitions),
     availableSymbols: readonly(availableSymbols),
     reelsNumber: readonly(reelsNumber),
-    reelsSymbolsNumber: readonly(reelsSymbolsNumber)
+    reelsSymbolsNumber: readonly(reelsSymbolsNumber),
+
+    // Free Spin Exports
+    isInFreeSpinSession: readonly(isInFreeSpinSession),
+    freeSpinsAvailable: readonly(freeSpinsAvailable),
+    freeSpinsTotal: readonly(freeSpinsTotal),
+    freeSpinTotalWin: readonly(freeSpinTotalWin),
+    hasTriggeredFreeSpins: readonly(hasTriggeredFreeSpins),
   };
 }
