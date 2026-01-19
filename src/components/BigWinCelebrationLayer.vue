@@ -65,7 +65,7 @@ onMounted(async () => {
     await app.init({ 
         resizeTo: window, 
         backgroundAlpha: 0, 
-        antialias: false, 
+        antialias: true, 
         resolution: Math.min(window.devicePixelRatio, 2), 
         autoDensity: true,
         autoStart: false 

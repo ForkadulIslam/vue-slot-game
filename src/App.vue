@@ -2,18 +2,16 @@
   <div id="app-container">
 
     <!-- Global dedicated celebration layer -->
-    <WinCelebrationLayer ref="winCelebrationRef" />
-
-    <EpicWinParticles ref="epicWinRef"/>
-    <WinParticles ref="winParticles" />
+    <LineWinCelebrationLayer ref="LineWinCelebrationRef" /> 
+    <BigWinCelebrationLayer ref="epicWinRef"/>
 
     <div class="game-area">
       <MultiplierBarDeepSee ref="multiplierBarRef"/>
       <SlotMachinePixi
-          :win-particles-ref="winParticles"
-          :epic-win-ref="epicWinRef"
-          @multiplier-triggered="handleMultiplier"
-          :win-celebration-ref="winCelebrationRef"
+        :win-particles-ref="winParticles"
+        :epic-win-ref="epicWinRef"
+        @multiplier-triggered="handleMultiplier"
+        :line-win-celebration-ref="winCelebrationRef"
       />
       <ControlPanel />
     </div>
@@ -22,17 +20,21 @@
 
 <script setup>
 
-import WinCelebrationLayer from './components/WinCelebrationLayer.vue';
-import EpicWinParticles from './components/EpicWinParticles.vue';
-import WinParticles from './components/WinParticles.vue';
-//import MultiplierBar from './components/MultiplierBar.vue';
+import LineWinCelebrationLayer from './components/LineWinCelebrationLayer.vue';
+import BigWinCelebrationLayer from './components/BigWinCelebrationLayer.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
 import ControlPanel from './components/ControlPanel.vue';
 
 import { onMounted, ref } from 'vue';
+import { Assets } from 'pixi.js';
 import gsap from 'gsap';
-import MultiplierBarPixi from './components/MultiplierBarPixi.vue';
 import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
+
+// --- Pre-load all celebration assets ---
+import symbolsSprite from './assets/images/symbols_sprite.png';
+import glowBurst from './assets/images/transparent_glow_squire.png';
+import shieldHelmet from './assets/images/shield_helmet.png';
+import backgroundGlow from './assets/images/transparent_glow.png';
 
 
 const winCelebrationRef = ref(null);
@@ -56,7 +58,16 @@ const handleMultiplier = (multiplier) => {
 };
 
 
-onMounted(() => {
+onMounted(async () => {
+  // Pre-load assets to prevent delay on first celebration
+  const allCelebrationAssets = [
+    symbolsSprite, 
+    glowBurst, 
+    shieldHelmet, 
+    backgroundGlow
+  ];
+  await Assets.load(allCelebrationAssets);
+
   if (atmosLight.value) {
     // Make the light pulse slowly like a fire/lantern
     gsap.to(atmosLight.value, {

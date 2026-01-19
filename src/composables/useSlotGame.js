@@ -51,13 +51,47 @@ const hasTriggeredFreeSpins = ref(false);
 
 // --- 3. SOUNDS ---
 const sounds = {
-  win: new Howl({ src: [new URL('../assets/sounds/win-alert.wav', import.meta.url).href] }),
-  payout: new Howl({ src: [new URL('../assets/sounds/payout-award.wav', import.meta.url).href] }),
+  winAlert: new Howl({ src: [new URL('../assets/sounds/winAlert.mp3', import.meta.url).href] }),
   explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
-  linewin: new Howl({ src: [new URL('../assets/sounds/linewin.mp3', import.meta.url).href], volume:0.1 }),
-  backgroundMusic: new Howl({ src: [new URL('../assets/sounds/background_music.mp3', import.meta.url).href], loop: true, volume: 0 }),
-  spinningMusic: new Howl({ src: [new URL('../assets/sounds/spinning_music.mp3', import.meta.url).href], loop: true, volume: 0 }),
-  celebrationMusic: new Howl({ src: [new URL('../assets/sounds/celebration_music.mp3', import.meta.url).href], loop: true, volume: 0 })
+  linewin: new Howl({ src: [new URL('../assets/sounds/linewin.mp3', import.meta.url).href], volume: 1.0 }),
+  backgroundMusic: new Howl({ 
+    src: [new URL('../assets/sounds/background_music.mp3', import.meta.url).href], 
+    loop: true, 
+    volume: 0.5 // Base volume
+  }),
+  celebrationMusic: new Howl({ 
+    src: [new URL('../assets/sounds/celebration_music.mp3', import.meta.url).href], 
+    loop: true, 
+    volume: 0 // Start silent
+  }),
+  reelsSound: new Howl({ 
+    src: [new URL('../assets/sounds/reels-sound.mp3', import.meta.url).href], 
+    loop: true, 
+    volume: 0 // Start silent
+  })
+};
+
+const triggerEffectWithDucking = (effectHowl) => {
+  // 1. Dim Background Music
+  sounds.backgroundMusic.fade(sounds.backgroundMusic.volume(), 0.1, 300);
+
+  // 2. Play the effect at high volume
+  effectHowl.volume(1.0);
+  effectHowl.play();
+
+  // 3. Management after 1 second
+  setTimeout(() => {
+    // Fade out the effect
+    effectHowl.fade(1.0, 0, 500);
+    
+    // Once faded, pause the effect to save resources
+    setTimeout(() => {
+      effectHowl.pause();
+    }, 500);
+
+    // 4. Slowly increment Background music back to 0.5
+    sounds.backgroundMusic.fade(0.1, 0.5, 1500); 
+  }, 1000);
 };
 
 // --- AUDIO MANAGEMENT ---
@@ -70,7 +104,7 @@ const manageSound = () => {
   if (isCelebrationPlaying.value) {
     musicIn = sounds.celebrationMusic;
   } else if (isSpinning.value) {
-    musicIn = sounds.spinningMusic;
+    musicIn = sounds.reelsSound;
   } else {
     musicIn = sounds.backgroundMusic;
   }
@@ -192,35 +226,31 @@ availableSymbols.value = gameSession.availableSymbols;
 let audioUnlocked = false;
 
 export function useSlotGame() {
+
   const unlockAudio = () => {
     if (audioUnlocked) return;
-    if (Howler.ctx && Howler.ctx.state === 'suspended') {
-      Howler.ctx.resume().then(() => {
-        manageSound(); // Start music after context is resumed
+    const ctx = Howler.ctx;
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        if (!sounds.backgroundMusic.playing()) sounds.backgroundMusic.play();
         audioUnlocked = true;
       });
-    } else if (Howler.ctx) {
-      // If context is already running, just start the music
-      manageSound();
+    } else {
+      if (!sounds.backgroundMusic.playing()) sounds.backgroundMusic.play();
       audioUnlocked = true;
     }
   };
 
-  watch(isSpinning, manageSound);
   watch(isCelebrationPlaying, manageSound);
 
-  // --- 4. CORE GAME LOGIC ---
-  const calculateWins = () => {
-    let totalWinnings = 0;
-    const currentWinningPaylines = new Set();
-    const winningPositions = new Set();
-    return { totalWinnings, winningPositions, currentWinningPaylines };
-  };
+  
 
-  // --- 5. MAIN SPIN FUNCTION ---
+  // MAIN SPIN FUNCTION ---
   const spin = async() => {
     unlockAudio();
     if (isSpinning.value || isWinAnimationPlaying.value) return;
+
+     triggerEffectWithDucking(sounds.reelsSound);
 
     if (isInFreeSpinSession.value) {
       if (freeSpinsAvailable.value > 0) {
@@ -232,7 +262,11 @@ export function useSlotGame() {
       } else {
         isInFreeSpinSession.value = false;
         // Logic to add freeSpinTotalWin to balance and show summary will be needed here
-        return;
+        if (balance.value < betAmount.value) return;
+        const finalOutcome = await getSpinAndOutcome();
+        outcome.value = finalOutcome;
+        isSpinning.value = true;
+        winAmount.value = parseFloat(0).toFixed(2);
       }
     } else {
       if (balance.value < betAmount.value) return;
@@ -275,10 +309,15 @@ export function useSlotGame() {
 
   function startCelebration() {
     isCelebrationPlaying.value = true;
+
+    triggerEffectWithDucking(sounds.celebrationMusic);
   }
 
   function endCelebration() {
     isCelebrationPlaying.value = false;
+    if (sounds.backgroundMusic.volume() < 0.5) {
+        sounds.backgroundMusic.fade(sounds.backgroundMusic.volume(), 0.5, 500);
+    }
   }
 
   function updateBalanceFromOutcome() {

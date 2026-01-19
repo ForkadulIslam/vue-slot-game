@@ -8,8 +8,6 @@ import { onMounted, onUnmounted, ref, defineExpose } from 'vue';
 import * as PIXI from 'pixi.js';
 import { gsap } from 'gsap';
 
-
-
 import symbolsSprite from '@/assets/images/symbols_sprite.png';
 import glowBurst from '@/assets/images/transparent_glow_squire.png';
 
@@ -34,39 +32,34 @@ const SYMBOL_MAP = {
 
 const canvasContainer = ref(null);
 let app = null;
-let textures = {}; // Cache for preloaded textures
+let textures = {}; 
 let dimmer = null;
-let winGroup = null;
+let winGroup = null; // Layer for pooled symbols
+let uiGroup = null;  // Layer for free spin text
 let lineGraphics = null; 
+const emitters = {};
 
 // --- ⚡ OBJECT POOLING ---
 let ghostPool = [];
-const MAX_POOL_SIZE = 15; // Max potential ghosts (e.g., 3 lines of 5)
-const PRE_WARM_COUNT = 5; // Create 5 ghosts on startup
+const MAX_POOL_SIZE = 15; 
+const PRE_WARM_COUNT = 5; 
 
-/**
- * Factory function to create a single, compound "ghost" object.
- * This includes the container, sprites, and mask.
- */
 const createGhostObject = () => {
     const ghostContainer = new PIXI.Container();
-    ghostContainer.visible = false; // Start invisible
+    ghostContainer.visible = false; 
 
-    // 1. THE GLOW
     const glow = new PIXI.Sprite(PIXI.Assets.get(glowBurst));
     glow.anchor.set(0.5);
     glow.blendMode = 'add';
-    glow.name = 'glow'; // Name for easy retrieval
+    glow.label = 'glow'; 
 
-    // 2. THE MASK (to make the glow circular)
     const mask = new PIXI.Graphics();
-    mask.name = 'mask';
+    mask.label = 'mask';
     glow.mask = mask;
     
-    // 3. THE SYMBOL GHOST
-    const ghost = new PIXI.Sprite(); // Texture set on retrieval
+    const ghost = new PIXI.Sprite(); 
     ghost.anchor.set(0.5);
-    ghost.name = 'ghost';
+    ghost.label = 'ghost';
 
     ghostContainer.addChild(mask, glow, ghost);
     return ghostContainer;
@@ -78,33 +71,30 @@ const getGhostFromPool = () => {
         ghostObj.visible = true;
         return ghostObj;
     }
-    // Pool is empty, create a new object on-the-fly
     return createGhostObject();
 };
 
 const returnGhostToPool = (ghostObj) => {
-    // Reset properties for reuse
     ghostObj.visible = false;
     ghostObj.position.set(0, 0);
     ghostObj.scale.set(1);
     ghostObj.alpha = 1;
     
-    // Specifically reset animated properties on children
     const ghost = ghostObj.getChildByName('ghost');
-    ghost.width = 0;
-    ghost.height = 0;
+    if (ghost) {
+        ghost.width = 0;
+        ghost.height = 0;
+    }
     
     const glow = ghostObj.getChildByName('glow');
-    glow.alpha = 0.7; // Default alpha
+    if (glow) glow.alpha = 0.7; 
 
     if (ghostPool.length < MAX_POOL_SIZE) {
         ghostPool.push(ghostObj);
     } else {
-        // If pool is full, destroy the object to prevent memory leaks
         ghostObj.destroy({ children: true });
     }
 };
-// --- END OBJECT POOLING ---
 
 onMounted(async () => {
     app = new PIXI.Application();
@@ -123,17 +113,18 @@ onMounted(async () => {
     dimmer.visible = false;
     
     winGroup = new PIXI.Container();
+    uiGroup = new PIXI.Container();
     lineGraphics = new PIXI.Graphics();
     
-    app.stage.addChild(dimmer, lineGraphics, winGroup);
+    app.stage.addChild(dimmer, lineGraphics, winGroup, uiGroup);
 
-    // Preload assets
     const [masterTexture] = await Promise.all([
         PIXI.Assets.load(symbolsSprite),
-        PIXI.Assets.load(glowBurst) // Ensure glow texture is loaded
+        PIXI.Assets.load(glowBurst)
     ]);
 
-    // Create symbol textures from spritesheet
+    
+
     Object.keys(SYMBOL_MAP).forEach(key => {
         const frame = SYMBOL_MAP[key];
         textures[key] = new PIXI.Texture({
@@ -142,7 +133,6 @@ onMounted(async () => {
         });
     });
 
-    // Pre-warm the object pool
     for (let i = 0; i < PRE_WARM_COUNT; i++) {
         ghostPool.push(createGhostObject());
     }
@@ -169,7 +159,6 @@ const celebrateLine = async (lineData, allSymbolElements) => {
 
         const rect = domEl.getBoundingClientRect();
         
-        // --- ⚡ POOL USAGE ---
         const ghostContainer = getGhostFromPool();
         ghostContainer.position.set(rect.left + rect.width / 2, rect.top + rect.height / 2);
 
@@ -177,30 +166,16 @@ const celebrateLine = async (lineData, allSymbolElements) => {
         const mask = ghostContainer.getChildByName('mask');
         const ghost = ghostContainer.getChildByName('ghost');
         
-        // Update properties of the recycled object
         ghost.texture = texture;
         glow.width = rect.width;
         glow.height = rect.height;
-        
-        // Redraw mask for the specific symbol size
         mask.clear().circle(0, 0, rect.width / 2).fill(0xffffff);
 
         winGroup.addChild(ghostContainer);
         activeGhosts.push(ghostContainer); 
 
-        // ANIMATION SEQUENCE (no changes needed here)
-        gsap.to(ghost, { 
-            width: rect.width * 0.7, 
-            height: rect.height * 0.7, 
-            duration: 0.4, 
-            ease: "back.out(2)" 
-        });
-        
-        gsap.to(glow, { 
-            alpha: 0.2, 
-            duration: 0.5, 
-            ease: "sine.inOut" 
-        });
+        gsap.to(ghost, { width: rect.width * 0.7, height: rect.height * 0.7, duration: 0.4, ease: "back.out(2)" });
+        gsap.to(glow, { alpha: 0.2, duration: 0.5, ease: "sine.inOut" });
 
         updateEnergyLine(activeGhosts);
         await new Promise(r => setTimeout(r, 160));
@@ -217,50 +192,143 @@ function updateEnergyLine(ghosts) {
         lineGraphics.filters = [new PIXI.BlurFilter({ strength: 4 })];
     }
     
-    // LAYER 1: Thick Outer Glow
     lineGraphics.moveTo(ghosts[0].x, ghosts[0].y);
     lineGraphics.setStrokeStyle({ width: 16, color: 0xFFD700, alpha: 0.2 });
     for (let i = 1; i < ghosts.length; i++) { lineGraphics.lineTo(ghosts[i].x, ghosts[i].y); }
     lineGraphics.stroke();
 
-    // LAYER 2: Sharp Inner Beam
     lineGraphics.moveTo(ghosts[0].x, ghosts[0].y);
     lineGraphics.setStrokeStyle({ width: 4, color: 0xFFFFFF, alpha: 0.8 });
     for (let i = 1; i < ghosts.length; i++) { lineGraphics.lineTo(ghosts[i].x, ghosts[i].y); }
     lineGraphics.stroke();
 }
 
+
 const clear = () => {
-    // --- ⚡ POOL USAGE ---
-    // Return all active ghosts to the pool instead of destroying them
-    for (let i = winGroup.children.length - 1; i >= 0; i--) {
-        returnGhostToPool(winGroup.children[i]);
+    // Use while loop with removeChildAt(0) to avoid RangeError in v8
+    if (winGroup) {
+        while (winGroup.children.length > 0) {
+            const child = winGroup.removeChildAt(0);
+            // Stop any active infinite pulses
+            gsap.killTweensOf(child);
+            gsap.killTweensOf(child.getChildByName('glow'));
+            returnGhostToPool(child);
+        }
     }
-    winGroup.removeChildren(); // Efficiently detaches them all
+
+    if (uiGroup) {
+        while (uiGroup.children.length > 0) {
+            const child = uiGroup.removeChildAt(0);
+            child.destroy({ children: true });
+        }
+        uiGroup.alpha = 1;
+    }
     
     if (lineGraphics) lineGraphics.clear();
     if (dimmer) dimmer.visible = false;
 };
 
 onUnmounted(() => {
-    // Destroy the app and any remaining objects in the pool
     ghostPool.forEach(ghost => ghost.destroy({ children: true }));
     ghostPool = [];
     app?.destroy(true);
 });
 
-defineExpose({ celebrateLine, clear });
+
+// Helper to create the cinematic background texture
+function createRadialGradientTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    
+    // Gradient from Deep Sea Teal to Dark Navy
+    const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+    grad.addColorStop(0, 'rgba(12, 45, 56, 0.9)'); // Center color
+    grad.addColorStop(1, 'rgba(2, 8, 12, 1)');      // Edge color
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 512);
+    return PIXI.Texture.from(canvas);
+}
+
+const announceFreeSpins = (spinCount) => {
+    return new Promise(async (resolve) => {
+        if (!app) { resolve(); return; }
+
+        clear();
+        
+        // 1. IMPROVED DIMMER: Use Radial Texture instead of solid color
+        const bgTexture = createRadialGradientTexture();
+        const cinematicBg = new PIXI.Sprite(bgTexture);
+        cinematicBg.width = app.screen.width;
+        cinematicBg.height = app.screen.height;
+        cinematicBg.alpha = 0;
+        uiGroup.addChild(cinematicBg);
+        
+        gsap.to(cinematicBg, { alpha: 0.9, duration: 0.4 });
+
+        // 2. TEXT STYLES (Brightened to pop against the teal)
+        const commonStyle = {
+            fontFamily: 'Arial Black, Impact, sans-serif',
+            fontWeight: '900',
+            fill: '#ffffff', // Pure white face for maximum "glow"
+            lineJoin: 'round',
+            dropShadow: { alpha: 0.9, blur: 20, distance: 0 }
+        };
+
+        const titleText = new PIXI.Text({ 
+            text: 'SPINS', 
+            style: { ...commonStyle, fontSize: 75, stroke: '#003344', strokeThickness: 10, dropShadow: { ...commonStyle.dropShadow, color: '#00ffff' } } 
+        });
+
+        const countText = new PIXI.Text({ 
+            text: spinCount, 
+            style: { ...commonStyle, fontSize: 180, stroke: '#4d3300', strokeThickness: 15, dropShadow: { ...commonStyle.dropShadow, color: '#f1c40f' } } 
+        });
+
+        const startText = new PIXI.Text({ 
+            text: 'START!', 
+            style: { ...commonStyle, fontSize: 100, stroke: '#003300', strokeThickness: 12, dropShadow: { ...commonStyle.dropShadow, color: '#55ff55' } } 
+        });
+
+        [titleText, countText, startText].forEach(t => {
+            t.anchor.set(0.5);
+            t.position.set(app.screen.width / 2, app.screen.height / 2);
+            t.alpha = 0;
+            t.scale.set(0);
+            uiGroup.addChild(t);
+        });
+
+        const tl = gsap.timeline({
+            onComplete: () => {
+                gsap.to(cinematicBg, { alpha: 0, duration: 0.5, onComplete: () => { clear(); resolve(); } });
+            }
+        });
+
+        // SEQUENCE: Zoom In -> Hold -> Zoom Out
+        // STEP 1: FREE SPINS
+        tl.to(titleText, { alpha: 1, duration: 0.2 })
+          .to(titleText.scale, { x: 1, y: 1, duration: 0.5, ease: "back.out(1.7)" }, "<")
+          .to(titleText, { alpha: 0, scale: 1.4, duration: 0.4, ease: "power2.in" }, "+=0.8");
+
+        // STEP 2: NUMBER
+        tl.to(countText, { alpha: 1, duration: 0.2 })
+          .to(countText.scale, { x: 1, y: 1, duration: 0.6, ease: "back.out(2)" }, "<")
+          .to(countText, { alpha: 0, scale: 1.4, duration: 0.4, ease: "power2.in" }, "+=1.0");
+
+        // STEP 3: START
+        tl.to(startText, { alpha: 1, duration: 0.2 })
+          .to(startText.scale, { x: 1, y: 1, duration: 0.5, ease: "back.out(1.7)" }, "<")
+          .to(uiGroup, { alpha: 0, duration: 0.6, delay: 1.2 });
+    });
+};
+
+defineExpose({ celebrateLine, clear, announceFreeSpins });
 </script>
 
 <style scoped>
 .celebration-layer {
-    position: fixed; /* Lock to window viewport */
-    top: 0; left: 0;
-    width: 100vw; 
-    /* Use dynamic viewport height to match App.vue and handle browser bars */
-    height: 100dvh; 
-    z-index: 1000;
-    pointer-events: none;
-    overflow: hidden;
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; 
+    z-index: 1000; pointer-events: none; overflow: hidden;
 }
 </style>

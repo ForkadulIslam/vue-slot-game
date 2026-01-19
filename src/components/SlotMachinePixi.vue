@@ -19,7 +19,6 @@
         :ref="el => reelElements[index] = el"
       />
     </div>
-    <div ref="winAmountContainer" class="win-amount-container"></div>
   </div>
 </template>
 
@@ -27,7 +26,6 @@
 import { computed, ref, watch, onBeforeUpdate, nextTick, defineProps, onMounted } from 'vue';
 import { gsap } from 'gsap';
 import Reel from './Reel.vue';
-import WinLine from './WinLine.vue';
 import { useSlotGame } from '../composables/useSlotGame';
 
 
@@ -206,26 +204,50 @@ watch(isSpinning, (spinning) => {
 
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(async () => {
-      // if (props.epicWinRef) {
-      //   props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
-      //   return;
-      // }
+      if (props.epicWinRef) {
+        props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
+        return;
+      }
 
 
       // if(props.winParticlesRef && props.winParticlesRef.playEpicWin) {
       //   await props.winParticlesRef.playEpicWin();
       // }
+
+      // Identify ALL scatter positions from the raw response
+      
+      const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
       const hasLineWins = winningPaylines.value.length > 0;
-      const hasScatterWins = winningScatters.value.length > 0;
+
+      const scatterElements = [];
+      outcome.value.reelsSymbols.forEach((reel, reelIndex) => {
+          reel.forEach((symbolName, rowIndex) => {
+              if (symbolName.toLowerCase().includes('scatter1')) {
+                  // Calculate index (assuming 4 symbols per reel based on your Height*4 logic)
+                  const symbolIndex = reelIndex * 4 + rowIndex;
+                  if (allSymbolElements[symbolIndex]) {
+                      scatterElements.push(allSymbolElements[symbolIndex]);
+                  }
+              }
+          });
+      });
+
 
       if (hasTriggeredFreeSpins.value) {
         console.log(`%c FREE SPINS TRIGGERED! ${freeSpinsTotal.value} spins awarded!`, 'font-size: 20px; color: yellow; background: red; padding: 10px;');
-        // TODO: Play a "Free Spins Won!" announcement animation here
+        
+        if (props.winCelebrationRef && props.winCelebrationRef.announceFreeSpins) {
+          await props.winCelebrationRef.announceFreeSpins(freeSpinsTotal.value);
+        }
+
+        if(hasLineWins){
+          console.log(winningPaylines.value)
+        }
+
         updateBalanceFromOutcome();
       }
       else if (hasLineWins) {
         setWinAnimationPlaying(true);
-        const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
         let cumulativeWin = 0;
 
         // ⚡ STEP 1: Dim the background reels once
@@ -247,6 +269,7 @@ watch(isSpinning, (spinning) => {
             const multiplier = 1 + index;
             const lineTimeline = gsap.timeline({
                 onStart: async () => {
+
                     sounds.linewin.play();
                     
                     // Trigger the Pixi Ghosts
@@ -282,6 +305,24 @@ watch(isSpinning, (spinning) => {
         if (!isInFreeSpinSession.value) { // Balance shouldn't update during free spins themselves
             updateBalanceFromOutcome();
         }
+
+
+        if (scatterElements.length > 0) {
+          gsap.to(scatterElements, {
+            scale: 1.15,
+            filter: 'brightness(2.5) drop-shadow(0 0 15px gold)',
+            duration: 0.6,
+            repeat: 2,
+            yoyo: true,
+            ease: "sine.inOut"
+          });
+          gsap.fromTo(scatterElements, 
+            { rotation: -2 }, 
+            { rotation: 2, duration: 0.05, repeat: -1, yoyo: true, ease: "none" }
+          );
+          await new Promise(r => setTimeout(r, 600));
+        }
+
       }
 
       // Temporarily trigger WinParticles for every spin completion for testing
