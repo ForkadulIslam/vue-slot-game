@@ -3,7 +3,7 @@
 
     <!-- Global dedicated celebration layer -->
     <template v-if="isAssetsLoaded">
-      <LineWinCelebrationLayer ref="LineWinCelebrationRef" /> 
+      <LineWinCelebrationLayer ref="lineWinCelebrationRef" /> 
       <BigWinCelebrationLayer ref="epicWinRef"/>
     </template>
 
@@ -13,7 +13,8 @@
         :win-particles-ref="winParticles"
         :epic-win-ref="epicWinRef"
         @multiplier-triggered="handleMultiplier"
-        :line-win-celebration-ref="winCelebrationRef"
+        :line-win-celebration-ref="lineWinCelebrationRef"
+        :multiplier-bar-ref="multiplierBarRef"
       />
       <ControlPanel />
     </div>
@@ -34,7 +35,7 @@ import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
 import { assetManifest } from './assets/assetManifest.js';
 
 
-const winCelebrationRef = ref(null);
+const lineWinCelebrationRef = ref(null);
 const multiplierBarRef = ref(null); // NEW: Ref for MultiplierBar
 
 const atmosLight = ref(null);

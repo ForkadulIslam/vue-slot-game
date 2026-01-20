@@ -150,13 +150,12 @@ const getSymbolKey = (id) => {
 };
 
 const celebrateLine = async (lineData, allSymbolElements) => {
-    clear(); 
+    clearLineWinCelebration(); 
     dimmer.visible = true; 
     const activeGhosts = [];
 
     const symbolKey = getSymbolKey(lineData.symbolId);
     const texture = textures[symbolKey] || textures['icon-A'];
-
     for (const reelIdx of lineData.symbolsPositions) {
         const rowIdx = lineData.definition[reelIdx];
         const symbolIndex = reelIdx * 4 + rowIdx; 
@@ -210,7 +209,7 @@ function updateEnergyLine(ghosts) {
 }
 
 
-const clear = () => {
+const clearLineWinCelebration = () => {
     // Use while loop with removeChildAt(0) to avoid RangeError in v8
     if (winGroup) {
         while (winGroup.children.length > 0) {
@@ -329,7 +328,7 @@ const announceFreeSpins = (spinCount) => {
     });
 };
 
-defineExpose({ celebrateLine, clear, announceFreeSpins });
+defineExpose({ celebrateLine, clearLineWinCelebration, announceFreeSpins });
 </script>
 
 <style scoped>

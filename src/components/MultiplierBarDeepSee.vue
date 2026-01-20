@@ -50,7 +50,13 @@ const setSpinState = (isSpinning) => {
   });
 };
 
-defineExpose({ setActiveMultiplier, setSpinState });
+const setFreeSpinsMode = (active) => {
+  if (fireEmitter) {
+    fireEmitter.emit = active;
+  }
+};
+
+defineExpose({ setActiveMultiplier, setSpinState, setFreeSpinsMode });
 
 const initPixi = async () => {
   if (!pixiContainer.value) return;

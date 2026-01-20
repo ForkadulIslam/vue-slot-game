@@ -199,8 +199,28 @@ const playEpicWin = (totalWin) => {
     tl.to(displayValue, { value: totalWin, duration: 5, ease: "power2.out", onStart: () => triggerImpact('EPIC', 'epic') });
 };
 
-const triggerImpact = (label, type) => {
-    currentWinLabel.value = `${label} WIN`;
+const announceFreeSpins = (spinCount) => {
+    visible.value = true;
+    app.start();
+
+    displayValue.value = spinCount;
+
+    gsap.set(heroContainer.scale, { x: 0, y: 0 });
+    gsap.set([glowSprite, raysSprite], { alpha: 0, tint: 0xFFFFFF });
+    gsap.set(bloomLayer, { alpha: 0 });
+
+    const tl = gsap.timeline({
+        onComplete: () => {
+            setTimeout(skip, 4000); // Auto-hide after 4 seconds
+        }
+    });
+
+    tl.to(heroContainer.scale, { x: targetHeroScale, y: targetHeroScale, duration: 0.8, ease: "back.out(1.4)" });
+    tl.add(() => triggerImpact('FREE SPINS', 'epic', ''), 0.1);
+};
+
+const triggerImpact = (label, type, suffix = ' WIN') => {
+    currentWinLabel.value = `${label}${suffix}`;
     currentWinType.value = type;
 
     gsap.fromTo(labelRef.value, { scale: 3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "power4.out" });
@@ -225,7 +245,7 @@ const skip = () => {
     app.stop();
 };
 
-defineExpose({ playEpicWin });
+defineExpose({ playEpicWin, announceFreeSpins });
 </script>
 
 <style scoped>

@@ -46,7 +46,11 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  winCelebrationRef: {
+  lineWinCelebrationRef: {
+    type: Object,
+    default: null
+  },
+  multiplierBarRef: {
     type: Object,
     default: null
   }
@@ -74,7 +78,21 @@ const {
   freeSpinsAvailable,
   freeSpinsTotal,
   isInFreeSpinSession,
+  freeSpinTotalWin,
 } = useSlotGame();
+
+watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
+  if (props.multiplierBarRef && props.multiplierBarRef.setFreeSpinsMode) {
+    props.multiplierBarRef.setFreeSpinsMode(isFreeSpinning);
+  }
+
+  // When session ends, play epic win with total winnings
+  if (wasFreeSpinning && !isFreeSpinning) {
+    if (props.epicWinRef && props.epicWinRef.playEpicWin && freeSpinTotalWin.value > 0) {
+      props.epicWinRef.playEpicWin(freeSpinTotalWin.value);
+    }
+  }
+});
 
 const reelsSymbolHeight = 90;
 const reelsContainerWidth = 390; // from CSS
@@ -98,7 +116,6 @@ const winLineElements = ref([]);
 const winAmountContainer = ref(null);
 const reelsContainer = ref(null);
 const lanternGlow = ref(null);
-const winCelebrationRef = ref(null)
 
 
 
@@ -112,7 +129,7 @@ onMounted(() => {
 
   // --- NEW: Lantern Flicker Effect ---
   if (lanternGlow.value) {
-    // Warm, fire-like pulse
+    
     gsap.to(lanternGlow.value, {
       opacity: 0.6,
       duration: 0.2,
@@ -204,10 +221,10 @@ watch(isSpinning, (spinning) => {
 
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(async () => {
-      if (props.epicWinRef) {
-        props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
-        return;
-      }
+      // if (props.epicWinRef) {
+      //   props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
+      //   return;
+      // }
 
 
       // if(props.winParticlesRef && props.winParticlesRef.playEpicWin) {
@@ -236,8 +253,8 @@ watch(isSpinning, (spinning) => {
       if (hasTriggeredFreeSpins.value) {
         console.log(`%c FREE SPINS TRIGGERED! ${freeSpinsTotal.value} spins awarded!`, 'font-size: 20px; color: yellow; background: red; padding: 10px;');
         
-        if (props.winCelebrationRef && props.winCelebrationRef.announceFreeSpins) {
-          await props.winCelebrationRef.announceFreeSpins(freeSpinsTotal.value);
+        if (props.epicWinRef && props.epicWinRef.announceFreeSpins) {
+          await props.epicWinRef.announceFreeSpins(freeSpinsTotal.value);
         }
 
         if(hasLineWins){
@@ -255,7 +272,7 @@ watch(isSpinning, (spinning) => {
 
         const masterTimeline = gsap.timeline({
             onComplete: () => {
-                if (props.winCelebrationRef) props.winCelebrationRef.clear();
+                if (props.lineWinCelebrationRef) props.lineWinCelebrationRef.clearLineWinCelebration();
                 reelsContainer.value.classList.remove('reels-dimmed');
                 setWinAnimationPlaying(false);
                 gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
@@ -273,8 +290,11 @@ watch(isSpinning, (spinning) => {
                     sounds.linewin.play();
                     
                     // Trigger the Pixi Ghosts
-                    if (props.winCelebrationRef) {
-                        await props.winCelebrationRef.celebrateLine(line, allSymbolElements);
+                    if (!isInFreeSpinSession.value) {
+                      emit('multiplier-triggered', multiplier);
+                    }
+                    if (props.lineWinCelebrationRef) {
+                        await props.lineWinCelebrationRef.celebrateLine(line, allSymbolElements);
                     }
                 },
                 onComplete: () => {
@@ -282,6 +302,7 @@ watch(isSpinning, (spinning) => {
                     //emit('multiplier-triggered', multiplier);
                     
                     // The clear call is removed from here to prevent clearing between lines
+
                 }
             });
 

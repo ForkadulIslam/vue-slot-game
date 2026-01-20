@@ -1,0 +1,30 @@
+vue-slot-game@0.0.0 build
+> vite build
+
+vite v4.5.14 building for production...
+✓ 762 modules transformed.
+rendering chunks (7)...[vite:esbuild-transpile] Transform failed with 1 error:
+assets/index-!~{001}~.js:49560:20: ERROR: Top-level await is not available in the configured target environment ("chrome87", "edge88", "es2020", "firefox78", "safari14" + 3 overrides)
+
+Top-level await is not available in the configured target environment ("chrome87", "edge88", "es2020", "firefox78", "safari14" + 3 overrides)
+49558|  
+49559|  // --- Initialize the game with a random grid ---
+49560|  const gameSession = await startGameSession();
+   |                      ^
+49561|  const initialGrid = gameSession.reelsSymbols;
+49562|  sessionId.value = gameSession.sessionId;
+
+✓ built in 24.91s
+error during build:
+Error: Transform failed with 1 error:
+assets/index-!~{001}~.js:49560:20: ERROR: Top-level await is not available in the configured target environment ("chrome87", "edge88", "es2020", "firefox78", "safari14" + 3 overrides)
+    at failureErrorWithLog (D:\nodejs_projects\vue-slot-game\node_modules\esbuild\lib\main.js:1649:15)
+    at D:\nodejs_projects\vue-slot-game\node_modules\esbuild\lib\main.js:847:29
+    at responseCallbacks.<computed> (D:\nodejs_projects\vue-slot-game\node_modules\esbuild\lib\main.js:703:9)
+    at handleIncomingPacket (D:\nodejs_projects\vue-slot-game\node_modules\esbuild\lib\main.js:762:9)
+    at Socket.readFromStdout (D:\nodejs_projects\vue-slot-game\node_modules\esbuild\lib\main.js:679:7)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:191:23)
