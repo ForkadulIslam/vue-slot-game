@@ -174,29 +174,84 @@ onMounted(async () => {
 });
 
 const formattedValue = computed(() => {
-    return Math.floor(displayValue.value).toLocaleString();
+    // Show fractional digits during active counting for a more dynamic feel
+    if (visible.value) {
+        return displayValue.value.toFixed(2).toLocaleString();
+    }
+    // Once hidden, or for initial state, show as an integer
+    return displayValue.value.toLocaleString(undefined, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+    });
 });
 
 const playEpicWin = (totalWin) => {
     visible.value = true;
     app.start(); 
-
     displayValue.value = 0;
     currentWinLabel.value = 'BIG';
     currentWinType.value = 'big';
 
+    // ⚡ PERFORMANCE: Reset local trackers
+    let lastValueInt = -1;
+
+    // Reset PIXI elements
     gsap.set(heroContainer.scale, { x: 0, y: 0 });
     gsap.set([glowSprite, raysSprite], { alpha: 0, tint: 0xFFFFFF });
     gsap.set(bloomLayer, { alpha: 0 });
 
     const tl = gsap.timeline();
 
+    // 1. Entrance
     tl.to(heroContainer.scale, { x: targetHeroScale, y: targetHeroScale, duration: 0.8, ease: "back.out(1.4)" });
     tl.add(() => triggerImpact('BIG', 'big'), 0.1);
 
-    tl.to(displayValue, { value: totalWin * 0.33, duration: 5, ease: "none" });
-    tl.to(displayValue, { value: totalWin * 0.66, duration: 5, ease: "none", onStart: () => triggerImpact('MEGA', 'mega') });
-    tl.to(displayValue, { value: totalWin, duration: 5, ease: "power2.out", onStart: () => triggerImpact('EPIC', 'epic') });
+    // 2. THE SECRET: High-Frequency "Vibration" on update
+    // We only trigger a pop if the decimal digit changed to save CPU
+    const updateLogic = function() {
+        const currentCheck = Math.floor(displayValue.value * 10);
+        if (currentCheck !== lastValueInt) {
+            lastValueInt = currentCheck;
+            // Quick physical 'thump'
+            gsap.fromTo(amountSectionRef.value, 
+                { scale: 1.1 }, 
+                { scale: 1, duration: 0.05, overwrite: true,force3D: true }
+            );
+        }
+    };
+
+    // SEGMENT 1: 0-5s (Acceleration)
+    tl.to(displayValue, { 
+        value: totalWin * 0.33, 
+        duration: 5, 
+        ease: "power2.in", 
+        onUpdate: updateLogic 
+    });
+
+    // SEGMENT 2: 5-10s (Constant Peak Speed)
+    tl.to(displayValue, { 
+        value: totalWin * 0.66, 
+        duration: 5, 
+        ease: "none", 
+        onStart: () => triggerImpact('MEGA', 'mega'),
+        onUpdate: updateLogic 
+    });
+
+    // SEGMENT 3: 10-15s (Deceleration & Final Slam)
+    tl.to(displayValue, { 
+        value: totalWin, 
+        duration: 5, 
+        ease: "power3.out", 
+        onStart: () => triggerImpact('MEGA', 'epic'),
+        onUpdate: updateLogic,
+        onComplete: () => {
+            // THE FINAL IMPACT: Massive bounce to settle the win
+            gsap.fromTo(amountSectionRef.value, 
+                { scale: 1.7 }, 
+                { scale: 1, duration: 0.8, ease: "back.out(2.5)" }
+            );
+        }
+    });
 };
 
 const announceFreeSpins = (spinCount) => {
@@ -223,20 +278,22 @@ const triggerImpact = (label, type, suffix = ' WIN') => {
     currentWinLabel.value = `${label}${suffix}`;
     currentWinType.value = type;
 
-    gsap.fromTo(labelRef.value, { scale: 3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "power4.out" });
-    gsap.fromTo(amountSectionRef.value, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)" });
-    gsap.fromTo(".content-box", { x: -5 }, { x: 5, duration: 0.04, repeat: 3, yoyo: true });
+    // Heavy text impact
+    gsap.fromTo(labelRef.value, { scale: 2.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "expo.out" });
+    
+    // Physical Screen Shake (Optimized to 3 repeats for mobile)
+    gsap.fromTo(".content-box", { x: -6 }, { x: 6, duration: 0.05, repeat: 3, yoyo: true });
     
     if (type === 'big') {
         gsap.to(glowSprite, { alpha: 0.4, tint: 0xFFF5E1, duration: 1 });
         gsap.to(raysSprite, { alpha: 0.2, duration: 1 });
     } else if (type === 'mega') {
-        gsap.to(glowSprite, { alpha: 0.6, tint: 0xFFD700, duration: 1.2 });
-        gsap.to(raysSprite, { alpha: 0.4, tint: 0xFFD700, duration: 1.2 });
+        gsap.to(glowSprite, { alpha: 0.6, tint: 0xFFD700, scale: targetHeroScale * 3.5, duration: 1 });
+        gsap.to(raysSprite, { alpha: 0.4, tint: 0xFFD700, duration: 1 });
     } else if (type === 'epic') {
-        gsap.to(glowSprite, { alpha: 0.8, tint: 0xFFFFFF, duration: 1 }); // White-hot
-        gsap.to(raysSprite, { alpha: 0.7, tint: 0xFFAA00, duration: 1 }); // Intense Orange/Gold
-        gsap.to(bloomLayer, { alpha: 0.4, duration: 1 });
+        gsap.to(glowSprite, { alpha: 0.9, tint: 0xFFFFFF, scale: targetHeroScale * 3.5, duration: 0.5 }); 
+        gsap.to(raysSprite, { alpha: 0.7, tint: 0xFFAA00, scale: targetHeroScale * 3.5, duration: 0.5 });
+        gsap.to(bloomLayer, { alpha: 0.5, duration: 1 });
     }
 };
 

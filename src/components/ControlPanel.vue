@@ -43,7 +43,7 @@
             <div class="spin-container">
                 <button @click="spin" class="spin-orb" :disabled="isSpinning" :class="{ 'spinning': isSpinning }">
                     <div class="orb-inner">
-                        <span v-if="!isSpinning" class="spin-label">SPIN</span>
+                        <span v-if="!isSpinning" class="spin-label" v-text="freeSpinsAvailable > 0 ? freeSpinsAvailable: 'SPIN'"></span>
                         <svg v-else class="spin-icon-anim" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46c.9-.99 1.44-2.3 1.44-4.26 0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 9.74c-.9.99-1.44 2.3-1.44 4.26 0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
                         </svg>
@@ -67,7 +67,7 @@
     import { ref } from 'vue';
     import { useSlotGame } from '../composables/useSlotGame';
 
-    const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, displayedWinAmount } = useSlotGame();
+    const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, displayedWinAmount, freeSpinsAvailable } = useSlotGame();
 
     const showBetTable = ref(false);
 

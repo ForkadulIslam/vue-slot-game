@@ -81,18 +81,7 @@ const {
   freeSpinTotalWin,
 } = useSlotGame();
 
-watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
-  if (props.multiplierBarRef && props.multiplierBarRef.setFreeSpinsMode) {
-    props.multiplierBarRef.setFreeSpinsMode(isFreeSpinning);
-  }
 
-  // When session ends, play epic win with total winnings
-  if (wasFreeSpinning && !isFreeSpinning) {
-    if (props.epicWinRef && props.epicWinRef.playEpicWin && freeSpinTotalWin.value > 0) {
-      props.epicWinRef.playEpicWin(freeSpinTotalWin.value);
-    }
-  }
-});
 
 const reelsSymbolHeight = 90;
 const reelsContainerWidth = 390; // from CSS
@@ -167,6 +156,20 @@ const createSymbolElement = (symbol) => {
   return symbolDiv;
 };
 
+// ---FREE SPIN SESSION LOGIC ---
+watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
+  if (props.multiplierBarRef && props.multiplierBarRef.setFreeSpinsMode) {
+    props.multiplierBarRef.setFreeSpinsMode(isFreeSpinning);
+  }
+
+  // When session ends, play epic win with total winnings
+  if (wasFreeSpinning && !isFreeSpinning) {
+    if (props.epicWinRef && props.epicWinRef.playEpicWin && freeSpinTotalWin.value > 0) {
+      props.epicWinRef.playEpicWin(freeSpinTotalWin.value);
+    }
+  }
+});
+
 // --- SPIN LOGIC ---
 watch(isSpinning, (spinning) => {
 
@@ -221,17 +224,6 @@ watch(isSpinning, (spinning) => {
 
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(async () => {
-      // if (props.epicWinRef) {
-      //   props.epicWinRef.playEpicWin(1500); // Trigger manually here based on logic
-      //   return;
-      // }
-
-
-      // if(props.winParticlesRef && props.winParticlesRef.playEpicWin) {
-      //   await props.winParticlesRef.playEpicWin();
-      // }
-
-      // Identify ALL scatter positions from the raw response
       
       const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
       const hasLineWins = winningPaylines.value.length > 0;
@@ -272,7 +264,9 @@ watch(isSpinning, (spinning) => {
 
         const masterTimeline = gsap.timeline({
             onComplete: () => {
-                if (props.lineWinCelebrationRef) props.lineWinCelebrationRef.clearLineWinCelebration();
+                if (props.lineWinCelebrationRef){
+                  props.lineWinCelebrationRef.clearLineWinCelebration();
+                }
                 reelsContainer.value.classList.remove('reels-dimmed');
                 setWinAnimationPlaying(false);
                 gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
@@ -294,7 +288,7 @@ watch(isSpinning, (spinning) => {
                       emit('multiplier-triggered', multiplier);
                     }
                     if (props.lineWinCelebrationRef) {
-                        await props.lineWinCelebrationRef.celebrateLine(line, allSymbolElements);
+                      await props.lineWinCelebrationRef.celebrateLine(line, allSymbolElements);
                     }
                 },
                 onComplete: () => {
@@ -344,11 +338,6 @@ watch(isSpinning, (spinning) => {
           await new Promise(r => setTimeout(r, 600));
         }
 
-      }
-
-      // Temporarily trigger WinParticles for every spin completion for testing
-      if (props.winParticlesRef && props.winParticlesRef.play) {
-        //props.winParticlesRef.play();
       }
 
     });
