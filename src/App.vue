@@ -33,6 +33,7 @@ import { Assets } from 'pixi.js';
 import gsap from 'gsap';
 import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
 import { assetManifest } from './assets/assetManifest.js';
+import { initializeGame } from "./composables/useSlotGame.js";
 
 
 const lineWinCelebrationRef = ref(null);
@@ -60,6 +61,7 @@ const handleMultiplier = (multiplier) => {
 
 onMounted(async () => {
   
+  await initializeGame();
 
   try {
     // 1. Initialize manifest

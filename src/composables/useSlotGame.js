@@ -209,19 +209,24 @@ const processOutcome = () => {
   }
 };
 
-// --- Initialize the game with a random grid ---
-const gameSession = await startGameSession();
-const initialGrid = gameSession.reelsSymbols;
-sessionId.value = gameSession.sessionId
-balance.value = parseFloat(gameSession.credits).toFixed(2);
-betAmount.value = gameSession.bet;
-availableBets.value = gameSession.availableBets
-outcome.value = gameSession;
-reelsForDisplay.value = initialGrid;
+let isInitialized = false;
+export async function initializeGame() {
+  if (isInitialized) return;
+  
+  const gameSession = await startGameSession();
+  const initialGrid = gameSession.reelsSymbols;
+  sessionId.value = gameSession.sessionId
+  balance.value = parseFloat(gameSession.credits).toFixed(2);
+  betAmount.value = gameSession.bet;
+  availableBets.value = gameSession.availableBets
+  outcome.value = gameSession;
+  reelsForDisplay.value = initialGrid;
 
-payTable.value = gameSession.paytable;
-linesDefinitions.value = gameSession.linesDefinitions;
-availableSymbols.value = gameSession.availableSymbols;
+  payTable.value = gameSession.paytable;
+  linesDefinitions.value = gameSession.linesDefinitions;
+  availableSymbols.value = gameSession.availableSymbols;
+  isInitialized = true;
+}
 
 let audioUnlocked = false;
 
