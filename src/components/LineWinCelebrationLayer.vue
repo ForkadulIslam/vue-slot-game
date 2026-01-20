@@ -5,11 +5,20 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref, defineExpose } from 'vue';
-import * as PIXI from 'pixi.js';
+import { 
+  Application, 
+  Container, 
+  Sprite, 
+  Graphics, 
+  Assets, 
+  Texture, 
+  Rectangle, 
+  BlurFilter,
+  TextStyle,
+  Text
+} from 'pixi.js';
 import { gsap } from 'gsap';
 
-import symbolsSprite from '@/assets/images/symbols_sprite.png';
-import glowBurst from '@/assets/images/transparent_glow_squire.png';
 
 // ⚡ CORE DIMENSIONS (Source Texture)
 const SYMBOL_W = 153;
@@ -45,19 +54,19 @@ const MAX_POOL_SIZE = 15;
 const PRE_WARM_COUNT = 5; 
 
 const createGhostObject = () => {
-    const ghostContainer = new PIXI.Container();
+    const ghostContainer = new Container();
     ghostContainer.visible = false; 
 
-    const glow = new PIXI.Sprite(PIXI.Assets.get(glowBurst));
+    const glow = new Sprite(Assets.get('glowBurst'));
     glow.anchor.set(0.5);
     glow.blendMode = 'add';
     glow.label = 'glow'; 
 
-    const mask = new PIXI.Graphics();
+    const mask = new Graphics();
     mask.label = 'mask';
     glow.mask = mask;
     
-    const ghost = new PIXI.Sprite(); 
+    const ghost = new Sprite(); 
     ghost.anchor.set(0.5);
     ghost.label = 'ghost';
 
@@ -97,7 +106,7 @@ const returnGhostToPool = (ghostObj) => {
 };
 
 onMounted(async () => {
-    app = new PIXI.Application();
+    app = new Application();
     await app.init({
         resizeTo: window,
         backgroundAlpha: 0,
@@ -107,29 +116,26 @@ onMounted(async () => {
     });
     canvasContainer.value.appendChild(app.canvas);
 
-    dimmer = new PIXI.Graphics()
+    dimmer = new Graphics()
         .rect(0, 0, window.innerWidth, window.innerHeight)
         .fill({ color: 0x0a0a1a, alpha: 0.6 });
     dimmer.visible = false;
     
-    winGroup = new PIXI.Container();
-    uiGroup = new PIXI.Container();
-    lineGraphics = new PIXI.Graphics();
+    winGroup = new Container();
+    uiGroup = new Container();
+    lineGraphics = new Graphics();
     
     app.stage.addChild(dimmer, lineGraphics, winGroup, uiGroup);
 
-    const [masterTexture] = await Promise.all([
-        PIXI.Assets.load(symbolsSprite),
-        PIXI.Assets.load(glowBurst)
-    ]);
+    const masterTexture = Assets.get('symbolsSprite');
 
     
 
     Object.keys(SYMBOL_MAP).forEach(key => {
         const frame = SYMBOL_MAP[key];
-        textures[key] = new PIXI.Texture({
-            source: masterTexture,
-            frame: new PIXI.Rectangle(frame.x, frame.y, SYMBOL_W, SYMBOL_H)
+        textures[key] = new Texture({
+            source: masterTexture.source,
+            frame: new Rectangle(frame.x, frame.y, SYMBOL_W, SYMBOL_H)
         });
     });
 
@@ -189,7 +195,7 @@ function updateEnergyLine(ghosts) {
     lineGraphics.blendMode = 'add';
     
     if (!lineGraphics.filters || lineGraphics.filters.length === 0) {
-        lineGraphics.filters = [new PIXI.BlurFilter({ strength: 4 })];
+        lineGraphics.filters = [new BlurFilter({ strength: 4 })];
     }
     
     lineGraphics.moveTo(ghosts[0].x, ghosts[0].y);
@@ -259,7 +265,7 @@ const announceFreeSpins = (spinCount) => {
         
         // 1. IMPROVED DIMMER: Use Radial Texture instead of solid color
         const bgTexture = createRadialGradientTexture();
-        const cinematicBg = new PIXI.Sprite(bgTexture);
+        const cinematicBg = new Sprite(bgTexture);
         cinematicBg.width = app.screen.width;
         cinematicBg.height = app.screen.height;
         cinematicBg.alpha = 0;
@@ -276,17 +282,17 @@ const announceFreeSpins = (spinCount) => {
             dropShadow: { alpha: 0.9, blur: 20, distance: 0 }
         };
 
-        const titleText = new PIXI.Text({ 
+        const titleText = new Text({ 
             text: 'SPINS', 
             style: { ...commonStyle, fontSize: 75, stroke: '#003344', strokeThickness: 10, dropShadow: { ...commonStyle.dropShadow, color: '#00ffff' } } 
         });
 
-        const countText = new PIXI.Text({ 
+        const countText = new Text({ 
             text: spinCount, 
             style: { ...commonStyle, fontSize: 180, stroke: '#4d3300', strokeThickness: 15, dropShadow: { ...commonStyle.dropShadow, color: '#f1c40f' } } 
         });
 
-        const startText = new PIXI.Text({ 
+        const startText = new Text({ 
             text: 'START!', 
             style: { ...commonStyle, fontSize: 100, stroke: '#003300', strokeThickness: 12, dropShadow: { ...commonStyle.dropShadow, color: '#55ff55' } } 
         });

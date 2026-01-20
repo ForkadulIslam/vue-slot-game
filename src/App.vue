@@ -2,11 +2,13 @@
   <div id="app-container">
 
     <!-- Global dedicated celebration layer -->
-    <LineWinCelebrationLayer ref="LineWinCelebrationRef" /> 
-    <BigWinCelebrationLayer ref="epicWinRef"/>
+    <template v-if="isAssetsLoaded">
+      <LineWinCelebrationLayer ref="LineWinCelebrationRef" /> 
+      <BigWinCelebrationLayer ref="epicWinRef"/>
+    </template>
 
     <div class="game-area">
-      <MultiplierBarDeepSee ref="multiplierBarRef"/>
+      <MultiplierBarDeepSee v-if="isAssetsLoaded" ref="multiplierBarRef"/>
       <SlotMachinePixi
         :win-particles-ref="winParticles"
         :epic-win-ref="epicWinRef"
@@ -29,12 +31,7 @@ import { onMounted, ref } from 'vue';
 import { Assets } from 'pixi.js';
 import gsap from 'gsap';
 import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
-
-// --- Pre-load all celebration assets ---
-import symbolsSprite from './assets/images/symbols_sprite.png';
-import glowBurst from './assets/images/transparent_glow_squire.png';
-import shieldHelmet from './assets/images/shield_helmet.png';
-import backgroundGlow from './assets/images/transparent_glow.png';
+import { assetManifest } from './assets/assetManifest.js';
 
 
 const winCelebrationRef = ref(null);
@@ -45,6 +42,8 @@ const atmosLight = ref(null);
 const winParticles = ref(null);
 
 const epicWinRef = ref(null); // Reference for epic win
+
+const isAssetsLoaded = ref(false);
 
 
 const handleMultiplier = (multiplier) => {
@@ -59,31 +58,36 @@ const handleMultiplier = (multiplier) => {
 
 
 onMounted(async () => {
-  // Pre-load assets to prevent delay on first celebration
-  const allCelebrationAssets = [
-    symbolsSprite, 
-    glowBurst, 
-    shieldHelmet, 
-    backgroundGlow
-  ];
-  await Assets.load(allCelebrationAssets);
+  
 
-  if (atmosLight.value) {
-    // Make the light pulse slowly like a fire/lantern
-    gsap.to(atmosLight.value, {
-      force3D:true,
-      opacity: 0.8, // Pulse between 0.4 (css) and 0.8
-      scale: 1.1,   // Slight expansion
-      duration: 3,
-      yoyo: true,
-      repeat: -1,
-      ease: "sine.inOut"
-    });
+  try {
+    // 1. Initialize manifest
+    await Assets.init({ manifest: assetManifest });
+    
+    // 2. Load the specific bundle
+    await Assets.loadBundle('celebration-assets');
+    // 3. Set loaded flag to true
+    isAssetsLoaded.value = true;
+    
+    if (atmosLight.value) {
+      // Make the light pulse slowly like a fire/lantern
+      gsap.to(atmosLight.value, {
+        force3D:true,
+        opacity: 0.8, // Pulse between 0.4 (css) and 0.8
+        scale: 1.1,   // Slight expansion
+        duration: 3,
+        yoyo: true,
+        repeat: -1,
+        ease: "sine.inOut"
+      });
+    }
+
+  } catch (e) {
+    console.error("Asset loading failed:", e);
   }
 });
 
 </script>
-
 <style>
 :root {
   --brand-purple: #8A2BE2; /* Vibrant Purple - Jili inspired */

@@ -1,3 +1,0 @@
-Warning
-CustomEase3.min.js:10 A trial version of CustomEase is loaded that only works locally and on domains like codepen.io and codesandbox.io. *** DO NOT DEPLOY THIS FILE *** Loading it on an unauthorized site violates the license and will cause a redirect. Please join Club GreenSock to get full access to the bonus plugins that boost your animation superpowers. Disable this warning with gsap.config({trialWarn: false});
-CustomEase3.min.js:10 Get unrestricted files at https://greensock.com/club
