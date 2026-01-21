@@ -50,7 +50,6 @@ const isAssetsLoaded = ref(false);
 
 const handleMultiplier = (multiplier) => {
   if (multiplierBarRef.value) {
-    console.log(multiplier);
     multiplierBarRef.value.setSpinState(true)
     multiplierBarRef.value.setActiveMultiplier(multiplier);
   }

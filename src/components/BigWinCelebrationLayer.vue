@@ -1,6 +1,6 @@
 <template>
   <transition name="zoom-fade">
-    <div v-show="visible" class="epic-overlay" @click="skip">
+    <div v-show="visible" class="epic-overlay">
       
       <!-- 1. PIXI LAYER -->
       <div ref="pixiContainer" class="pixi-layer"></div>
@@ -45,6 +45,7 @@ const currentWinType = ref('big'); // 'big', 'mega', 'epic'
 const displayValue = ref(0);
 const labelRef = ref(null);
 const amountSectionRef = ref(null);
+const isDisplayValueFreeSpinCount = ref(false);
 
 let targetHeroScale = 1;
 let heroContainer = null;
@@ -176,7 +177,11 @@ onMounted(async () => {
 const formattedValue = computed(() => {
     // Show fractional digits during active counting for a more dynamic feel
     if (visible.value) {
-        return displayValue.value.toFixed(2).toLocaleString();
+        if(isDisplayValueFreeSpinCount.value){
+            return displayValue.value
+        }else{
+            return displayValue.value.toFixed(2).toLocaleString();
+        }
     }
     // Once hidden, or for initial state, show as an integer
     return displayValue.value.toLocaleString(undefined, {
@@ -200,7 +205,11 @@ const playEpicWin = (totalWin) => {
     gsap.set([glowSprite, raysSprite], { alpha: 0, tint: 0xFFFFFF });
     gsap.set(bloomLayer, { alpha: 0 });
 
-    const tl = gsap.timeline();
+    const tl = gsap.timeline({
+        onComplete: () => {
+            setTimeout(skip, 2000); // Auto-hide after 1 seconds
+        }
+    });
 
     // 1. Entrance
     tl.to(heroContainer.scale, { x: targetHeroScale, y: targetHeroScale, duration: 0.8, ease: "back.out(1.4)" });
@@ -256,6 +265,7 @@ const playEpicWin = (totalWin) => {
 
 const announceFreeSpins = (spinCount) => {
     visible.value = true;
+    isDisplayValueFreeSpinCount.value = true;
     app.start();
 
     displayValue.value = spinCount;
@@ -271,7 +281,7 @@ const announceFreeSpins = (spinCount) => {
     });
 
     tl.to(heroContainer.scale, { x: targetHeroScale, y: targetHeroScale, duration: 0.8, ease: "back.out(1.4)" });
-    tl.add(() => triggerImpact('FREE SPINS', 'epic', ''), 0.1);
+    tl.add(() => triggerImpact('FREE SPINS', 'mega', ''), 0.1);
 };
 
 const triggerImpact = (label, type, suffix = ' WIN') => {
@@ -299,6 +309,7 @@ const triggerImpact = (label, type, suffix = ' WIN') => {
 
 const skip = () => {
     visible.value = false;
+    isDisplayValueFreeSpinCount.value = false;
     app.stop();
 };
 

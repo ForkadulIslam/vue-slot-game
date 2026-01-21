@@ -264,15 +264,10 @@ export function useSlotGame() {
         freeSpinsAvailable.value--;
         isSpinning.value = true;
         winAmount.value = parseFloat(0).toFixed(2);
-      } else {
-        isInFreeSpinSession.value = false;
-        console.log('is free spin session', isInFreeSpinSession.value);
-        // Logic to add freeSpinTotalWin to balance and show summary will be needed here
-        if (balance.value < betAmount.value) return;
-        const finalOutcome = await getSpinAndOutcome();
-        outcome.value = finalOutcome;
-        isSpinning.value = true;
-        winAmount.value = parseFloat(0).toFixed(2);
+        if(freeSpinsAvailable.value == 0){
+          isInFreeSpinSession.value = false;
+          outcome.value.shouldTriggerBigWinCelebration = true;
+        }
       }
     } else {
       if (balance.value < betAmount.value) return;
@@ -281,9 +276,12 @@ export function useSlotGame() {
       isSpinning.value = true;
       winAmount.value = parseFloat(0).toFixed(2);
     }
+
+    //console.log(outcome.value);
   };
 
   const finishSpin = () => {
+
     isSpinning.value = false;
     processOutcome();
 

@@ -1,476 +1,187 @@
-<div class="stage">
-    <svg class="poster" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1008 1364">
-        <defs>
-            <linearGradient id="linear-gradient" x1="331.5" x2="331.5" y1="289.5" y2="1074.5" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#b74242" />
-                <stop offset="1" stop-color="#6060A6" />
-            </linearGradient>
-<!--             <linearGradient id="linear-gradient-1" x1="484" y1="384.5" x2="577" y2="384.5" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#b74242"/>
-                <stop offset="0.9997" stop-color="#421919"/>
-            </linearGradient>
-            <linearGradient id="linear-gradient-2" x1="139" x2="232" xlink:href="#linear-gradient-1"/> -->
-            <clipPath id="clip-path">
-                <rect width="199" height="785" x="232" y="289.5" fill="none" />
-                <rect width="199" height="785" x="577" y="289.5" fill="none" />
-            </clipPath>
-            <clipPath id="twenty-20">
-                <rect width="85" height="36" x="462" y="35" fill="none" />
-            </clipPath>
-            <clipPath id="clip-logo">
-                <path d="m484.108 1322.799 11.361-.002v-29.034h25.247v-11.361h-36.608z"/>
-                <path d="m484.1083 1254h48.5998v11.361h-48.5998z"/>
-                <path d="m402.767 1322.797 12.356.002 14.993-34.378h-12.288z"/>
-                <path d="m445.528 1254h-12.424l30.336 68.797h12.379z"/>
-                <path d="m541.5444 1254h11.3897v68.7971h-11.3897z"/>
-                <path d="m575.067 1288.354 26.343-34.354h-14.869l-26.206 34.218 27.916 34.579h14.516z"/>
-            </clipPath>
-            <filter id="goo" color-interpolation-filters="sRGB">
-				<feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
-				<feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
-				<feBlend in="SourceGraphic" in2="goo" />
-			</filter> 
-        </defs>
-        <rect fill="white" width="1008" height="1364"></rect>
-        <g class="bg-circs">
-            <circle class="bg-circs__stroke" cx="504" cy="682" r="374" fill="none" stroke="#2E3C40" stroke-miterlimit="10" opacity="0.5" />
-            <circle class="bg-circs__fill" cx="504" cy="682" r="334.5" fill="#2E3C40" />
-        </g>
-        <g class="border-txt" fill="#2e3c40" font-family="Noto Sans" font-size="40" font-weight="700" >
-            <text transform="translate(35.4995 63.2676)">E</text>
-            <text transform="translate(35.4995 656.2676)">L</text>
-            <text transform="translate(35.4995 1319.2677)">E</text>
-            <text transform="translate(946.4995 63.2676)">V</text>
-            <text transform="translate(946.4995 656.2676)">E</text>
-            <text transform="translate(938.4995 1319.2677)">N</text>
-        </g>
-        <g class="circles__red" fill="#b74242" filter="url(#goo)">
-            <g class="goo-base">
-                <rect width="190" height="100" x="237" y="292" />
-                <rect width="190" height="100" x="582" y="292" />
-            </g>
-            <circle cx="326.5" cy="207.5" r="8.5"/>
-            <circle cx="734.5" cy="150.5" r="6.5"/>
-            <circle cx="384" cy="234" r="14"/>
-        </g>
-        <text x="393" y="1180" class="anniversary">11TH ANNIVERSARY</text>
-        <g class="eleven-tops" fill="#424270">
-            <path class="eleven-tops__l" d="M587,479H484l93-189Z"/>
-            <path class="eleven-tops__r" d="M242,479H139l93-189Z"/>
-        </g>
-        
-        <g clip-path="url(#clip-path)">
-            <g class="eleven-lg" fill="url(#linear-gradient)" >
-                <rect width="199" height="785" x="232" y="289.5"/>
-                <rect width="199" height="785" x="577" y="289.5"/>
-            </g>
-            
-            <g class="circles__white" fill="white">
-                <g class="circles__white-l">
-                    <circle class="circles__single-l" cx="232" cy="1075" r="10"/>
-                </g>
-                <g class="circles__white-r">
-                    <circle class="circles__single-r" cx="577" cy="1075" r="10"/>
-                </g>
-            </g>
-        </g>
-        
-        <g class="twenty20">
-            <rect width="85" height="36" x="462" y="35" fill="none" stroke-weight="2" stroke="#2e3c40" />
-            <text font-size="30" font-weight="700" x="472" y="64" clipPath="url(#twenty-20)">2020</text>
-        </g>
-<!--         <text class="years" fill="#2e3c40" font-family="Noto Sans" font-size="20" transform="rotate(-90 941.984 133.4428)">11 YEARS</text> -->
-        <g class="barcode" stroke="#2e3c40" stroke-miterlimit="10" fill="none">
-            <line x1="232.5" x2="232.5" y1="1111" y2="1091" />
-            <line x1="236.5" x2="236.5" y1="1111" y2="1091" />
-            <line x1="241.5" x2="241.5" y1="1111" y2="1091" />
-            <line x1="248.5" x2="248.5" y1="1111" y2="1091" />
-            <line x1="256.5" x2="256.5" y1="1111" y2="1091" />
-            <line x1="261.5" x2="261.5" y1="1111" y2="1091" />
-            <line x1="272.5" x2="272.5" y1="1111" y2="1091" />
-            <line x1="276.5" x2="276.5" y1="1111" y2="1091" />
-            <line x1="282.5" x2="282.5" y1="1111" y2="1091" />
-        </g>
-        
-        <g clip-path="url(#clip-logo)" stroke-miterlimit="10" >
-            <g class="afk-1" clip-path="url(#clip-logo)">
-                <path class="a__left" d="m425.0949 1286.1532-17.2235 39.051"/>
-                <path class="a__right" d="m438.034 1251.16 13.78 31.242 18.896 42.844"/>
-                <path class="f__top" d="m484.1083 1259.6805h48.5997"/>
-                <path class="f__btm" d="m520.716 1288.26h-30.927v15.251 19.286"/>
-                <path class="k__left" d="m547.239 1254v11.361 38.15 19.286"/>
-                <path class="k__right" d="m597.088 1250.213-20.804 26.843-8.546 11.027 31.559 39.132"/>
-            </g>
+# Refactor for Performance: Symbol Element Object Pooling
 
-            <g class="afk-2" clip-path="url(#clip-logo)">
-                <path class="a__left" d="m425.0949 1286.1532-17.2235 39.051"/>
-                <path class="a__right" d="m438.034 1251.16 13.78 31.242 18.896 42.844"/>
-                <path class="f__top" d="m484.1083 1259.6805h48.5997"/>
-                <path class="f__btm" d="m520.716 1288.26h-30.927v15.251 19.286"/>
-                <path class="k__left" d="m547.239 1254v11.361 38.15 19.286"/>
-                <path class="k__right" d="m597.088 1250.213-20.804 26.843-8.546 11.027 31.559 39.132"/>
-            </g>
+## 1. Executive Summary
 
-            <g class="afk-3" clip-path="url(#clip-logo)">
-                <path class="a__left" d="m425.0949 1286.1532-17.2235 39.051"/>
-                <path class="a__right" d="m438.034 1251.16 13.78 31.242 18.896 42.844"/>
-                <path class="f__top" d="m484.1083 1259.6805h48.5997"/>
-                <path class="f__btm" d="m520.716 1288.26h-30.927v15.251 19.286"/>
-                <path class="k__left" d="m547.239 1254v11.361 38.15 19.286"/>
-                <path class="k__right" d="m597.088 1250.213-20.804 26.843-8.546 11.027 31.559 39.132"/>
-            </g>
-            
-        </g>
-    </svg>
-</div>
+This document outlines the plan to refactor `SlotMachinePixi.vue` to implement an object pooling strategy for its symbol elements. The current implementation creates and destroys over 90 DOM elements on every spin, causing significant memory churn and garbage collector pressure. This leads to animation stutter ("jank") and poor performance, especially on mobile devices.
 
+By creating a pre-allocated pool of symbol elements and reusing them for animations, we can virtually eliminate memory management during the critical spin sequence, leading to a dramatically smoother and more performant user experience.
 
+---
 
+## 2. File to be Modified
 
+*   **`src/components/SlotMachinePixi.vue`**
 
-console.clear();
+---
 
-select = e => document.querySelector(e);
-selectAll = e => document.querySelectorAll(e);
+## 3. Detailed Implementation Plan
 
-gsap.registerPlugin(DrawSVGPlugin, ScrambleTextPlugin);
+The entire change will be contained within the `<script setup>` section of `SlotMachinePixi.vue`.
 
-const stage = select('.stage');
-const circles = select('.circles__white');
-const lCircs = select('.circles__white-l');
-const rCircs = select('.circles__white-r');
-const lCirc = select('.circles__single-l');
-const rCirc = select('.circles__single-r');
-const global = gsap.timeline();
-const numCircles = 20; // number of bubbles per column.
-const bubblesDur = 4; // duration for bubbles from bottom to top.
-const minCircScale = 0.2; // minimum scale for random bubbles.  
-const maxCircScale = 1; // maximum scale for random bubbles .
-const circsTop = -900; // make a larger minimum value if maxCircScale is large to prevent cut off.
-const goo = false; // set to true to make gooey bubbles!
+### Step 3.1: Pool State and Initialization
 
-function initCircles() {
-    
-    if(goo) {
-        circles.setAttribute("filter", "url(#goo)");
-    }
-    
-    for(let i = 0; i < numCircles-1; i++) {
-        var cloneL = lCirc.cloneNode(true);
-        var cloneR = rCirc.cloneNode(true);
-        lCircs.appendChild(cloneL);
-        rCircs.appendChild(cloneR);
-    }
-}
+We will introduce new script-level variables to manage the pool.
 
-function twenty20() {
-    
-    let tl = gsap.timeline();
-    
-    tl.from('.twenty20 rect', {
-        drawSVG: "0%",
-        duration: 2,
-        ease: 'power4.inOut'
-    })
-    .from('.twenty20 text', {
-        scrambleText:{ 
-            text: "0000", 
-            chars: "23456789", 
-            speed: 1
-        },
-        opacity: 0,
-        duration: 2,
-        ease: 'sine'
-    }, 1.2)
-    
-    return tl;
-}
+```javascript
+// To hold all pooled symbol elements, out of the DOM
+let symbolPool = []; 
+// To cache all possible icon classes for quick cleanup
+let allSymbolSpriteClasses = []; 
+```
 
-function barcode() {
-    let tl = gsap.timeline();
-    
-    tl.from('.barcode line', {
-        scale: 0,
-        duration: 2,
-        transformOrigin: "top center",
-        stagger: 0.1
-    })
-    
-    return tl;
-}
+The pool will be created once when the component is mounted.
 
-function borderTxt() {
-    
-    let tl = gsap.timeline();
-    
-    tl.from('.border-txt text', {
-        opacity: 0,
-        x: (i) => {
-            if(i<3) {
-                return "+=40";
-            }
-            return "-=40";
-        },
-		duration: 1.5,
-		stagger: 0.1,
-		scrambleText:{ text: "x", chars: "upperCase", speed: 1, delimiter:" ", tweenLength: false },
-		ease: 'expo'
-	})
-    
-    return tl;
-    
-}
+```javascript
+onMounted(() => {
+  // ... existing code ...
 
-function anniversary() {
-    
-    let tl = gsap.timeline();
-    
-    tl.from('.anniversary', {
-        opacity: 0,
-		duration: 4,
-		ease: 'sine'
-	})
-    
-    return tl;
+  // --- NEW: Initialize Symbol Pool ---
   
-}
+  // 1. Cache all possible sprite classes from the symbolPaths map.
+  allSymbolSpriteClasses = Object.values(symbolPaths);
 
-function eleven() {
-    let tl = gsap.timeline();
-    
-    tl.from('.bg-circs__stroke', {
-        drawSVG: "0% 0%",
-        ease: 'power4.inOut',
-        duration: 4
-    }, 0)
-    .from('.bg-circs__fill', {
-        scale: 0,
-        // ease: 'elastic(0.4, 0.4)',
-        ease: 'power4.inOut',
-        duration: 2,
-        transformOrigin: "center center"
-    }, 0.5)
-    .from('#clip-path rect', {
-        scaleX: 0,
-        ease: 'expo.inOut',
-        transformOrigin: "left top",
-        duration: 2
-    }, 1)
-    
-    .set('.eleven-tops', {
-        autoAlpha: 1
-    }, 2)
-    .from('.eleven-tops path', {
-        scaleX: 0,
-        ease: 'expo',
-        duration: 2,
-        transformOrigin: "93px top"
-    }, 2)
-    .set('.circles__red circle, .goo-base', {
-        autoAlpha: 1
-    }, 2.5)
-    .from('.circles__red circle', {
-        y: 200,
-        duration: 10,
-        ease: 'power4',
-        stagger: 0.4
-    }, 2.5)
-    
-    return tl;
-}
+  // 2. Define the size of the pool. (5 reels * ~18 symbols per reel) + buffer.
+  const poolSize = 120; 
 
-function bubbles() {
-    
-    let tl = gsap.timeline();
-    
-    tl.fromTo('.circles__white-l circle', {
-        x: 'random(0, 200)',
-        y: 50,
-        opacity: 1,
-        scale: `random(${minCircScale}, ${maxCircScale}, 0.5)`
-    }, {
-        x: () => {
-            let newX = gsap.utils.random(-75, 75);
-            if(newX < 0) {
-                return `-=${newX*-1}`;
-            }
-            return `+=${newX}`;
-        },
-        y: circsTop,
-        duration: bubblesDur,
-        ease: "sine.in",
-        stagger: {
-            each: bubblesDur/numCircles,
-            repeat: -1,
-            repeatRefresh: true
-        }
-    })
-    .fromTo('.circles__white-r circle', {
-        x: ('random(0, 200)'),
-        y: 100,
-        opacity: 1,
-        scale: `random(${minCircScale}, ${maxCircScale}, 0.5)`
-    }, {
-        x: () => {
-            let newX = gsap.utils.random(-75, 75);
-            if(newX < 0) {
-                return `-=${newX*-1}`;
-            }
-            return `+=${newX}`;
-        },
-        y: circsTop,
-        duration: bubblesDur,
-        ease: "sine.in",
-        stagger: {
-            each: bubblesDur/numCircles,
-            repeat: -1,
-            repeatRefresh: true
-        }
-    }, 0)
-    
-    return tl;
-}
+  // 3. Create raw symbol elements and add them to the pool.
+  for (let i = 0; i < poolSize; i++) {
+    symbolPool.push(createSymbolForPool());
+  }
+});
+```
 
-function afkPaths1() {
-    let tl = gsap.timeline({
-        defaults: {
-            ease: 'power4.in'
-        }
-    });
-    
-    tl.from('.afk-1 .a__right',{
-        drawSVG: "100% 100%",
-        duration: 1.5
-    })
-    .from('.afk-1 .a__left',{
-        drawSVG: "100% 100%",
-        duration: 1.5
-    }, 0.2)
-    .from('.afk-1 .f__top',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.4)
-    .from('.afk-1 .f__btm',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.6)
-    .from('.afk-1 .k__left',{
-        drawSVG: "0% 0%",
-        duration: 1.0
-    }, 0.5)
-    .from('.afk-1 .k__right',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.55)
-    
-    return tl;
-}
+### Step 3.2: New Pool Management Functions
 
-function afkPaths2() {
-    let tl = gsap.timeline({
-        defaults: {
-            ease: 'power4.in'
-        }
-    });
-    
-    tl.from('.afk-2 .a__right',{
-        drawSVG: "100% 100%",
-        duration: 1.5
-    })
-    .from('.afk-2 .a__left',{
-        drawSVG: "100% 100%",
-        duration: 1.5
-    }, 0.2)
-    .from('.afk-2 .f__top',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.4)
-    .from('.afk-2 .f__btm',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.6)
-    .from('.afk-2 .k__left',{
-        drawSVG: "0% 0%",
-        duration: 1.0
-    }, 0.5)
-    .from('.afk-2 .k__right',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.55)
-    
-    
-    return tl;
-}
+We will replace the existing `createSymbolElement` function with a suite of new functions to manage borrowing and returning pool objects.
 
-function afkPaths3() {
-    let tl = gsap.timeline({
-        defaults: {
-            ease: 'expo'
-        }
-    });
-    
-    tl.from('.afk-3 .a__right',{
-        drawSVG: "100% 100%",
-        duration: 1.4
-    })
-    .from('.afk-3 .a__left',{
-        drawSVG: "100% 100%",
-        duration: 1.4
-    }, 0.2)
-    .from('.afk-3 .f__top',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.3)
-    .from('.afk-3 .f__btm',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.3)
-    .from('.afk-3 .k__left',{
-        drawSVG: "0% 0%",
-        duration: 1.0
-    }, 0.4)
-    .from('.afk-3 .k__right',{
-        drawSVG: "100% 100%",
-        duration: 1.0
-    }, 0.45)
-    
-    
-    return tl;
-}
+**A. `createSymbolForPool()`**
+This function will create the raw DOM structure for a symbol. It's used *only* to populate the pool on startup.
 
-function init() {
-    resize();
-    initCircles();
-    gsap.set(stage, { autoAlpha: 1 });
-    global.add(eleven())
-        .add(bubbles(), 3)
-        .add(borderTxt(), 2)
-        .add(barcode(), 1)
-        .add(anniversary(), 3)
-        .add(twenty20(), 1)
-        .add(afkPaths1(), 2)
-        .add(afkPaths2(), 2.35)
-        .add(afkPaths3(), 3.65)
-    
-    stage.onclick = () => {
-        global.restart();
-    }
-}
+```javascript
+const createSymbolForPool = () => {
+  const imgElement = document.createElement('div');
+  imgElement.classList.add('symbol-icon');
 
-function resize() {
-	let vh = window.innerHeight;
-	let sh = stage.offsetHeight;
-	let scaleFactor = vh/sh;
-	if(scaleFactor<1) {
-		gsap.set(stage, { scale: scaleFactor });
-	}
-	else {
-        gsap.set(stage, { scale: 1 });
-    }
-}
+  const symboxBoxSheenEffect = document.createElement('div');
+  symboxBoxSheenEffect.classList.add('symbol-box');
+  symboxBoxSheenEffect.appendChild(imgElement);
 
-window.onload = () => {
-    window.onresize = resize;
-	init();
-    // GSDevTools.create();
+  const symbolDiv = document.createElement('div');
+  symbolDiv.classList.add('symbol');
+  symbolDiv.appendChild(symboxBoxSheenEffect);
+  return symbolDiv;
 };
+```
+
+**B. `borrowSymbol(symbolName)`**
+This will be the new function for getting a ready-to-use symbol element.
+
+```javascript
+const borrowSymbol = (symbolName) => {
+  // Fallback: create a new element if pool is unexpectedly empty
+  const symbolEl = symbolPool.pop() || createSymbolForPool(); 
+  
+  const isSpecial = SPECIAL_SYMBOLS.includes(symbolName.toLowerCase());
+  const symbolIcon = symbolEl.querySelector('.symbol-icon');
+  const symbolBox = symbolEl.querySelector('.symbol-box');
+
+  // Efficiently reset state by removing all possible sprite classes
+  symbolIcon.classList.remove(...allSymbolSpriteClasses, 'is-special');
+  symbolBox.classList.remove('shine-effect');
+
+  // Apply new classes
+  symbolIcon.classList.add(symbolPaths[symbolName]);
+  if (isSpecial) {
+    symbolIcon.classList.add('is-special');
+    symbolBox.classList.add('shine-effect');
+  }
+
+  return symbolEl;
+};
+```
+
+**C. `returnSymbols(elements)`**
+This function will return an array of used elements back to the pool.
+
+```javascript
+const returnSymbols = (elements) => {
+  if (!Array.isArray(elements)) return;
+  symbolPool.push(...elements);
+};
+```
+
+### Step 3.3: Refactor Core Spin Logic
+
+The primary changes will occur within the `watch(isSpinning, ...)` handler.
+
+**A. Logic for Spin Start (`if (spinning)`)**
+The `reelsEl.forEach` loop will be heavily modified to use the pool instead of creating elements on the fly.
+
+```javascript
+// --- OLD CODE ---
+// const finalSymbolElements = finalSymbols.map(s => createSymbolElement(s));
+// const startingSymbolElements = Array.from(reel.children);
+// const randomSymbolElements = []; /* ...populated by createSymbolElement... */
+// reel.innerHTML = '';
+// reel.append(...finalSymbolElements, ...randomSymbolElements, ...startingSymbolElements);
+
+// --- NEW LOGIC ---
+reelsEl.forEach((reel, reelIndex) => {
+  const finalSymbols = finalOutcome[reelIndex];
+  
+  // 1. Get elements from the pool instead of creating them.
+  const finalSymbolElements = finalSymbols.map(s => borrowSymbol(s));
+  const randomSymbolElements = [];
+  const symbolKeys = Object.keys(symbolPaths).filter(k => k !== 'gold_coin');
+  for (let k = 0; k < 10; k++) {
+    randomSymbolElements.push(borrowSymbol(symbolKeys[Math.floor(Math.random() * symbolKeys.length)]));
+  }
+
+  // 2. Keep track of the old symbols that are currently in the DOM.
+  const startingSymbolElements = Array.from(reel.children);
+
+  // 3. Append the new symbols for the animation strip. DO NOT clear innerHTML.
+  reel.append(...finalSymbolElements, ...randomSymbolElements);
+
+  // 4. Animate the reel container as before.
+  const spinContentHeight = (finalSymbolElements.length + randomSymbolElements.length) * symbolHeight;
+  gsap.set(reel, { y: -spinContentHeight, force3D: true });
+
+  gsap.to(reel, {
+    // ... animation properties ...
+    onComplete: () => {
+      // (See new onComplete logic below)
+    }
+  });
+});
+```
+
+**B. Logic for Spin End (`onComplete` callback)**
+The `onComplete` logic will be updated to surgically remove old nodes and return them to the pool, avoiding `innerHTML` and `cloneNode`.
+
+```javascript
+// --- OLD onComplete ---
+// const finalClones = finalSymbolElements.map(s => s.cloneNode(true));
+// reel.innerHTML = '';
+// reel.append(...finalClones);
+
+// --- NEW onComplete LOGIC ---
+onComplete: () => {
+  // 1. Remove the temporary blur and old symbols from the DOM.
+  randomSymbolElements.forEach(el => el.remove());
+  startingSymbolElements.forEach(el => el.remove());
+  
+  // 2. Return those removed elements to the pool for reuse.
+  returnSymbols(randomSymbolElements);
+  returnSymbols(startingSymbolElements);
+
+  // 3. The `finalSymbolElements` are now the only ones left. Reset the reel's position.
+  gsap.set(reel, { y: 0 });
+
+  if (reelIndex === reelsEl.length - 1) {
+    finishSpin();
+  }
+}
+```
+
+This plan replaces the inefficient create-and-destroy pattern with a highly performant reuse-and-recycle (pooling) pattern, directly targeting the most significant performance bottleneck in the component.

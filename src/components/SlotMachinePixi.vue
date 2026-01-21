@@ -164,9 +164,7 @@ watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
 
   // When session ends, play epic win with total winnings
   if (wasFreeSpinning && !isFreeSpinning) {
-    if (props.epicWinRef && props.epicWinRef.playEpicWin && freeSpinTotalWin.value > 0) {
-      props.epicWinRef.playEpicWin(freeSpinTotalWin.value);
-    }
+    // Can do necessary clean up free spin states
   }
 });
 
@@ -226,6 +224,8 @@ watch(isSpinning, (spinning) => {
     nextTick(async () => {
       
       const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
+
+
       const hasLineWins = winningPaylines.value.length > 0;
 
       const scatterElements = [];
@@ -239,6 +239,31 @@ watch(isSpinning, (spinning) => {
                   }
               }
           });
+      });
+
+      const masterTimeline = gsap.timeline({
+          onComplete: () => {
+              if (props.lineWinCelebrationRef){
+                props.lineWinCelebrationRef.clearLineWinCelebration();
+              }
+              reelsContainer.value.classList.remove('reels-dimmed');
+              setWinAnimationPlaying(false);
+              gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
+              if (!isInFreeSpinSession.value) {
+                  updateBalanceFromOutcome();
+              }
+
+
+              if(outcome.value.shouldTriggerBigWinCelebration){
+                console.log('Total win from free spins to be celebrated: ', freeSpinTotalWin.value);
+                if (props.epicWinRef && props.epicWinRef.playEpicWin && freeSpinTotalWin.value > 0) {
+                  gsap.delayedCall(0.5, () => {
+                      props.epicWinRef.playEpicWin(freeSpinTotalWin.value);
+                  });
+                }
+              }
+
+          }
       });
 
 
@@ -262,19 +287,7 @@ watch(isSpinning, (spinning) => {
         // ⚡ STEP 1: Dim the background reels once
         reelsContainer.value.classList.add('reels-dimmed');
 
-        const masterTimeline = gsap.timeline({
-            onComplete: () => {
-                if (props.lineWinCelebrationRef){
-                  props.lineWinCelebrationRef.clearLineWinCelebration();
-                }
-                reelsContainer.value.classList.remove('reels-dimmed');
-                setWinAnimationPlaying(false);
-                gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
-                if (!isInFreeSpinSession.value) {
-                    updateBalanceFromOutcome();
-                }
-            }
-        });
+        
 
         winningPaylines.value.forEach((line, index) => {
             const multiplier = 1 + index;
@@ -339,6 +352,7 @@ watch(isSpinning, (spinning) => {
         }
 
       }
+
 
     });
   }
