@@ -12,12 +12,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, defineExpose } from 'vue';
-import * as PIXI from 'pixi.js';
+import { Application, Sprite, Graphics, Container, Texture, Text, ParticleContainer, Assets, Rectangle } from 'pixi.js';
 import { Emitter, upgradeConfig } from '@spd789562/particle-emitter';
-import {
-  horizontalFireConfig,
-  fireSparkParticleTexturePath,
-} from '../composables/particleConfigs.js';
+import {horizontalFireConfig} from '../composables/particleConfigs.js';
 import { gsap } from 'gsap';
 
 
@@ -66,7 +63,7 @@ defineExpose({ setActiveMultiplier, setSpinState, setFreeSpinsMode });
 const initPixi = async () => {
   if (!pixiContainer.value) return;
 
-  app = new PIXI.Application();
+  app = new Application();
   await app.init({
     width: 420, height: 75,
     backgroundAlpha: 0,
@@ -78,13 +75,13 @@ const initPixi = async () => {
   pixiContainer.value.appendChild(app.canvas);
 
   // 1. Cinematic Deep Background
-  const bg = new PIXI.Graphics()
+  const bg = new Graphics()
     .fill({ color: 0x031016 }) // Deep obsidian teal
     .rect(0, 0, 420, 75);
   app.stage.addChild(bg);
 
   // 2. The Active "Podium" Glow
-  activeGlow = new PIXI.Sprite(createActiveGlowTexture());
+  activeGlow = new Sprite(createActiveGlowTexture());
   activeGlow.anchor.set(0.5);
   activeGlow.blendMode = 'add';
   activeGlow.alpha = 0.6;
@@ -93,7 +90,7 @@ const initPixi = async () => {
   // 3. Volumetric Cinematic Streams
   const streamTex = createVolumetricStreamTexture();
   for (let i = 0; i < 2; i++) {
-    const s = new PIXI.Sprite(streamTex);
+    const s = new Sprite(streamTex);
     s.anchor.set(0.5);
     s.y = 37.5;
     s.x = i * 400;
@@ -104,7 +101,7 @@ const initPixi = async () => {
   }
 
   // 4. Burst Effect
-  burstSprite = new PIXI.Sprite(createBurstTexture());
+  burstSprite = new Sprite(createBurstTexture());
   burstSprite.anchor.set(0.5);
   burstSprite.blendMode = 'screen';
   burstSprite.alpha = 0;
@@ -112,19 +109,20 @@ const initPixi = async () => {
 
 
   // --- Particle Emitter Setup ---
-  await PIXI.Assets.load([fireSparkParticleTexturePath]);
-  const pixiParticleContainer = new PIXI.ParticleContainer(1000, {
+  //await Assets.load([fireSparkParticleTexturePath]);
+  const pixiParticleContainer = new ParticleContainer(1000, {
     uvs: true, position: true, rotation: true, scale: true, alpha: true, color: true,
   });
   pixiParticleContainer.blendMode = 'add';
   app.stage.addChild(pixiParticleContainer);
 
   const newConfig = upgradeConfig(horizontalFireConfig);
+  newConfig.behaviors.find(b => b.type === 'textureSingle').config.texture = Assets.get('fireSparkParticleTexture');
   fireEmitter = new Emitter(pixiParticleContainer, newConfig);
 
   fireEmitter.spawnPos.x = 0;
   fireEmitter.spawnPos.y = 37.5;
-  fireEmitter.spawnRect = new PIXI.Rectangle(-5, -10, 5, 20);
+  fireEmitter.spawnRect = new Rectangle(-5, -10, 5, 20);
   
   // Start from Left Center
   fireEmitter.updateSpawnPos(0, 37.5);
@@ -133,10 +131,10 @@ const initPixi = async () => {
   // 5. Text Setup
   const spacing = 420 / 4;
   multipliers.value.forEach((val, i) => {
-    const container = new PIXI.Container();
+    const container = new Container();
     
     // Create the main text with a robust starting style
-    const txt = new PIXI.Text({
+    const txt = new Text({
       text: `x${val}`,
       style: {
         fontFamily: 'Arial Black, sans-serif',
@@ -208,7 +206,7 @@ function createActiveGlowTexture() {
   grad.addColorStop(1, 'rgba(0, 255, 255, 0)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 100, 75);
-  return PIXI.Texture.from(canvas);
+  return Texture.from(canvas);
 }
 
 function createVolumetricStreamTexture() {
@@ -224,7 +222,7 @@ function createVolumetricStreamTexture() {
   ctx.fillStyle = grad;
   ctx.setTransform(1, 0, -0.6, 1, 60, 0); // Cinematic slant
   ctx.fillRect(0, 0, 300, 100);
-  return PIXI.Texture.from(canvas);
+  return Texture.from(canvas);
 }
 
 function createBurstTexture() {
@@ -238,7 +236,7 @@ function createBurstTexture() {
   grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = grad;
   ctx.beginPath(); ctx.arc(75, 75, 75, 0, Math.PI*2); ctx.fill();
-  return PIXI.Texture.from(canvas);
+  return Texture.from(canvas);
 }
 
 const triggerCinematicBurst = (index) => {

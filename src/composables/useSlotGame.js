@@ -1,6 +1,5 @@
 import { ref, readonly, watch } from 'vue';
-import { sound } from '@pixi/sound'; // ⚡ PIXI SOUND IMPORT
-import { Assets } from 'pixi.js';
+import { sound } from '@pixi/sound';
 import axios from 'axios';
 import gsap from 'gsap';
 

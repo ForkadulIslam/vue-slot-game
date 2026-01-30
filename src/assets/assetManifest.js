@@ -20,6 +20,10 @@ export const assetManifest = {
                     alias: 'backgroundGlow', 
                     src: new URL('./images/transparent_glow.png', import.meta.url).href 
                 },
+                {
+                    alias:'fireSparkParticleTexture',
+                    src: new URL('./images/fireSpark_particle.png', import.meta.url).href
+                },
                 { 
                     alias: 'fighterModelPortrait', 
                     src: new URL('./images/boxing_king_portrait.webp', import.meta.url).href 
