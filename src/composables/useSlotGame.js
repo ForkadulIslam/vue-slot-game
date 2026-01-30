@@ -1,6 +1,8 @@
-import { ref, readonly, watch, onMounted } from 'vue';
-import { Howl } from 'howler';
+import { ref, readonly, watch } from 'vue';
+import { sound } from '@pixi/sound'; // ⚡ PIXI SOUND IMPORT
+import { Assets } from 'pixi.js';
 import axios from 'axios';
+import gsap from 'gsap';
 
 // --- 1. GAME CONFIGURATION ---
 const symbolPaths = {
@@ -40,6 +42,7 @@ const reelsNumber = ref(5);
 const reelsSymbolsNumber = ref(4);
 const availableSymbols = ref([]);
 const sessionId = ref(0);
+const multipliers = ref([4, 8, 16, 32])
 
 // --- Free Spin State ---
 const isInFreeSpinSession = ref(false);
@@ -48,49 +51,37 @@ const freeSpinsTotal = ref(0);
 const freeSpinOutcomes = ref([]);
 const freeSpinTotalWin = ref(0);
 const hasTriggeredFreeSpins = ref(false);
+export const gameError = ref(null);
 
-// --- 3. SOUNDS ---
-const sounds = {
-  winAlert: new Howl({ src: [new URL('../assets/sounds/winAlert.mp3', import.meta.url).href] }),
-  explosion: new Howl({ src: [new URL('../assets/sounds/game-explosion.wav', import.meta.url).href] }),
-  linewin: new Howl({ src: [new URL('../assets/sounds/linewin.mp3', import.meta.url).href], volume: 1.0 }),
-  backgroundMusic: new Howl({ 
-    src: [new URL('../assets/sounds/background_music.mp3', import.meta.url).href], 
-    loop: true, 
-    volume: 0.5 // Base volume
-  }),
-  celebrationMusic: new Howl({ 
-    src: [new URL('../assets/sounds/celebration_music.mp3', import.meta.url).href], 
-    loop: true, 
-    volume: 0 // Start silent
-  }),
-  reelsSound: new Howl({ 
-    src: [new URL('../assets/sounds/reels-sound.mp3', import.meta.url).href], 
-    loop: true, 
-    volume: 0 // Start silent
-  })
-};
+// --- PIXI SOUNDS SETUP ---
+// We initialize the sounds using Pixi's sound manager. 
+// Note: URLs stay the same as they were.
 
-const triggerEffectWithDucking = (effectHowl) => {
-  // 1. Dim Background Music
-  sounds.backgroundMusic.fade(sounds.backgroundMusic.volume(), 0.1, 300);
 
-  // 2. Play the effect at high volume
-  effectHowl.volume(1.0);
-  effectHowl.play();
 
-  // 3. Management after 1 second
+
+const triggerEffectWithDucking = (soundInstance) => {
+  if (!soundInstance) return;
+
+  // 1. Dim Background Music using GSAP
+  // Pixi Sound volume is a property, GSAP handles this perfectly
+  gsap.to(sounds.backgroundMusic, { volume: 0.1, duration: 0.3 });
+
+  // 2. Play the effect
+  soundInstance.volume = 1.0;
+  soundInstance.play();
+
+  // 3. Audio Management (Ducking logic)
   setTimeout(() => {
     // Fade out the effect
-    effectHowl.fade(1.0, 0, 500);
-    
-    // Once faded, pause the effect to save resources
-    setTimeout(() => {
-      effectHowl.pause();
-    }, 500);
+    gsap.to(soundInstance, { 
+        volume: 0, 
+        duration: 0.5, 
+        onComplete: () => soundInstance.stop() 
+    });
 
     // 4. Slowly increment Background music back to 0.5
-    sounds.backgroundMusic.fade(0.1, 0.5, 1500); 
+    gsap.to(sounds.backgroundMusic, { volume: 0.5, duration: 1.5 });
   }, 1000);
 };
 
@@ -112,16 +103,17 @@ const manageSound = () => {
   if (musicOut === musicIn) return;
 
   if (musicOut) {
-    // Fade out the old music
-    musicOut.fade(musicOut.volume(), 0, 500);
-    musicOut.once('fade', () => {
-      musicOut.pause();
+    // Fade out old music
+    gsap.to(musicOut, { 
+        volume: 0, 
+        duration: 0.5, 
+        onComplete: () => musicOut.pause() 
     });
   }
 
-  // Fade in the new music
+  // Fade in new music
   musicIn.play();
-  musicIn.fade(0, 0.9, 500); // Target volume for background is 0.5
+  gsap.to(musicIn, { volume: 0.9, duration: 0.5 });
   
   activeMusic = musicIn;
 };
@@ -129,30 +121,66 @@ const manageSound = () => {
 // --- Helper function to generate outcome from API response ---
 const endpoint = import.meta.env.VITE_API_BASE_URL;
 
-const startGameSession = async ()=> {
+const startGameSession = async () => {
+  gameError.value = null;
+  const queryParams = new URLSearchParams(window.location.search);
+  const userIdFromUrl = queryParams.get('userId');
+
+  if (!userIdFromUrl) {
+    const errorMsg = 'Missing userId in URL. Expected format: ?userId=1';
+    gameError.value = errorMsg;
+    return { error: errorMsg };
+  }
+
   try {
     const response = await axios.post(`${endpoint}/start-session`, {
-        "user_name":"Demo",
-        "pin": "1234"
+      userId: userIdFromUrl,
     });
-    return response.data;
+    
+    if (response.data && response.data.status === 'success') {
+      return response.data.data;
+    } else {
+      const errorMessage = response.data?.message || 'Unknown error during session start.';
+      gameError.value = errorMessage;
+      return { error: errorMessage };
+    }
   } catch (error) {
-     console.error('Axios error:', error.message);
+    let errorMessage;
+    if (error.response) {
+      const serverMessage = error.response.data?.message || error.response.statusText;
+      errorMessage = `Server error: ${serverMessage}`;
+    } else if (error.request) {
+      errorMessage = 'Network error: No response from server.';
+    } else {
+      errorMessage = `Request setup error: ${error.message}`;
+    }
+    gameError.value = errorMessage;
+    return { error: errorMessage };
   }
-}
+};
 
 const getSpinAndOutcome = async ()=>{
+  gameError.value = null; // Reset error before spin
   try {
     const response = await axios.post(`${endpoint}/spin`, {
         "bet":betAmount.value,
         "sessionId": sessionId.value
     });
-    return response.data
-    // Process the data here
+    return response.data;
   } catch (error) {
-     console.error('Axios error:', error.message);
+    console.error('Axios error in getSpinAndOutcome:', error);
+    let errorMessage;
+    if (error.response) {
+      const serverMessage = error.response.data?.message || error.response.statusText;
+      errorMessage = `Server error: ${serverMessage}`;
+    } else if (error.request) {
+      errorMessage = 'Network error: No response from server.';
+    } else {
+      errorMessage = `Request setup error: ${error.message}`;
+    }
+    gameError.value = errorMessage;
+    return { error: errorMessage }; // Return an error object
   }
-
 }
 const processOutcome = () => {
   const _outcome = outcome.value;
@@ -214,6 +242,9 @@ export async function initializeGame() {
   if (isInitialized) return;
   
   const gameSession = await startGameSession();
+  if (gameSession.error) {
+    return;
+  }
   const initialGrid = gameSession.reelsSymbols;
   sessionId.value = gameSession.sessionId
   balance.value = parseFloat(gameSession.credits).toFixed(2);
@@ -228,22 +259,64 @@ export async function initializeGame() {
   isInitialized = true;
 }
 
-let audioUnlocked = false;
 
+
+// SOUNDS REFERENCE OBJECT
+// We leave this empty initially; it will be populated after loading
+const sounds = {
+  winAlert: null,
+  explosion: null,
+  jackpotCoinLoop: null,
+  backgroundMusic: null,
+  celebrationMusic: null,
+  reelsSound: null
+};
+export function setupLoadedSounds() {
+    // Pixi Sound automatically registers assets loaded via PIXI.Assets
+    sounds.winAlert = sound.find('winAlert');
+    sounds.explosion = sound.find('explosion');
+    sounds.youWinVoice = sound.find('youWinVoice');
+    sounds.congratulationsVoice = sound.find('congratulationsVoice')
+    
+    // Configure Looping and Volume for music tracks
+    sounds.jackpotCoinLoop = sound.find('jackpotCoinLoop');
+    sounds.jackpotCoinLoop.loop = true;
+    sounds.jackpotCoinLoop.value = 0;
+
+    sounds.backgroundMusic = sound.find('backgroundMusic');
+    sounds.backgroundMusic.loop = true;
+    sounds.backgroundMusic.volume = 0.5;
+
+    sounds.celebrationMusic = sound.find('celebrationMusic');
+    sounds.celebrationMusic.loop = true;
+    sounds.celebrationMusic.volume = 0;
+
+    sounds.reelsSound = sound.find('reelsSound');
+    sounds.reelsSound.loop = true;
+    sounds.reelsSound.volume = 0;
+}
+
+
+let audioUnlocked = false;
 export function useSlotGame() {
 
   const unlockAudio = () => {
     if (audioUnlocked) return;
-    const ctx = Howler.ctx;
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().then(() => {
-        if (!sounds.backgroundMusic.playing()) sounds.backgroundMusic.play();
-        audioUnlocked = true;
-      });
-    } else {
-      if (!sounds.backgroundMusic.playing()) sounds.backgroundMusic.play();
-      audioUnlocked = true;
+
+    // 1. Force resume the global audio context (Required by browsers)
+    sound.resumeAll();
+
+    // 2. ⚡ THE FIX: Use .isPlaying. 
+    // If the sound is not currently active, start it.
+    if (!sounds.backgroundMusic.isPlaying) {
+      sounds.backgroundMusic.play();
+      
+      // 3. ⚡ CRITICAL: Update the pointer so manageSound() knows 
+      // that backgroundMusic is the currently active track.
+      activeMusic = sounds.backgroundMusic;
     }
+
+    audioUnlocked = true;
   };
 
   watch(isCelebrationPlaying, manageSound);
@@ -271,10 +344,21 @@ export function useSlotGame() {
       }
     } else {
       if (balance.value < betAmount.value) return;
-      const finalOutcome = await getSpinAndOutcome();
-      outcome.value = finalOutcome;
+
       isSpinning.value = true;
       winAmount.value = parseFloat(0).toFixed(2);
+      const finalOutcome = await getSpinAndOutcome();
+      if (finalOutcome.error) {
+        isSpinning.value = false;
+
+        // Manually stop the spin sound and restore background music immediately
+        gsap.killTweensOf(sounds.reelsSound); // Stop any fades on the sound
+        if (sounds.reelsSound) sounds.reelsSound.stop();
+        gsap.to(sounds.backgroundMusic, { volume: 0.5, duration: 0.5 });
+
+        return;
+      }
+      outcome.value = finalOutcome;
     }
 
     //console.log(outcome.value);
@@ -284,10 +368,6 @@ export function useSlotGame() {
 
     isSpinning.value = false;
     processOutcome();
-
-    if (isAutoplaying.value) {
-      spin();
-    }
   };
 
   function setBetAmount(bet) {
@@ -330,10 +410,10 @@ export function useSlotGame() {
     balance: readonly(balance), 
     betAmount: readonly(betAmount),
     availableBets:readonly(availableBets),
-    isSpinning: readonly(isSpinning), 
-    isAutoplaying: readonly(isAutoplaying), 
+    isSpinning: readonly(isSpinning),  
     isWinAnimationPlaying: readonly(isWinAnimationPlaying),
     isCelebrationPlaying: readonly(isCelebrationPlaying),
+    isAutoplaying,
     setWinAnimationPlaying,
     startCelebration,
     endCelebration,
@@ -357,6 +437,7 @@ export function useSlotGame() {
     availableSymbols: readonly(availableSymbols),
     reelsNumber: readonly(reelsNumber),
     reelsSymbolsNumber: readonly(reelsSymbolsNumber),
+    multipliers: readonly(multipliers),
 
     // Free Spin Exports
     isInFreeSpinSession: readonly(isInFreeSpinSession),
@@ -364,5 +445,8 @@ export function useSlotGame() {
     freeSpinsTotal: readonly(freeSpinsTotal),
     freeSpinTotalWin: readonly(freeSpinTotalWin),
     hasTriggeredFreeSpins: readonly(hasTriggeredFreeSpins),
+    gameError: readonly(gameError),
+
   };
 }
+

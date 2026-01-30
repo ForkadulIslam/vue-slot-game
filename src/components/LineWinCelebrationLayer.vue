@@ -14,8 +14,6 @@ import {
   Texture, 
   Rectangle, 
   BlurFilter,
-  TextStyle,
-  Text
 } from 'pixi.js';
 import { gsap } from 'gsap';
 
@@ -240,95 +238,10 @@ onUnmounted(() => {
 });
 
 
-// Helper to create the cinematic background texture
-function createRadialGradientTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512; canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    
-    // Gradient from Deep Sea Teal to Dark Navy
-    const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
-    grad.addColorStop(0, 'rgba(12, 45, 56, 0.9)'); // Center color
-    grad.addColorStop(1, 'rgba(2, 8, 12, 1)');      // Edge color
-    
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 512);
-    return PIXI.Texture.from(canvas);
-}
 
-const announceFreeSpins = (spinCount) => {
-    return new Promise(async (resolve) => {
-        if (!app) { resolve(); return; }
 
-        clear();
-        
-        // 1. IMPROVED DIMMER: Use Radial Texture instead of solid color
-        const bgTexture = createRadialGradientTexture();
-        const cinematicBg = new Sprite(bgTexture);
-        cinematicBg.width = app.screen.width;
-        cinematicBg.height = app.screen.height;
-        cinematicBg.alpha = 0;
-        uiGroup.addChild(cinematicBg);
-        
-        gsap.to(cinematicBg, { alpha: 0.9, duration: 0.4 });
 
-        // 2. TEXT STYLES (Brightened to pop against the teal)
-        const commonStyle = {
-            fontFamily: 'Arial Black, Impact, sans-serif',
-            fontWeight: '900',
-            fill: '#ffffff', // Pure white face for maximum "glow"
-            lineJoin: 'round',
-            dropShadow: { alpha: 0.9, blur: 20, distance: 0 }
-        };
-
-        const titleText = new Text({ 
-            text: 'SPINS', 
-            style: { ...commonStyle, fontSize: 75, stroke: '#003344', strokeThickness: 10, dropShadow: { ...commonStyle.dropShadow, color: '#00ffff' } } 
-        });
-
-        const countText = new Text({ 
-            text: spinCount, 
-            style: { ...commonStyle, fontSize: 180, stroke: '#4d3300', strokeThickness: 15, dropShadow: { ...commonStyle.dropShadow, color: '#f1c40f' } } 
-        });
-
-        const startText = new Text({ 
-            text: 'START!', 
-            style: { ...commonStyle, fontSize: 100, stroke: '#003300', strokeThickness: 12, dropShadow: { ...commonStyle.dropShadow, color: '#55ff55' } } 
-        });
-
-        [titleText, countText, startText].forEach(t => {
-            t.anchor.set(0.5);
-            t.position.set(app.screen.width / 2, app.screen.height / 2);
-            t.alpha = 0;
-            t.scale.set(0);
-            uiGroup.addChild(t);
-        });
-
-        const tl = gsap.timeline({
-            onComplete: () => {
-                gsap.to(cinematicBg, { alpha: 0, duration: 0.5, onComplete: () => { clear(); resolve(); } });
-            }
-        });
-
-        // SEQUENCE: Zoom In -> Hold -> Zoom Out
-        // STEP 1: FREE SPINS
-        tl.to(titleText, { alpha: 1, duration: 0.2 })
-          .to(titleText.scale, { x: 1, y: 1, duration: 0.5, ease: "back.out(1.7)" }, "<")
-          .to(titleText, { alpha: 0, scale: 1.4, duration: 0.4, ease: "power2.in" }, "+=0.8");
-
-        // STEP 2: NUMBER
-        tl.to(countText, { alpha: 1, duration: 0.2 })
-          .to(countText.scale, { x: 1, y: 1, duration: 0.6, ease: "back.out(2)" }, "<")
-          .to(countText, { alpha: 0, scale: 1.4, duration: 0.4, ease: "power2.in" }, "+=1.0");
-
-        // STEP 3: START
-        tl.to(startText, { alpha: 1, duration: 0.2 })
-          .to(startText.scale, { x: 1, y: 1, duration: 0.5, ease: "back.out(1.7)" }, "<")
-          .to(uiGroup, { alpha: 0, duration: 0.6, delay: 1.2 });
-    });
-};
-
-defineExpose({ celebrateLine, clearLineWinCelebration, announceFreeSpins });
+defineExpose({ celebrateLine, clearLineWinCelebration });
 </script>
 
 <style scoped>

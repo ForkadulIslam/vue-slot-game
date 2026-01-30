@@ -14,7 +14,7 @@
         <!-- Bottom Section: Amount below the shield -->
         <div class="win-amount-section" ref="amountSectionRef">
           <div class="win-amount">
-            <span class="val">{{ formattedValue }}</span>
+            <span v-if="formattedValue > 0" class="val">{{ formattedValue }}</span>
           </div>
         </div>
 
@@ -32,8 +32,11 @@ import {
   ColorMatrixFilter,
   Container,
   Graphics,
-  Texture
+  Texture,
+  Text
 } from 'pixi.js';
+import { useSlotGame } from '../composables/useSlotGame';
+const { toggleAutoplay, sounds } = useSlotGame();
 import gsap from 'gsap';
 
 
@@ -55,6 +58,9 @@ let glowSprite = null;
 let raysSprite = null; // Cinematic God Rays
 let heroSprite = null;
 let bloomLayer = null;
+
+let fighterSprite = null;
+
 
 // --- Helper: Procedural God Rays ---
 const createRaysTexture = () => {
@@ -131,6 +137,11 @@ onMounted(async () => {
     bloomLayer.alpha = 0;
     heroContainer.addChild(bloomLayer);
 
+    fighterSprite = new Sprite(Assets.get('fighterModelPortrait')); 
+    fighterSprite.anchor.set(0.5, 1); // Anchor at bottom center for "Rise" effect
+    fighterSprite.visible = false;
+    app.stage.addChild(fighterSprite);
+
     const updateLayout = () => {
         const cx = app.screen.width / 2;
         const cy = app.screen.height / 2;
@@ -145,6 +156,13 @@ onMounted(async () => {
         // Light elements should be significantly larger than the shield
         raysSprite.scale.set(targetHeroScale * 2.5);
         glowSprite.scale.set(targetHeroScale * 3.5);
+
+
+        if (fighterSprite) {
+          const fScale = (app.screen.height * 0.85) / fighterSprite.texture.height;
+          fighterSprite.scale.set(fScale);
+          fighterSprite.position.set(cx, app.screen.height);
+        }
     };
 
     window.addEventListener('resize', updateLayout);
@@ -263,25 +281,250 @@ const playEpicWin = (totalWin) => {
     });
 };
 
+
 const announceFreeSpins = (spinCount) => {
-    visible.value = true;
-    isDisplayValueFreeSpinCount.value = true;
-    app.start();
+    return new Promise((resolve) => {
+        visible.value = true;
+        isDisplayValueFreeSpinCount.value = true;
+        displayValue.value = 0;
+        app.start();
 
-    displayValue.value = spinCount;
+        // 1. SCENE TAKEOVER
+        const blackout = new Graphics().rect(0, 0, app.screen.width, app.screen.height).fill({ color: 0x000000, alpha: 1 });
+        blackout.alpha = 0;
+        app.stage.addChildAt(blackout, 0);
 
-    gsap.set(heroContainer.scale, { x: 0, y: 0 });
-    gsap.set([glowSprite, raysSprite], { alpha: 0, tint: 0xFFFFFF });
-    gsap.set(bloomLayer, { alpha: 0 });
+        const flash = new Graphics().rect(0, 0, app.screen.width, app.screen.height).fill({ color: 0xFFFFFF });
+        flash.alpha = 0;
+        app.stage.addChild(flash);
 
-    const tl = gsap.timeline({
-        onComplete: () => {
-            setTimeout(skip, 4000); // Auto-hide after 4 seconds
-        }
+        // --- 2. STUNNING VIKING BUTTON DESIGN ---
+        const startBtn = new Container();
+        const btnShadow = new Graphics().roundRect(-185, -60, 370, 125, 20).fill({ color: 0x000000, alpha: 0.5 });
+        const btnBody = new Graphics()
+            .roundRect(-180, -65, 360, 120, 20)
+            .fill({ color: 0xc5a059 }) 
+            .stroke({ color: 0xFFFFFF, width: 4, alpha: 0.9 }); 
+
+        const btnShine = new Graphics()
+            .roundRect(-180, -65, 360, 60, 20) 
+            .fill({ color: 0xFFFFFF, alpha: 0.2 });
+
+        const btnTxt = new Text({ 
+            text: 'START', 
+            style: { 
+                fontFamily: 'Cinzel Decorative', 
+                fontSize: 50, 
+                fontWeight: '900', 
+                fill: '#000000',
+                letterSpacing: 6
+            } 
+        });
+        btnTxt.anchor.set(0.5);
+        
+        startBtn.addChild(btnShadow, btnBody, btnShine, btnTxt);
+        startBtn.position.set(app.screen.width / 2, app.screen.height / 2+200);
+        startBtn.visible = false;
+        startBtn.interactive = true;
+        app.stage.addChild(startBtn);
+
+        let isStarted = false;
+        const triggerStart = () => {
+            if (isStarted) return;
+            isStarted = true;
+
+            startBtn.off('pointerdown', triggerStart);
+            gsap.killTweensOf([bloomLayer, glowSprite, raysSprite, raysSprite.scale, startBtn.scale]);
+            app.stage.removeChild(flash, startBtn, blackout);
+            toggleAutoplay();
+            skip();
+            resolve();
+        };
+
+        const tl = gsap.timeline();
+
+        // PHASE 1: "FREE SPIN"
+        tl.to(blackout, { alpha: 0.95, duration: 0.8 });
+        tl.add(() => {
+            currentWinLabel.value = "FREE SPIN";
+            gsap.fromTo(labelRef.value, { scale: 5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "expo.out" });
+        }, 0.5);
+
+        // PHASE 2: THE NUMBER (Ex: 10)
+        tl.add(() => {
+            currentWinLabel.value = spinCount;
+            // ⚡ FIX: Target 'labelRef.value' (the element), not 'currentWinLabel.value' (the string)
+            gsap.fromTo(labelRef.value, { scale: 6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" });
+            if (sounds.explosion) sounds.explosion.play();
+        }, 2.5);
+
+        // PHASE 3: "READY"
+        tl.add(() => {
+            displayValue.value = 0; 
+            isDisplayValueFreeSpinCount.value = false;
+            currentWinLabel.value = "READY";
+            gsap.fromTo(labelRef.value, { scale: 0.1, alpha: 0 }, { scale: 1, alpha: 1, duration: 0.4, ease: "back.out(2)" });
+        }, 4.5);
+
+        // --- PHASE 4: START BUTTON SLAM ---
+        tl.add(() => {
+            currentWinLabel.value = ""; 
+            displayValue.value = 0;
+            
+            startBtn.visible = true;
+            startBtn.scale.set(12);
+            startBtn.alpha = 0;
+            
+            gsap.to(startBtn.scale, { x: 1, y: 1, duration: 0.5, ease: "bounce.out" });
+            gsap.to(startBtn, { alpha: 1, duration: 0.5 });
+
+            gsap.fromTo(flash, { alpha: 1 }, { alpha: 0, duration: 1.0 }); 
+            gsap.fromTo(".epic-overlay", { x: -20 }, { x: 20, duration: 0.05, repeat: 8, yoyo: true, onComplete: () => gsap.set(".epic-overlay", {x:0}) });
+        }, 6.0);
+
+        // --- PHASE 5: THE 3, 2, 1 COUNTDOWN ---
+        const countdownTl = gsap.timeline({ onComplete: triggerStart });
+        const countdown = ["5", "4", "3", "2", "1"];
+        countdown.forEach((text, i) => {
+            countdownTl.add(() => {
+                currentWinLabel.value = text;
+                gsap.fromTo(labelRef.value, 
+                    { scale: 10, opacity: 0, filter: "blur(20px)" }, 
+                    { scale: 2, opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "expo.out" }
+                );
+                gsap.fromTo(raysSprite.scale, { x: 6, y: 6 }, { x: 4, y: 4, duration: 0.5 });
+                gsap.fromTo(raysSprite, { alpha: 1 }, { alpha: 0.4, duration: 0.5 });
+            }, i * 1.0);
+        });
+        
+        // Add the countdown timeline to the main timeline
+        tl.add(countdownTl, 7.5);
+
+        // Loop background energy
+        tl.add(() => {
+            gsap.to(raysSprite.scale, { x: 6, y: 6, duration: 2 });
+            gsap.to(raysSprite, { alpha: 0.8, duration: 2 });
+            gsap.to([bloomLayer, glowSprite], { 
+                alpha: 0.7, duration: 0.4, repeat: -1, yoyo: true, ease: "sine.inOut" 
+            });
+        }, 1.0);
+
+        // INTERACTION
+        startBtn.on('pointerdown', triggerStart);
     });
+};
 
-    tl.to(heroContainer.scale, { x: targetHeroScale, y: targetHeroScale, duration: 0.8, ease: "back.out(1.4)" });
-    tl.add(() => triggerImpact('FREE SPINS', 'mega', ''), 0.1);
+const announceFreeSpinByModel = (spinCount) => {
+    return new Promise((resolve) => {
+        visible.value = true;
+        isDisplayValueFreeSpinCount.value = true;
+        displayValue.value = spinCount;
+        app.start();
+
+        // 1. DYNAMIC TAKEOVER: Create a local dimmer to hide the reels completely
+        const localDimmer = new Graphics().rect(0, 0, app.screen.width, app.screen.height).fill({ color: 0x000000, alpha: 1 });
+        localDimmer.alpha = 0;
+        app.stage.addChildAt(localDimmer, 0); // Bottom layer
+
+        // 2. SCENE RESET
+        heroContainer.visible = false;
+        fighterSprite.visible = true;
+        fighterSprite.alpha = 0;
+        
+        // Local Flashbang for impact moments
+        const flash = new Graphics().rect(0, 0, app.screen.width, app.screen.height).fill({ color: 0xFFFFFF });
+        flash.alpha = 0;
+        app.stage.addChild(flash);
+
+        // Local Start Button
+        const startBtn = new Container();
+        const btnBg = new Graphics().roundRect(-160, -50, 320, 100, 20).fill({ color: 0xFFD700 }).stroke({ color: 0xFFFFFF, width: 4 });
+        const btnTxt = new Text({ text: 'START', style: { fontFamily: 'Georgia, serif', fontSize: 46, fontWeight: '900', fill: '#000' } });
+        btnTxt.anchor.set(0.5);
+        startBtn.addChild(btnBg, btnTxt);
+        startBtn.position.set(app.screen.width / 2, app.screen.height / 2 + 50);
+        startBtn.visible = false;
+        startBtn.interactive = true;
+        app.stage.addChild(startBtn);
+
+        const tl = gsap.timeline();
+
+        // PHASE 1: THE DRAMATIC RISE (0s - 1.5s)
+        tl.to(localDimmer, { alpha: 0.9, duration: 1 }); // Deep background takeover
+        tl.to(fighterSprite, { 
+            alpha: 1, 
+            y: app.screen.height, 
+            duration: 1.2, 
+            startAt: { y: app.screen.height + 400 },
+            ease: "expo.out" 
+        }, 0);
+
+        // ⚡ IMPACT SHAKE: Snappy and short to feel heavy
+        tl.add(() => {
+            triggerImpact('FREE', 'epic', ' HIT');
+            gsap.fromTo(".content-box", { x: -8, y: -4 }, { 
+                x: 8, y: 4, duration: 0.04, repeat: 7, yoyo: true, ease: "none",
+                onComplete: () => gsap.set(".content-box", { x: 0, y: 0 }) 
+            });
+            gsap.fromTo(flash, { alpha: 0.5 }, { alpha: 0, duration: 0.6 });
+        }, 0.8);
+
+        // PHASE 2: CONTINUOUS ENERGY SPREAD (1.5s - 6s)
+        tl.add(() => {
+            gsap.to(raysSprite, { alpha: 1, scale: 6, duration: 3 });
+            // Pulse the body glow constantly
+            gsap.to(glowSprite, { 
+                alpha: 0.8, scale: targetHeroScale * 6, duration: 0.4, 
+                repeat: -1, yoyo: true, ease: "sine.inOut" 
+            });
+        }, 1.5);
+
+        // PHASE 3: THE CINEMATIC COUNTDOWN (6s - 8.5s)
+        const sequence = ["READY", "3", "2", "1"];
+        sequence.forEach((text, i) => {
+            tl.add(() => {
+                currentWinLabel.value = text;
+                // Hammer the text onto the screen with a blur-reset
+                gsap.fromTo(labelRef.value, 
+                    { scale: 6, opacity: 0, filter: "blur(30px)" }, 
+                    { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power4.out" }
+                );
+                // Mini-thump shake per count
+                gsap.fromTo(".content-box", { y: 10 }, { y: 0, duration: 0.1, ease: "bounce.out" });
+            }, 6 + (i * 0.7));
+        });
+
+        // PHASE 4: THE START BUTTON SLAM (9s)
+        tl.add(() => {
+            currentWinLabel.value = ""; 
+            startBtn.visible = true;
+            startBtn.scale.set(10); // Slam from "camera"
+            startBtn.alpha = 0;
+
+            // ⚡ MASSIVE SLAM
+            gsap.to(startBtn, { alpha: 1, scale: 1, duration: 0.5, ease: "bounce.out" });
+            
+            // Flashbang Effect
+            gsap.fromTo(flash, { alpha: 1 }, { alpha: 0, duration: 1.2 });
+            
+            // Final Heavy Impact Shake
+            gsap.fromTo(".epic-overlay", { x: -15, y: -10 }, { 
+                x: 15, y: 10, duration: 0.04, repeat: 10, yoyo: true,
+                onComplete: () => gsap.set(".epic-overlay", { x: 0, y: 0 })
+            });
+        }, 9.0);
+
+        // INTERACTION
+        startBtn.on('pointerdown', () => {
+            gsap.killTweensOf(glowSprite);
+            app.stage.removeChild(flash, startBtn, localDimmer);
+            heroContainer.visible = true;
+            fighterSprite.visible = false;
+            toggleAutoplay();
+            skip();
+            resolve();
+        });
+    });
 };
 
 const triggerImpact = (label, type, suffix = ' WIN') => {
@@ -313,7 +556,7 @@ const skip = () => {
     app.stop();
 };
 
-defineExpose({ playEpicWin, announceFreeSpins });
+defineExpose({ playEpicWin, announceFreeSpins, announceFreeSpinByModel });
 </script>
 
 <style scoped>

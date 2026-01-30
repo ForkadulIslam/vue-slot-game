@@ -20,7 +20,12 @@ import {
 } from '../composables/particleConfigs.js';
 import { gsap } from 'gsap';
 
-const multipliers = [4, 8, 16, 32];
+
+import { useSlotGame } from '../composables/useSlotGame';
+const { multipliers} = useSlotGame()
+
+
+const totlaMultipliers = multipliers.value;
 const activeIndex = ref(0);
 const pixiContainer = ref(null);
 
@@ -34,7 +39,7 @@ let fireEmitter = null; //
 
 
 const setActiveMultiplier = (multiplier) => {
-  const index = multipliers.indexOf(multiplier);
+  const index = multipliers.value.indexOf(multiplier);
   if (index !== -1) {
     activeIndex.value = index;
     updateActiveStates(index);
@@ -127,7 +132,7 @@ const initPixi = async () => {
 
   // 5. Text Setup
   const spacing = 420 / 4;
-  multipliers.forEach((val, i) => {
+  multipliers.value.forEach((val, i) => {
     const container = new PIXI.Container();
     
     // Create the main text with a robust starting style

@@ -7,8 +7,8 @@
       <BigWinCelebrationLayer ref="epicWinRef"/>
     </template>
 
-    <div class="game-area">
-      <MultiplierBarDeepSee v-if="isAssetsLoaded" ref="multiplierBarRef"/>
+    <div class="game-area" v-if="isAssetsLoaded">
+      <MultiplierBarDeepSee ref="multiplierBarRef"/>
       <SlotMachinePixi
         :win-particles-ref="winParticles"
         :epic-win-ref="epicWinRef"
@@ -18,11 +18,13 @@
       />
       <ControlPanel />
     </div>
+    <LoadingScreen v-else/>
   </div>
 </template>
 
 <script setup>
 
+import LoadingScreen from './components/LoadingScreen.vue';
 import LineWinCelebrationLayer from './components/LineWinCelebrationLayer.vue';
 import BigWinCelebrationLayer from './components/BigWinCelebrationLayer.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
@@ -33,9 +35,11 @@ import { Assets } from 'pixi.js';
 import gsap from 'gsap';
 import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
 import { assetManifest } from './assets/assetManifest.js';
-import { initializeGame } from "./composables/useSlotGame.js";
+import { initializeGame, setupLoadedSounds } from "./composables/useSlotGame.js";
+import { useScreenWakeLock } from './composables/useScreenWakeLock';
 
-
+// Stoping devices
+    useScreenWakeLock()
 const lineWinCelebrationRef = ref(null);
 const multiplierBarRef = ref(null); // NEW: Ref for MultiplierBar
 
@@ -53,8 +57,6 @@ const handleMultiplier = (multiplier) => {
     multiplierBarRef.value.setSpinState(true)
     multiplierBarRef.value.setActiveMultiplier(multiplier);
   }
-
-  
 };
 
 
@@ -63,12 +65,17 @@ onMounted(async () => {
   await initializeGame();
 
   try {
-    // 1. Initialize manifest
+
+    // Initialize manifest
     await Assets.init({ manifest: assetManifest });
     
-    // 2. Load the specific bundle
-    await Assets.loadBundle('celebration-assets');
-    // 3. Set loaded flag to true
+    // Load the specific bundle
+    await Assets.loadBundle(['celebration-assets', 'audio-assets']);
+
+    // Map the loaded assets to your sounds object
+    setupLoadedSounds();
+
+     // Set loaded flag to true
     isAssetsLoaded.value = true;
     
     if (atmosLight.value) {

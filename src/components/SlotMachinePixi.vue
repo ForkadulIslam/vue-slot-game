@@ -61,7 +61,9 @@ const {
   symbolPaths,
   isSpinning,
   outcome,
+  isAutoplaying,
   finishSpin,
+  spin,
   sounds,
   winningPaylines,
   winningSymbolPositions,
@@ -79,8 +81,11 @@ const {
   freeSpinsTotal,
   isInFreeSpinSession,
   freeSpinTotalWin,
+  multipliers
 } = useSlotGame();
 
+
+const currentMultiplierIndex = ref(0);
 
 
 const reelsSymbolHeight = 90;
@@ -159,10 +164,13 @@ const createSymbolElement = (symbol) => {
 // ---FREE SPIN SESSION LOGIC ---
 watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
   if (props.multiplierBarRef && props.multiplierBarRef.setFreeSpinsMode) {
+    if (isAutoplaying.value) {
+      isAutoplaying.value = false;
+    }
     props.multiplierBarRef.setFreeSpinsMode(isFreeSpinning);
   }
 
-  // When session ends, play epic win with total winnings
+  // When session ends
   if (wasFreeSpinning && !isFreeSpinning) {
     // Can do necessary clean up free spin states
   }
@@ -172,11 +180,14 @@ watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
 watch(isSpinning, (spinning) => {
 
   if (spinning) {
-
-
-
+    
     // --- SPIN START ---
     displayedWinAmount.value = 0;
+    
+    // For every spin (normal or free), reset the multiplier index to the start.
+    currentMultiplierIndex.value = 0;
+    emit('multiplier-triggered', multipliers.value[0]);
+
 
     const reelsEl = document.querySelectorAll('.reel');
     const finalOutcome = outcome.value.reelsSymbols;
@@ -224,21 +235,19 @@ watch(isSpinning, (spinning) => {
     nextTick(async () => {
       
       const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
-
-
       const hasLineWins = winningPaylines.value.length > 0;
 
       const scatterElements = [];
       outcome.value.reelsSymbols.forEach((reel, reelIndex) => {
-          reel.forEach((symbolName, rowIndex) => {
-              if (symbolName.toLowerCase().includes('scatter1')) {
-                  // Calculate index (assuming 4 symbols per reel based on your Height*4 logic)
-                  const symbolIndex = reelIndex * 4 + rowIndex;
-                  if (allSymbolElements[symbolIndex]) {
-                      scatterElements.push(allSymbolElements[symbolIndex]);
-                  }
-              }
-          });
+        reel.forEach((symbolName, rowIndex) => {
+          if (symbolName.toLowerCase().includes('scatter1')) {
+            // Calculate index (assuming 4 symbols per reel based on your Height*4 logic)
+            const symbolIndex = reelIndex * 4 + rowIndex;
+            if (allSymbolElements[symbolIndex]) {
+              scatterElements.push(allSymbolElements[symbolIndex]);
+            }
+          }
+        });
       });
 
       const masterTimeline = gsap.timeline({
@@ -252,10 +261,13 @@ watch(isSpinning, (spinning) => {
               if (!isInFreeSpinSession.value) {
                   updateBalanceFromOutcome();
               }
+              displayedWinAmount.value
+
 
 
               if(outcome.value.shouldTriggerBigWinCelebration){
                 console.log('Total win from free spins to be celebrated: ', freeSpinTotalWin.value);
+                isAutoplaying.value = false;
                 if (props.epicWinRef && props.epicWinRef.playEpicWin && freeSpinTotalWin.value > 0) {
                   gsap.delayedCall(0.5, () => {
                       props.epicWinRef.playEpicWin(freeSpinTotalWin.value);
@@ -263,14 +275,19 @@ watch(isSpinning, (spinning) => {
                 }
               }
 
+              
+              //REGULAR paid autoplay is active.
+              if (isAutoplaying.value) {
+                gsap.delayedCall(0.7, spin);
+              }
           }
       });
 
 
       if (hasTriggeredFreeSpins.value) {
-        console.log(`%c FREE SPINS TRIGGERED! ${freeSpinsTotal.value} spins awarded!`, 'font-size: 20px; color: yellow; background: red; padding: 10px;');
+        //console.log(`%c FREE SPINS TRIGGERED! ${freeSpinsTotal.value} spins awarded!`, 'font-size: 20px; color: yellow; background: red; padding: 10px;');
         
-        if (props.epicWinRef && props.epicWinRef.announceFreeSpins) {
+        if (props.epicWinRef && props.epicWinRef.announceFreeSpinByModel) {
           await props.epicWinRef.announceFreeSpins(freeSpinsTotal.value);
         }
 
@@ -284,54 +301,49 @@ watch(isSpinning, (spinning) => {
         setWinAnimationPlaying(true);
         let cumulativeWin = 0;
 
-        // ⚡ STEP 1: Dim the background reels once
+        // Dim the background reels once
         reelsContainer.value.classList.add('reels-dimmed');
-
         
-
         winningPaylines.value.forEach((line, index) => {
-            const multiplier = 1 + index;
-            const lineTimeline = gsap.timeline({
-                onStart: async () => {
-
-                    sounds.linewin.play();
-                    
-                    // Trigger the Pixi Ghosts
-                    if (!isInFreeSpinSession.value) {
-                      emit('multiplier-triggered', multiplier);
-                    }
-                    if (props.lineWinCelebrationRef) {
-                      await props.lineWinCelebrationRef.celebrateLine(line, allSymbolElements);
-                    }
-                },
-                onComplete: () => {
-                    sounds.linewin.stop();
-                    //emit('multiplier-triggered', multiplier);
-                    
-                    // The clear call is removed from here to prevent clearing between lines
-
+          const lineTimeline = gsap.timeline({
+            onStart: async () => {
+              sounds.winAlert.play();
+              if (isInFreeSpinSession.value) {
+                // Increment multiplier index if not at the end
+                if (currentMultiplierIndex.value < multipliers.value.length - 1) {
+                    currentMultiplierIndex.value++;
                 }
-            });
+                // Emit the corresponding multiplier VALUE
+                emit('multiplier-triggered', multipliers.value[currentMultiplierIndex.value]);
+              }
 
-            // Payoff counter
-            lineTimeline.to(displayedWinAmount, {
-                value: (cumulativeWin += line.winAmount),
-                duration: 0.8,
-                ease: 'power1.out'
-            }, "+=0.3");
+              if (props.lineWinCelebrationRef) {
+                await props.lineWinCelebrationRef.celebrateLine(line, allSymbolElements);
+              }
+            },
+            onComplete: () => {
+              sounds.winAlert.stop();
+            }
+          });
 
-            // Hold the line on screen for the player
-            const revealTime = (line.symbolsPositions.length * 0.18);
-            lineTimeline.to({}, { duration: revealTime });
+          // Payoff counter
+          lineTimeline.to(displayedWinAmount, {
+              value: (cumulativeWin += line.winAmount),
+              duration: 0.8,
+              ease: 'power1.out'
+          }, "+=0.3");
 
-            masterTimeline.add(lineTimeline);
+          // Hold the line on screen for the player
+          
+
+          masterTimeline.add(lineTimeline);
         });
       }
       else {
         // For non-line-win spins (including scatter-only and losing spins),
-        // update the balance immediately.
-        if (!isInFreeSpinSession.value) { // Balance shouldn't update during free spins themselves
-            updateBalanceFromOutcome();
+        // update the balance immediately. The multiplier was already reset at spin start.
+        if(!isInFreeSpinSession.value) {
+          updateBalanceFromOutcome();
         }
 
 

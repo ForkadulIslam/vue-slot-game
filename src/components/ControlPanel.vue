@@ -3,10 +3,17 @@
 
         <!-- 1. Slim Info Bar -->
         <div class="info-bar">
-            <!-- Balance -->
-            <div class="info-strip">
+            <!-- Normal Mode: Show Balance -->
+            <div class="info-strip" v-if="!isInFreeSpinSession">
                 <span class="label">BAL</span>
                 <span class="value">{{ balance }}</span>
+            </div>
+            <!-- Free Spin Mode: Show Autoplay button here -->
+            <div class="action-group" v-else>
+                <button @click="toggleAutoplay" class="glass-btn" :class="{ 'active': isAutoplaying }">
+                    <svg v-if="!isAutoplaying" viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    <svg v-else viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
             </div>
 
             <!-- Win -->
@@ -21,8 +28,8 @@
         <!-- 2. Compact Dock -->
         <div class="controls-dock">
 
-            <!-- Left: Bet (Icon Only) -->
-            <div class="action-group">
+            <!-- Left: Bet (Normal Mode Only) -->
+            <div class="action-group" v-if="!isInFreeSpinSession">
                 <button @click="toggleBetTable" class="glass-btn">
                     <!-- Stack of Coins Icon -->
                     <svg viewBox="0 0 24 24" fill="currentColor" class="icon">
@@ -38,10 +45,13 @@
                     </button>
                 </div>
             </div>
+            <!-- Free Spin Mode: Placeholder to keep spin button centered -->
+            <div v-else style="width: 45px;"></div>
+
 
             <!-- Center: Spin Orb -->
             <div class="spin-container">
-                <button @click="spin" class="spin-orb" :disabled="isSpinning" :class="{ 'spinning': isSpinning }">
+                <button @click="handleSpinClick" class="spin-orb" :disabled="isSpinning" :class="{ 'spinning': isSpinning }">
                     <div class="orb-inner">
                         <span v-if="!isSpinning" class="spin-label" v-text="freeSpinsAvailable > 0 ? freeSpinsAvailable: 'SPIN'"></span>
                         <svg v-else class="spin-icon-anim" viewBox="0 0 24 24" fill="currentColor">
@@ -51,13 +61,15 @@
                 </button>
             </div>
 
-            <!-- Right: Auto (Icon Only) -->
-            <div class="action-group">
-                <button @click="toggleAutoplay" class="glass-btn" :class="{ 'active': isAutoplaying }">
+            <!-- Right: Auto (Normal Mode Only) -->
+            <div class="action-group" v-if="!isInFreeSpinSession">
+                <button @click="handleAutoPlay" class="glass-btn" :class="{ 'active': isAutoplaying }">
                     <svg v-if="!isAutoplaying" viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
                     <svg v-else viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                 </button>
             </div>
+            <!-- Free Spin Mode: Placeholder to keep spin button centered -->
+            <div v-else style="width: 45px;"></div>
 
         </div>
     </div>
@@ -66,8 +78,10 @@
 <script setup>
     import { ref } from 'vue';
     import { useSlotGame } from '../composables/useSlotGame';
+    import { useScreenWakeLock } from '../composables/useScreenWakeLock';
 
-    const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, displayedWinAmount, freeSpinsAvailable } = useSlotGame();
+    const { balance, betAmount, availableBets, isSpinning, isAutoplaying, spin, setBetAmount, toggleAutoplay, displayedWinAmount, freeSpinsAvailable, isInFreeSpinSession } = useSlotGame();
+    const { isLocked, requestLock } = useScreenWakeLock();
 
     const showBetTable = ref(false);
 
@@ -79,6 +93,23 @@
         setBetAmount(bet);
         showBetTable.value = false;
     };
+
+    const handleSpinClick = () => {
+      // On the first spin, if the lock isn't active, request it.
+      if (!isLocked.value) {
+        requestLock();
+      }
+      // Proceed with the actual spin
+      spin();
+    }
+
+    const handleAutoPlay = ()=>{
+        if (!isLocked.value) {
+            requestLock();
+        }
+
+        toggleAutoplay()
+    }
 </script>
 
 <style scoped>

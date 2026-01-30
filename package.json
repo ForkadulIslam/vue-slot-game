@@ -10,6 +10,7 @@
   "dependencies": {
     "@pixi/filter-glow": "^5.2.1",
     "@pixi/particle-emitter": "^5.0.8",
+    "@pixi/sound": "^6.0.1",
     "@spd789562/particle-emitter": "^1.0.2",
     "axios": "^1.13.2",
     "express": "^5.1.0",
