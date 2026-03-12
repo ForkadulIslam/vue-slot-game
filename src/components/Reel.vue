@@ -1,30 +1,26 @@
 <template>
   <div class="reel">
-    <Symbol
-      v-for="(symbol, index) in symbols"
-      :key="index"
-      :symbolName="symbol.name"
-      :symbolUrl="symbol.url"
-    />
+    <div v-for="(symbol, index) in symbols" :key="index" class="symbol">
+        <div class="symbol-box"
+             :class="{ 'shine-effect': symbol.isSpecial }"
+        >
+            <div :class="['symbol-icon',  symbol.className, { 'is-special': symbol.isSpecial }]"></div>
+        </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import Symbol from './Symbol.vue';
+import { ref } from 'vue';
 
 defineProps({
-  symbols: {
-    type: Array,
-    required: true,
-  },
+  symbols: { type: Array, required: true },
+  reelIndex: { type: Number, required: true }
 });
 </script>
 
-<style scoped>
-.reel {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  gap: 1vw;
-}
+<style>
+
+
 </style>

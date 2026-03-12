@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Slot Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #222;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .slot-container {
+            border-radius: 15px;
+            background-color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+
+        .reels-wrapper {
+            display: flex;
+            width: 325px; /* 5 reels * 65px/reel + 2*1px border */
+            overflow: hidden;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background-color: #111;
+            justify-content: flex-start;
+            height: 195px; /* 3 symbols * 65px/symbol + 2*1px border */
+        }
+
+        .reel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .reel:last-child {
+            border-right: none;
+        }
+
+        .symbol {
+            width: 65px;
+            height: 65px;
+            background-color:#e401014a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+            overflow: hidden; /* Ensure images don't overflow */
+            flex-shrink: 0; /* Prevent symbols from shrinking */
+        }
+
+        .symbol img {
+            width: 70%;
+            border-radius: 50%;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: gold;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: darkgoldenrod;
+        }
+    </style>
+</head>
+<body>
+    <div class="slot-container">
+        <div class="reels-wrapper" id="reels-wrapper">
+            <!-- Reels will be dynamically inserted here -->
+        </div>
+        <div class="controls">
+            <button id="spinButton">Spin</button>
+        </div>
+    </div>
+
+    <script>
+        const reelsWrapper = document.getElementById('reels-wrapper');
+        const spinButton = document.getElementById('spinButton');
+        const numReels = 5;
+        const numRows = 3;
+        const symbolPath = 'src/assets/images/symblos/';
+        const symbolImages = [
+            `${symbolPath}seven.svg`,
+            `${symbolPath}orange.svg`,
+            `${symbolPath}plum.svg`,
+            `${symbolPath}banana.svg`,
+            `${symbolPath}bar.svg`,
+            `${symbolPath}bell.svg`,
+            `${symbolPath}cherry.svg`,
+            `${symbolPath}lemon.svg`,
+            `${symbolPath}melon.svg`,
+        ];
+
+        function createReels() {
+            reelsWrapper.innerHTML = ''; // Clear existing reels
+            for (let i = 0; i < numReels; i++) {
+                const reel = document.createElement('div');
+                reel.classList.add('reel');
+                reel.id = `reel-${i}`;
+                for (let j = 0; j < numRows; j++) {
+                    const symbol = document.createElement('div');
+                    symbol.classList.add('symbol');
+                    symbol.appendChild(getRandomSymbol()); // Append img element
+                    reel.appendChild(symbol);
+                }
+                reelsWrapper.appendChild(reel);
+            }
+        }
+
+        function getRandomSymbol() {
+            const randomIndex = Math.floor(Math.random() * symbolImages.length);
+            const img = document.createElement('img');
+            img.src = symbolImages[randomIndex];
+            return img;
+        }
+
+        const getRandomSymbolElement = () => {
+            const img = getRandomSymbol();
+            const symbol = document.createElement('div');
+            symbol.classList.add('symbol');
+            symbol.appendChild(img);
+            return symbol;
+        };
+            
+        function spinReels() {
+            spinButton.disabled = true;
+            const reels = document.querySelectorAll('.reel');
+            const symbolHeight = 65;
+
+            // 1. Pre-determine the outcome for ALL reels first!
+            const finalOutcomes = [];
+            for (let i = 0; i < reels.length; i++) {
+                finalOutcomes.push([
+                    getRandomSymbolElement(),
+                    getRandomSymbolElement(),
+                    getRandomSymbolElement()
+                ]);
+            }
+            //console.log(finalOutcomes)
+            reels.forEach((reel, reelIndex) => {
+                const finalSymbols = finalOutcomes[reelIndex];
+                const startingSymbols = Array.from(reel.children);
+                
+                // Create a long strip of symbols for the spin effect
+                const spinningSymbols = [];
+                for (let i = 0; i < 900; i++) {
+                    spinningSymbols.push(getRandomSymbolElement());
+                }
+                // Assemble the reel content
+                reel.innerHTML = '';
+                reel.append(...finalSymbols, ...spinningSymbols, ...startingSymbols);
+                //console.log(reel);
+                // Position the reel to show the starting symbols
+                const spinContentHeight = (finalSymbols.length + spinningSymbols.length) * symbolHeight;
+                gsap.set(reel, { y: -spinContentHeight });
+
+                const reelTimeline = gsap.timeline({
+                    delay: reelIndex * .9,
+                    onComplete: () => {
+                        // Clean up - keep only final symbols
+                        const finalClones = finalSymbols.map(s => s.cloneNode(true));
+                        reel.innerHTML = '';
+                        reel.append(...finalClones);
+                        gsap.set(reel, { y: 0, filter: 'blur(0px)' });
+                        
+                        if (reelIndex === reels.length - 1) {
+                            spinButton.disabled = false;
+                        }
+                    }
+                });
+
+                // ANIMATION WITH BLUR EFFECT
+                reelTimeline.to(reel, {
+                    y: 0,
+                    duration: 5,
+                    ease: "power2.inOut",
+                    // REPLACE the onUpdate section with this:
+                    onUpdate: function() {
+                        const progress = this.progress();
+                        let blurIntensity;
+                        if (progress < 0.5) {
+                            blurIntensity = progress * 10 * 4; // quick ramp up
+                        } else if (progress > 0.9) {
+                            blurIntensity = (1 - progress) * 10 * 4; // quick ramp down
+                        } else {
+                            blurIntensity = 4;
+                        }
+                        gsap.set(reel, { filter: `blur(${blurIntensity}px)` });
+                    }
+                });
+            });
+        }
+
+        // Initial setup
+        createReels();
+        spinButton.addEventListener('click', spinReels);
+    </script>
+</body>
+</html>
