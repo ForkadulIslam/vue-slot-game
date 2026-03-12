@@ -6,7 +6,7 @@ export const assetManifest = {
             assets: [
                 { 
                     alias: 'symbolsSprite', 
-                    src: new URL('./images/symbols_sprite.png', import.meta.url).href 
+                    src: new URL('./images/symbols_sprite.webp', import.meta.url).href 
                 },
                 { 
                     alias: 'glowBurst', 

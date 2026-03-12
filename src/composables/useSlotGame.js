@@ -51,6 +51,7 @@ const freeSpinOutcomes = ref([]);
 const freeSpinTotalWin = ref(0);
 const hasTriggeredFreeSpins = ref(false);
 export const gameError = ref(null);
+export const isGameReady = ref(false); // NEW: Tracks completion of the initial session API call
 
 // --- PIXI SOUNDS SETUP ---
 // We initialize the sounds using Pixi's sound manager. 
@@ -238,11 +239,15 @@ const processOutcome = () => {
 
 let isInitialized = false;
 export async function initializeGame() {
-  if (isInitialized) return;
-  
+  if (isInitialized) {
+    isGameReady.value = true; // Already ready
+    return;
+  }
+  isGameReady.value = false; // Explicitly set to false at the start
+
   const gameSession = await startGameSession();
   if (gameSession.error) {
-    return;
+    return; // Stop initialization if session start fails
   }
   const initialGrid = gameSession.reelsSymbols;
   sessionId.value = gameSession.sessionId
@@ -256,6 +261,7 @@ export async function initializeGame() {
   linesDefinitions.value = gameSession.linesDefinitions;
   availableSymbols.value = gameSession.availableSymbols;
   isInitialized = true;
+  isGameReady.value = true; // Signal that game data is ready
 }
 
 
@@ -324,10 +330,9 @@ export function useSlotGame() {
 
   // MAIN SPIN FUNCTION ---
   const spin = async() => {
-    unlockAudio();
     if (isSpinning.value || isWinAnimationPlaying.value) return;
 
-     triggerEffectWithDucking(sounds.reelsSound);
+    triggerEffectWithDucking(sounds.reelsSound);
 
     if (isInFreeSpinSession.value) {
       if (freeSpinsAvailable.value > 0) {
@@ -445,6 +450,7 @@ export function useSlotGame() {
     freeSpinTotalWin: readonly(freeSpinTotalWin),
     hasTriggeredFreeSpins: readonly(hasTriggeredFreeSpins),
     gameError: readonly(gameError),
+    isGameReady: readonly(isGameReady),
 
   };
 }

@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUpdate, nextTick, defineProps, onMounted } from 'vue';
+import { computed, ref, watch, onBeforeUpdate, nextTick, defineProps, onMounted, onUnmounted } from 'vue';
 import { gsap } from 'gsap';
 import Reel from './Reel.vue';
 import { useSlotGame } from '../composables/useSlotGame';
@@ -255,7 +255,9 @@ watch(isSpinning, (spinning) => {
               if (props.lineWinCelebrationRef){
                 props.lineWinCelebrationRef.clearLineWinCelebration();
               }
-              reelsContainer.value.classList.remove('reels-dimmed');
+              if(reelsContainer.value){
+                reelsContainer.value.classList.remove('reels-dimmed');
+              }
               setWinAnimationPlaying(false);
               gsap.set(allSymbolElements, { opacity: 1, scale: 1, filter: 'none' });
               if (!isInFreeSpinSession.value) {
@@ -495,7 +497,7 @@ watch(isSpinning, (spinning) => {
     width: 153px;
     height: 136px;
 
-    background-image: url('@/assets/images/symbols_sprite.png');
+    background-image: url('@/assets/images/symbols_sprite.webp');
     background-repeat: no-repeat;
 
     position: absolute;

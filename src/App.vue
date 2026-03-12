@@ -3,11 +3,11 @@
 
     <!-- Global dedicated celebration layer -->
     <template v-if="isAssetsLoaded">
-      <LineWinCelebrationLayer ref="lineWinCelebrationRef" /> 
+      <LineWinCelebrationLayer ref="lineWinCelebrationRef" />
       <BigWinCelebrationLayer ref="epicWinRef"/>
     </template>
 
-    <div class="game-area" v-if="isAssetsLoaded">
+    <div class="game-area" v-if="!showLoadingScreen">
       <MultiplierBarDeepSee ref="multiplierBarRef"/>
       <SlotMachinePixi
         :win-particles-ref="winParticles"
@@ -18,7 +18,7 @@
       />
       <ControlPanel />
     </div>
-    <LoadingScreen v-else/>
+    <LoadingScreen :error="loadingError" @retry="handleLoadingRetry" v-else/>
   </div>
 </template>
 
@@ -30,16 +30,16 @@ import BigWinCelebrationLayer from './components/BigWinCelebrationLayer.vue';
 import SlotMachinePixi from './components/SlotMachinePixi.vue';
 import ControlPanel from './components/ControlPanel.vue';
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { Assets } from 'pixi.js';
 import gsap from 'gsap';
 import MultiplierBarDeepSee from './components/MultiplierBarDeepSee.vue';
 import { assetManifest } from './assets/assetManifest.js';
-import { initializeGame, setupLoadedSounds } from "./composables/useSlotGame.js";
+import { initializeGame, setupLoadedSounds, useSlotGame, isGameReady } from "./composables/useSlotGame.js";
 import { useScreenWakeLock } from './composables/useScreenWakeLock';
 
 // Stoping devices
-    useScreenWakeLock()
+useScreenWakeLock()
 const lineWinCelebrationRef = ref(null);
 const multiplierBarRef = ref(null); // NEW: Ref for MultiplierBar
 
@@ -50,6 +50,24 @@ const winParticles = ref(null);
 const epicWinRef = ref(null); // Reference for epic win
 
 const isAssetsLoaded = ref(false);
+const assetLoadingError = ref(null); // For asset loading specific errors
+
+const { balance, betAmount, gameError } = useSlotGame();
+
+const loadingError = computed(() => {
+  if (gameError.value) { // Error from game session API
+    return gameError.value;
+  }
+  if (assetLoadingError.value) { // Error from asset loader
+    return assetLoadingError.value;
+  }
+  return null;
+});
+
+const showLoadingScreen = computed(() => {
+  // Show loading screen until both game data and assets are fully loaded, or if an error occurs.
+  return !isGameReady.value || !isAssetsLoaded.value || loadingError.value !== null;
+});
 
 
 const handleMultiplier = (multiplier) => {
@@ -59,13 +77,23 @@ const handleMultiplier = (multiplier) => {
   }
 };
 
+function handleLoadingRetry() {
+  window.location.reload();
+}
+
 
 onMounted(async () => {
   
+  // Step 1: Initialize game session. isGameReady will be set to true by this function upon success.
   await initializeGame();
 
-  try {
+  // If initialization failed, gameError will be set. The loading screen will show the error. Stop here.
+  if (gameError.value) {
+    return;
+  }
 
+  // Step 2: Load Pixi assets.
+  try {
     // Initialize manifest
     await Assets.init({ manifest: assetManifest });
     
@@ -75,7 +103,7 @@ onMounted(async () => {
     // Map the loaded assets to your sounds object
     setupLoadedSounds();
 
-     // Set loaded flag to true
+     // Set loaded flag to true only after all assets are loaded
     isAssetsLoaded.value = true;
     
     if (atmosLight.value) {
@@ -93,6 +121,7 @@ onMounted(async () => {
 
   } catch (e) {
     console.error("Asset loading failed:", e);
+    assetLoadingError.value = "Failed to load game assets. Please check your connection and try again.";
   }
 });
 
@@ -128,7 +157,7 @@ body {
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
 
   box-sizing: border-box;
-  background-image: url('./assets/images/game_banner.jpg');
+  background-image: url('./assets/images/game_banner.webp');
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
@@ -171,10 +200,10 @@ body {
 
 /* Optional: Add this media query to ensure elements scale down on very short screens */
 @media (max-height: 700px) {
-  /*.game-area {*/
-  /*  transform: scale(0.9);*/
-  /*  transform-origin: bottom center;*/
-  /*}*/
+  /* .game-area {
+    transform: scale(0.8);
+    transform-origin: bottom center;
+  } */
 }
 
 </style>

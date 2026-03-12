@@ -2,12 +2,12 @@
   <div class="loading-overlay">
     <div v-if="!error" class="loading-container">
       <div class="spinner"></div>
-      <p>Loading Assets...</p>
+      <p>Loading....</p>
     </div>
     <div v-if="error" class="error-container">
-      <p class="error-title">Loading Error</p>
+      <p class="error-title">OPSss</p>
       <p class="error-message">{{ error }}</p>
-      <button @click="refreshPage" class="refresh-button">Refresh</button>
+      <button @click="$emit('retry')" class="refresh-button">Refresh</button>
     </div>
   </div>
 </template>
@@ -20,9 +20,8 @@ defineProps({
   }
 });
 
-function refreshPage() {
-  window.location.reload();
-}
+defineEmits(['retry']);
+
 </script>
 
 <style scoped>
