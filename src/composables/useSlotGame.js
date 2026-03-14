@@ -135,6 +135,7 @@ const startGameSession = async () => {
   try {
     const response = await axios.post(`${endpoint}/start-session`, {
       userId: userIdFromUrl,
+      gameId:'mega-win'
     });
     
     if (response.data && response.data.status === 'success') {
