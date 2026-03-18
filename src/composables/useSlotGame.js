@@ -5,18 +5,18 @@ import gsap from 'gsap';
 
 // --- 1. GAME CONFIGURATION ---
 const symbolPaths = {
-  Wild: 'icon-wild',
-  Scatter1: 'icon-scatter',
-  seven: 'icon-777',
+  W: 'icon-wild',
+  S: 'icon-scatter',
+  //seven: 'icon-777',
   Nine: 'icon-spade',
   Jack: 'icon-J',
   Ten: 'icon-diamond',
   King: 'icon-K',
   Queen: 'icon-Q',
-  lemon: 'icon-heart',
+  //lemon: 'icon-heart',
   Ace: 'icon-A',
-  banana: 'icon-club',
-  Scatter2: 'icon-bonus',
+  //banana: 'icon-club',
+  //Scatter2: 'icon-bonus',
 };
 
 // --- 2. SHARED REACTIVE STATE ---
@@ -188,7 +188,12 @@ const processOutcome = () => {
   winAmount.value = _outcome.totalWin ? _outcome.totalWin.toFixed(2) : parseFloat(0).toFixed(2);
   hasTriggeredFreeSpins.value = false;
 
-  // Clear previous win data
+  // Sync reelsForDisplay with the actual outcome
+  if (_outcome.reelsSymbols) {
+    reelsForDisplay.value = _outcome.reelsSymbols;
+  }
+
+  // Clear previous win data ...
   winningPaylines.value = [];
   winningSymbolPositions.value = [];
   winningScatters.value = [];
@@ -350,20 +355,17 @@ export function useSlotGame() {
     } else {
       if (balance.value < betAmount.value) return;
 
-      isSpinning.value = true;
       winAmount.value = parseFloat(0).toFixed(2);
       const finalOutcome = await getSpinAndOutcome();
       if (finalOutcome.error) {
-        isSpinning.value = false;
-
         // Manually stop the spin sound and restore background music immediately
         gsap.killTweensOf(sounds.reelsSound); // Stop any fades on the sound
         if (sounds.reelsSound) sounds.reelsSound.stop();
         gsap.to(sounds.backgroundMusic, { volume: 0.5, duration: 0.5 });
-
         return;
       }
       outcome.value = finalOutcome;
+      isSpinning.value = true;
     }
 
     //console.log(outcome.value);

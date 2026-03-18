@@ -31,7 +31,8 @@ import { useSlotGame } from '../composables/useSlotGame';
 
 
 // Define which symbols should "Pop"
-const SPECIAL_SYMBOLS = ['scatter1', 'scatter2'];
+
+const SPECIAL_SYMBOLS = ['s', 'w'];
 
 
 const emit = defineEmits(['multiplier-triggered']);
@@ -240,7 +241,7 @@ watch(isSpinning, (spinning) => {
       const scatterElements = [];
       outcome.value.reelsSymbols.forEach((reel, reelIndex) => {
         reel.forEach((symbolName, rowIndex) => {
-          if (symbolName.toLowerCase().includes('scatter1')) {
+          if (symbolName.toLowerCase() === 's') {
             // Calculate index (assuming 4 symbols per reel based on your Height*4 logic)
             const symbolIndex = reelIndex * 4 + rowIndex;
             if (allSymbolElements[symbolIndex]) {

@@ -16,11 +16,14 @@ import {
   BlurFilter,
 } from 'pixi.js';
 import { gsap } from 'gsap';
+import { useSlotGame } from '../composables/useSlotGame';
 
 
 // ⚡ CORE DIMENSIONS (Source Texture)
 const SYMBOL_W = 153;
 const SYMBOL_H = 136;
+
+const { symbolPaths, reelsForDisplay } = useSlotGame();
 
 const SYMBOL_MAP = {
   'icon-diamond': { x: 28,  y: 0 },
@@ -143,8 +146,8 @@ onMounted(async () => {
 });
 
 const getSymbolKey = (id) => {
-    const map = { 'Ace': 'icon-A', 'King': 'icon-K', 'Queen': 'icon-Q', 'Jack': 'icon-J', 'Ten': 'icon-diamond' };
-    return map[id] || `icon-${id.toLowerCase()}`;
+    console.log(symbolPaths[id]);
+    return symbolPaths[id] || 'icon-A';
 };
 
 const celebrateLine = async (lineData, allSymbolElements) => {
@@ -152,13 +155,16 @@ const celebrateLine = async (lineData, allSymbolElements) => {
     dimmer.visible = true; 
     const activeGhosts = [];
 
-    const symbolKey = getSymbolKey(lineData.symbolId);
-    const texture = textures[symbolKey] || textures['icon-A'];
     for (const reelIdx of lineData.symbolsPositions) {
         const rowIdx = lineData.definition[reelIdx];
         const symbolIndex = reelIdx * 4 + rowIdx; 
         const domEl = allSymbolElements[symbolIndex];
         if (!domEl) continue;
+
+        // Fetch the ACTUAL symbol currently on the reel to handle Wilds correctly
+        const actualSymbolId = reelsForDisplay.value[reelIdx][rowIdx];
+        const symbolKey = getSymbolKey(actualSymbolId);
+        const texture = textures[symbolKey] || textures['icon-A'];
 
         const rect = domEl.getBoundingClientRect();
         
