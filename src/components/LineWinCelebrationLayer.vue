@@ -27,17 +27,13 @@ const { symbolPaths, reelsForDisplay } = useSlotGame();
 
 const SYMBOL_MAP = {
   'icon-diamond': { x: 28,  y: 0 },
-  'icon-heart':   { x: 153, y: 0 },
-  'icon-club':    { x: 306, y: 0 },
   'icon-spade':   { x: 428, y: 0 },
   'icon-K':       { x: 35,  y: 120 },
   'icon-Q':       { x: 172, y: 118 },
   'icon-J':       { x: 302, y: 120 },
   'icon-A':       { x: 427, y: 118 },
   'icon-scatter': { x: 33,  y: 247 },
-  'icon-bonus':   { x: 163, y: 242 },
-  'icon-wild':    { x: 295, y: 242 },
-  'icon-777':     { x: 459, y: 272 }
+  'icon-wild':    { x: 295, y: 242 }
 };
 
 const canvasContainer = ref(null);
@@ -146,7 +142,6 @@ onMounted(async () => {
 });
 
 const getSymbolKey = (id) => {
-    console.log(symbolPaths[id]);
     return symbolPaths[id] || 'icon-A';
 };
 

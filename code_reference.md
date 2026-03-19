@@ -563,3 +563,118 @@
         "wonFreeGamesNumber": 0
     }
 }
+
+{
+    "credits": 165.49999999999986,
+    "bet": 1,
+    "reelsSymbols": [
+        [
+            "Nine",
+            "S",
+            "Nine",
+            "King"
+        ],
+        [
+            "Nine",
+            "S",
+            "Nine",
+            "Nine"
+        ],
+        [
+            "Queen",
+            "Nine",
+            "Ten",
+            "Jack"
+        ],
+        [
+            "King",
+            "S",
+            "Nine",
+            "Queen"
+        ],
+        [
+            "W",
+            "Nine",
+            "Nine",
+            "King"
+        ]
+    ],
+    "winningLines": {
+        "8": {
+            "definition": [
+                0,
+                0,
+                1,
+                2,
+                2
+            ],
+            "pattern": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            "symbolId": "Nine",
+            "lineId": "8",
+            "symbolsPositions": [
+                0,
+                1,
+                2,
+                3,
+                4
+            ],
+            "wildSymbolsPositions": [],
+            "winAmount": 1.4
+        },
+        "11": {
+            "definition": [
+                2,
+                2,
+                1,
+                0,
+                0
+            ],
+            "pattern": [
+                1,
+                1,
+                1,
+                0,
+                0
+            ],
+            "symbolId": "Nine",
+            "lineId": "11",
+            "symbolsPositions": [
+                0,
+                1,
+                2
+            ],
+            "wildSymbolsPositions": [],
+            "winAmount": 0.35
+        }
+    },
+    "winningScatters": {
+        "S": {
+            "symbolId": "S",
+            "symbolsPositions": [
+                [
+                    0,
+                    1
+                ],
+                [
+                    1,
+                    1
+                ],
+                [
+                    3,
+                    1
+                ]
+            ],
+            "winAmount": 2.1
+        }
+    },
+    "freeGamesNum": 0,
+    "freeGamesSum": 10,
+    "freeGamesBank": 0,
+    "wonFreeGamesNumber": 10
+}
