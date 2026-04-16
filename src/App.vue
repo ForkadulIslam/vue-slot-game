@@ -118,6 +118,7 @@ onMounted(async () => {
         ease: "sine.inOut"
       });
     }
+    
 
   } catch (e) {
     console.error("Asset loading failed:", e);

@@ -14,27 +14,41 @@ import {
   Texture, 
   Rectangle, 
   BlurFilter,
+  AnimatedSprite // Add this
 } from 'pixi.js';
 import { gsap } from 'gsap';
 
 
+let vfxGroup = null;
 // ⚡ CORE DIMENSIONS (Source Texture)
 const SYMBOL_W = 153;
 const SYMBOL_H = 136;
 
 const SYMBOL_MAP = {
-  'icon-diamond': { x: 28,  y: 0 },
-  'icon-heart':   { x: 153, y: 0 },
-  'icon-club':    { x: 306, y: 0 },
-  'icon-spade':   { x: 428, y: 0 },
-  'icon-K':       { x: 35,  y: 120 },
-  'icon-Q':       { x: 172, y: 118 },
-  'icon-J':       { x: 302, y: 120 },
-  'icon-A':       { x: 427, y: 118 },
-  'icon-scatter': { x: 33,  y: 247 },
-  'icon-bonus':   { x: 163, y: 242 },
-  'icon-wild':    { x: 295, y: 242 },
-  'icon-777':     { x: 459, y: 272 }
+
+    /* Filler symbol - Non payable */
+    'icon-777':     { x: 432, y: 235 },
+
+    /* High value symbols */
+    'icon-A':       { x: 427, y: 118 },
+    'icon-K':       { x: 35,  y: 118 },
+    'icon-Q':       { x: 172, y: 118 },
+    'icon-J':       { x: 302, y: 118 },
+
+    
+    /* Low value symbols */
+    'icon-spade':   { x: 428, y: 0 },
+    'icon-diamond': { x: 31,  y: 0 },
+
+
+    /* High Value (These will get the is-special class) */
+    'icon-scatter': { x: 33,  y: 247 },
+    'icon-wild':    { x: 295, y: 242 },
+
+    /* Optional symbol - Non use */
+    // 'icon-heart':   { x: 153, y: 0 },
+    // 'icon-club':    { x: 306, y: 0 },
+    // 'icon-bonus':   { x: 163, y: 242 },
 };
 
 const canvasContainer = ref(null);
@@ -103,6 +117,111 @@ const returnGhostToPool = (ghostObj) => {
     }
 };
 
+// --- VFX SYMBOL EXPLOSION TRIGGER ---
+const clearPlayExplosion = () => {
+    if(vfxGroup){
+        while (vfxGroup.children.length > 0) {
+            const child = vfxGroup.removeChildAt(0);
+            child.destroy({ children: true });
+        }
+    }
+}
+const playExplosion = (specialSymbols) => {
+
+    const elements = specialSymbols[0];
+    let rect = elements.getBoundingClientRect();
+    let x = rect.x;
+    let y = rect.y;
+
+
+    // 1. Retrieve the spritesheet from the Assets cache
+    const sheet = Assets.get('explosionVFXSheet');
+    if (!sheet) return console.error("VFX Error: 'explosionSheet' not found in cache.");
+
+    // 2. Collect Animation Frames
+    // Because you used leading zeros (.00, .01), a simple sort() now works perfectly.
+    let animationFrames = [];
+    animationFrames = Object.keys(sheet.textures)
+        .sort() // Correctly sorts 00, 01, 02... 35
+        .map(key => sheet.textures[key]);
+
+    if (animationFrames.length === 0) return;
+
+    // 3. Create the AnimatedSprite
+    //console.log(animationFrames)
+    const anim = new AnimatedSprite(animationFrames);
+
+    // 4. Visual Configuration (Cinematic Style)
+    console.log(elements, rect);
+    anim.anchor.set(0);
+    anim.position.set(rect.left, rect.top);
+    
+    // Set scale to 1.5 to 2.0 to cover the symbol area (based on 256px frame)
+    anim.scale.set(.4); 
+    
+    // speed 0.5 to 0.7 matches the energetic PG Soft feel
+    anim.animationSpeed = .6; 
+    anim.loop = true;
+    
+    // Use ADDITIVE blending so the orange sparks glow against the reels
+    anim.blendMode = 'add'; 
+
+    // 5. Memory Management (Critical for Mobile)
+    anim.onComplete = () => {
+        // Explicitly remove and destroy to prevent GPU memory leaks
+        if (anim.parent) anim.parent.removeChild(anim);
+        anim.destroy();
+    };
+
+    // 6. Add to your existing winGroup and play
+    vfxGroup.addChild(anim);
+    anim.play();
+
+};
+
+// -- VSF SWARD EMBER TRIGGER
+const playSwordEmber = (x, y) => {
+
+    const sheet = Assets.get('swordEmberVFXSheet');
+    if (!sheet) return;
+
+    // 1. Collect frames
+    const animationFrames = Object.keys(sheet.textures)
+        .sort()
+        .map(key => sheet.textures[key]);
+
+    console.log(animationFrames);
+    const anim = new AnimatedSprite(animationFrames);
+
+    // 2. Setup
+    anim.anchor.set(0.5);
+    anim.position.set(x, y);
+    anim.blendMode = 'add';
+    anim.animationSpeed = 0.25; 
+    anim.loop = true;
+    
+    // 3. ⚡ THE "3D" TRICK
+    // We start small and scale up rapidly to make it look like 
+    // the sword is slashing toward the camera.
+    anim.scale.set(0.8);
+    gsap.to(anim.scale, {
+        x: 2.2,
+        y: 2.2,
+        duration: 0.4,
+        ease: "power2.out"
+    });
+
+    // 4. Memory Management
+    anim.onComplete = () => {
+        if (anim.parent) anim.parent.removeChild(anim);
+        anim.destroy();
+    };
+
+    vfxGroup.addChild(anim);
+    anim.play();
+
+};
+
 onMounted(async () => {
     app = new Application();
     await app.init({
@@ -122,8 +241,10 @@ onMounted(async () => {
     winGroup = new Container();
     uiGroup = new Container();
     lineGraphics = new Graphics();
+
+    vfxGroup = new Container(); // ⚡ NEW: Dedicated VFX layer
     
-    app.stage.addChild(dimmer, lineGraphics, winGroup, uiGroup);
+    app.stage.addChild(dimmer, lineGraphics, winGroup, uiGroup, vfxGroup);
 
     const masterTexture = Assets.get('symbolsSprite');
 
@@ -143,11 +264,19 @@ onMounted(async () => {
 });
 
 const getSymbolKey = (id) => {
-    const map = { 'Ace': 'icon-A', 'King': 'icon-K', 'Queen': 'icon-Q', 'Jack': 'icon-J', 'Ten': 'icon-diamond' };
+    const map = { 
+        'Ace': 'icon-A', 
+        'King': 'icon-K', 
+        'Queen': 'icon-Q', 
+        'Jack': 'icon-J', 
+        'Diamond': 'icon-diamond', 
+        'Spade': 'icon-spade',
+    };
     return map[id] || `icon-${id.toLowerCase()}`;
 };
 
 const celebrateLine = async (lineData, allSymbolElements) => {
+    //console.log(lineData, allSymbolElements);
     clearLineWinCelebration(); 
     dimmer.visible = true; 
     const activeGhosts = [];
@@ -177,7 +306,7 @@ const celebrateLine = async (lineData, allSymbolElements) => {
         winGroup.addChild(ghostContainer);
         activeGhosts.push(ghostContainer); 
 
-        gsap.to(ghost, { width: rect.width * 0.7, height: rect.height * 0.7, duration: 0.4, ease: "back.out(2)" });
+        gsap.to(ghost, { width: rect.width, height: rect.height * 0.7, duration: 0.4, ease: "back.out(2)" });
         gsap.to(glow, { alpha: 0.2, duration: 0.5, ease: "sine.inOut" });
 
         updateEnergyLine(activeGhosts);
@@ -241,7 +370,7 @@ onUnmounted(() => {
 
 
 
-defineExpose({ celebrateLine, clearLineWinCelebration });
+defineExpose({ celebrateLine, clearLineWinCelebration, playExplosion, clearPlayExplosion, playSwordEmber });
 </script>
 
 <style scoped>

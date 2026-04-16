@@ -31,7 +31,7 @@ import { useSlotGame } from '../composables/useSlotGame';
 
 
 // Define which symbols should "Pop"
-const SPECIAL_SYMBOLS = ['scatter1', 'scatter2'];
+const SPECIAL_SYMBOLS = ['s', 'w'];
 
 
 const emit = defineEmits(['multiplier-triggered']);
@@ -121,6 +121,8 @@ onBeforeUpdate(() => {
 
 onMounted(() => {
 
+  
+  //console.log(reelsForDisplay.value);
   // --- NEW: Lantern Flicker Effect ---
   if (lanternGlow.value) {
     
@@ -139,25 +141,18 @@ onMounted(() => {
 
 
 const createSymbolElement = (symbol) => {
-  const isSpecial = SPECIAL_SYMBOLS.includes(symbol.toLowerCase());
 
   const imgElement = document.createElement('div');
   imgElement.classList.add('symbol-icon');
   imgElement.classList.add(symbolPaths[symbol]);
-  if(isSpecial){
-    imgElement.classList.add('is-special');
-  }
 
-  const symboxBoxSheenEffect = document.createElement('div');
-  symboxBoxSheenEffect.classList.add('symbol-box');
-  if(isSpecial){
-    symboxBoxSheenEffect.classList.add('shine-effect');
-  }
-  symboxBoxSheenEffect.appendChild(imgElement);
+  const symboxBox = document.createElement('div');
+  symboxBox.classList.add('symbol-box');
+  symboxBox.appendChild(imgElement);
 
   const symbolDiv = document.createElement('div');
   symbolDiv.classList.add('symbol');
-  symbolDiv.appendChild(symboxBoxSheenEffect);
+  symbolDiv.appendChild(symboxBox);
   return symbolDiv;
 };
 
@@ -178,6 +173,7 @@ watch(isInFreeSpinSession, (isFreeSpinning, wasFreeSpinning) => {
 
 // --- SPIN LOGIC ---
 watch(isSpinning, (spinning) => {
+  props.lineWinCelebrationRef.clearPlayExplosion();
 
   if (spinning) {
     
@@ -193,6 +189,7 @@ watch(isSpinning, (spinning) => {
     const finalOutcome = outcome.value.reelsSymbols;
     const symbolHeight = reelsSymbolHeight;
     const reelAnimationDuration = 1.2;
+    //console.log(finalOutcome);
     reelsEl.forEach((reel, reelIndex) => {
       const finalSymbols = finalOutcome[reelIndex];
       const finalSymbolElements = finalSymbols.map(s => createSymbolElement(s));
@@ -233,20 +230,37 @@ watch(isSpinning, (spinning) => {
 
     // Use nextTick to ensure the DOM has updated with the final symbols before checking for wins.
     nextTick(async () => {
+
+      // if (props.lineWinCelebrationRef) {
+      //   console.log('Play explosion');
+      //   //props.lineWinCelebrationRef.playExplosion(200, 200);
+      //   props.lineWinCelebrationRef.playExplosion(200, 200);
+      // }
+      // return;
+      
       
       const allSymbolElements = Array.from(reelsContainer.value.querySelectorAll('.symbol'));
       const hasLineWins = winningPaylines.value.length > 0;
 
-      const scatterElements = [];
+      const specialSymbolElements = [];
       outcome.value.reelsSymbols.forEach((reel, reelIndex) => {
         reel.forEach((symbolName, rowIndex) => {
-          if (symbolName.toLowerCase().includes('scatter1')) {
-            // Calculate index (assuming 4 symbols per reel based on your Height*4 logic)
+          let specialSymbolMatch = false;
+          SPECIAL_SYMBOLS.map((s)=>{
+            if(s == symbolName.toLowerCase()){
+              specialSymbolMatch = true;
+              return true;
+            }
+          })
+          
+          if(specialSymbolMatch){
             const symbolIndex = reelIndex * 4 + rowIndex;
-            if (allSymbolElements[symbolIndex]) {
-              scatterElements.push(allSymbolElements[symbolIndex]);
+            const domEl = allSymbolElements[symbolIndex];
+            if (domEl) {
+              specialSymbolElements.push(domEl);
             }
           }
+
         });
       });
 
@@ -349,20 +363,33 @@ watch(isSpinning, (spinning) => {
         }
 
 
-        if (scatterElements.length > 0) {
-          gsap.to(scatterElements, {
-            scale: 1.15,
-            filter: 'brightness(2.5) drop-shadow(0 0 15px gold)',
-            duration: 0.6,
-            repeat: 2,
-            yoyo: true,
-            ease: "sine.inOut"
-          });
-          gsap.fromTo(scatterElements, 
-            { rotation: -2 }, 
-            { rotation: 2, duration: 0.05, repeat: -1, yoyo: true, ease: "none" }
-          );
-          await new Promise(r => setTimeout(r, 600));
+        if (specialSymbolElements.length > 0) {
+
+          if (props.lineWinCelebrationRef) {
+            console.log('Play explosion');
+            //props.lineWinCelebrationRef.playExplosion(200, 200);
+            props.lineWinCelebrationRef.playExplosion(specialSymbolElements);
+          }
+
+
+          // if (props.lineWinCelebrationRef) {
+          //   console.log('Play explosion');
+          //   props.lineWinCelebrationRef.playExplosion(specialSymbolElements);
+          // }
+
+          // gsap.to(specialSymbolElements, {
+          //   scale: 1.15,
+          //   filter: 'brightness(2.5) drop-shadow(0 0 15px gold)',
+          //   duration: 0.6,
+          //   repeat: 2,
+          //   yoyo: true,
+          //   ease: "sine.inOut"
+          // });
+          // gsap.fromTo(specialSymbolElements, 
+          //   { rotation: -2 }, 
+          //   { rotation: 2, duration: 0.05, repeat: -1, yoyo: true, ease: "none" }
+          // );
+          // await new Promise(r => setTimeout(r, 600));
         }
 
       }
@@ -522,22 +549,29 @@ watch(isSpinning, (spinning) => {
     /* filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 180, 0, 0.6)); */
   }
 
-  /* SPRITE POSITIONS */
-  /* Low Value */
-  .icon-diamond { background-position: -28px 1px }
-  .icon-heart   { background-position: -153px 0 }
-  .icon-club    { background-position: -306px 0 }
-  .icon-spade   { background-position: -428px -1px }
-  .icon-K       { background-position: -35px -120px }
-  .icon-Q       { background-position: -172px -118px }
-  .icon-J       { background-position: -302px -120px }
+  /* ==== SPRITE POSITIONS ==== */
+  /* Filler symbol - Non payable */
+  .icon-777     { background-position: -432px -235px }
+
+  /* High value symbols */
   .icon-A       { background-position: -427px -118px }
+  .icon-K       { background-position: -35px -118px }
+  .icon-Q       { background-position: -172px -118px }
+  .icon-J       { background-position: -302px -118px }
+
+  /* Low value symbols */
+  .icon-spade   { background-position: -428px 0 }
+  .icon-diamond { background-position: -31px 0px }
+  
 
   /* High Value (These will get the is-special class) */
-  .icon-scatter { background-position: -33px -247px }
-  .icon-bonus   { background-position: -163px -242px }
+  .icon-scatter { background-position: -33px -236px }
   .icon-wild    { background-position: -295px -242px }
-  .icon-777     { background-position: -459px -272px }
+
+  /* Optional symbol - Non use */
+  /* .icon-bonus   { background-position: -163px -242px }
+  .icon-heart   { background-position: -153px 0 }
+  .icon-club    { background-position: -306px 0 } */
 
   /* --- ANIMATIONS --- */
   @keyframes sheen-sweep {

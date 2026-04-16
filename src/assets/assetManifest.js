@@ -9,6 +9,14 @@ export const assetManifest = {
                     src: new URL('./images/symbols_sprite.webp', import.meta.url).href 
                 },
                 { 
+                    alias: 'explosionVFXSheet', 
+                    src: new URL('./images/vfx/symbol_explosion/symbol_explosion.json', import.meta.url).href 
+                },
+                { 
+                    alias: 'swordEmberVFXSheet', 
+                    src: new URL('./images/vfx/sword_ember/sword_ember.json', import.meta.url).href 
+                },
+                { 
                     alias: 'glowBurst', 
                     src: new URL('./images/transparent_glow_squire.png', import.meta.url).href 
                 },

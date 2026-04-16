@@ -5,18 +5,21 @@ import gsap from 'gsap';
 
 // --- 1. GAME CONFIGURATION ---
 const symbolPaths = {
-  Wild: 'icon-wild',
-  Scatter1: 'icon-scatter',
-  seven: 'icon-777',
-  Nine: 'icon-spade',
-  Jack: 'icon-J',
-  Ten: 'icon-diamond',
+  Filler: 'icon-777',
+
+  Ace: 'icon-A',
   King: 'icon-K',
   Queen: 'icon-Q',
-  lemon: 'icon-heart',
-  Ace: 'icon-A',
-  banana: 'icon-club',
-  Scatter2: 'icon-bonus',
+  Jack: 'icon-J',
+  Diamond: 'icon-diamond',
+  Spade: 'icon-spade',
+
+  W: 'icon-wild',
+  S: 'icon-scatter',
+
+  // lemon: 'icon-heart',
+  // banana: 'icon-club',
+  // Scatter2: 'icon-bonus',
 };
 
 // --- 2. SHARED REACTIVE STATE ---
@@ -135,6 +138,7 @@ const startGameSession = async () => {
   try {
     const response = await axios.post(`${endpoint}/start-session`, {
       userId: userIdFromUrl,
+      gameId: 'crazy-seven'
     });
     
     if (response.data && response.data.status === 'success') {
@@ -262,6 +266,7 @@ export async function initializeGame() {
   availableSymbols.value = gameSession.availableSymbols;
   isInitialized = true;
   isGameReady.value = true; // Signal that game data is ready
+  
 }
 
 
@@ -349,7 +354,7 @@ export function useSlotGame() {
     } else {
       if (balance.value < betAmount.value) return;
 
-      isSpinning.value = true;
+      
       winAmount.value = parseFloat(0).toFixed(2);
       const finalOutcome = await getSpinAndOutcome();
       if (finalOutcome.error) {
@@ -362,6 +367,7 @@ export function useSlotGame() {
 
         return;
       }
+      isSpinning.value = true;
       outcome.value = finalOutcome;
     }
 
